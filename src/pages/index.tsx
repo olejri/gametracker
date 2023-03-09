@@ -1,26 +1,34 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-
-import { api } from "npm/utils/api";
 import { useUser } from "@clerk/nextjs";
 
 
 const Home: NextPage = () => {
   const { isLoaded, isSignedIn, user } = useUser()
 
-
-  if (!isLoaded || !isSignedIn) {
+  if (!isLoaded || !isSignedIn || !user) {
     return null
   }
 
-    //const saveGame = api.game.addOrUpdateGame.useQuery({
-     //   name: "test",
-     //   description: "test"
-    //})
 
-    //saveGame.isSuccess && console.log(saveGame.data)
+ //show the greetings message based on the organization membership
+  if (user.organizationMemberships && user.organizationMemberships.length == 1) {
 
+    const data = user.organizationMemberships[0].organization.publicMetadata;
 
+    return (
+      <>
+        <Head>
+          <title>Game Tracker</title>
+        </Head>
+        <main>
+          <h1>Dashboard</h1>
+          <h2>Welcome user: {user.firstName}</h2>
+          <p>Welcome to {data.name}</p>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
@@ -30,6 +38,7 @@ const Home: NextPage = () => {
       <main>
         <h1>Game Tracker</h1>
         <h2>Welcome user: {user.firstName}</h2>
+
       </main>
     </>
   );
