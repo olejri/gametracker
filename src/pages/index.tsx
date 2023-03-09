@@ -1,6 +1,7 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useUser } from "@clerk/nextjs";
+import { type DataFromClerk } from "npm/components/Types";
 
 
 const Home: NextPage = () => {
@@ -15,6 +16,7 @@ const Home: NextPage = () => {
   if (user.organizationMemberships && user.organizationMemberships.length == 1) {
 
     const data = user.organizationMemberships[0]?.organization.publicMetadata;
+    const data1 = data as unknown as DataFromClerk;
 
     if (data === undefined) {
       return null
@@ -28,7 +30,7 @@ const Home: NextPage = () => {
         <main>
           <h1>Dashboard</h1>
           <h2>Welcome user: {user.firstName}</h2>
-          <div>Welcome to {data.name}</div>
+          <div>Welcome to {data1.name}</div>
         </main>
       </>
     );
