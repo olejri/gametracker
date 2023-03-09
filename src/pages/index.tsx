@@ -3,26 +3,24 @@ import Head from "next/head";
 
 import { api } from "npm/utils/api";
 import { useUser } from "@clerk/nextjs";
-import dayjs from "dayjs";
+
 
 const Home: NextPage = () => {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
-
-  const db = api.example.postExample.useQuery({
-    id: "1", createdAt: new Date(), updatedAt: new Date()
-  });
-
-  const getData = api.example.getAll.useQuery()
-
   const { isLoaded, isSignedIn, user } = useUser()
 
-  if (!isLoaded || !isSignedIn || !getData.isSuccess) {
+
+  if (!isLoaded || !isSignedIn) {
     return null
   }
 
-  const test = getData.data.map((item) => {
-    return dayjs(item.createdAt).format("DD/MM/YYYY")
-  })
+    //const saveGame = api.game.addOrUpdateGame.useQuery({
+     //   name: "test",
+     //   description: "test"
+    //})
+
+    //saveGame.isSuccess && console.log(saveGame.data)
+
+
 
   return (
     <>
@@ -32,9 +30,6 @@ const Home: NextPage = () => {
       <main>
         <h1>Game Tracker</h1>
         <h2>Welcome user: {user.firstName}</h2>
-        {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-        {db.isSuccess ? "saved" : "not saved"}
-        {getData.isSuccess ? getData.data.map((item) => <p key={item.id}>{test}</p>) : "not saved"}
       </main>
     </>
   );
