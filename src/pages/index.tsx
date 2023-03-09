@@ -6,14 +6,14 @@ import { type DataFromClerk } from "npm/components/Types";
 
 const Home: NextPage = () => {
   const { isLoaded, isSignedIn, user } = useUser()
-  const { isLoaded: orgLoaded, organization }= useOrganization()
+  const { isLoaded: orgLoaded, organization } = useOrganization()
 
   if (!isLoaded || !isSignedIn || !user || !orgLoaded || !organization) {
     return null
   }
 
  //show the greetings message based on the organization membership
-  if (user.organizationMemberships && user.organizationMemberships.length == 1) {
+  if (user.organizationMemberships && user.organizationMemberships.length > 0) {
 
     const orgData = JSON.stringify(organization);
 
