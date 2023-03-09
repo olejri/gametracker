@@ -2,6 +2,7 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import { useUser, useOrganization} from "@clerk/nextjs";
 import { type DataFromClerk } from "npm/components/Types";
+import OrganizationList from "npm/components/OrganizationList";
 
 
 const Home: NextPage = () => {
@@ -36,6 +37,7 @@ const Home: NextPage = () => {
           <div>Welcome to {data1.name}</div>
           <div>{name2}</div>
           <div>{orgData}</div>
+          <OrganizationList />
         </main>
       </>
     );
@@ -49,6 +51,7 @@ const Home: NextPage = () => {
       <main>
         <h1>Game Tracker</h1>
         <h2>Welcome user: {user.firstName}</h2>
+        <OrganizationList />
 
       </main>
     </>
