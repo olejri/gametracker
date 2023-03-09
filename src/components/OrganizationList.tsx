@@ -1,4 +1,5 @@
 import { useOrganizationList } from "@clerk/nextjs";
+import { log } from "next/dist/server/typescript/utils";
 
 const OrganizationList = () => {
   const { organizationList, isLoaded, setActive } = useOrganizationList();
@@ -19,7 +20,8 @@ const OrganizationList = () => {
             <li key={organization.id}>
               <p>Name: {organization.name}</p>
               <p>Your role: {membership.role}</p>
-              <button onClick={() => setActive(organization.id)}>Make active</button>
+              {/* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */}
+              <button onClick={() => {setActive({ organization: organization.id }).catch(e => log(e))}}>Make active</button>
             </li>
           ))}
         </ul>
