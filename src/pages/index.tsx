@@ -6,9 +6,9 @@ import { type DataFromClerk } from "npm/components/Types";
 
 const Home: NextPage = () => {
   const { isLoaded, isSignedIn, user } = useUser()
-  const { isLoaded: orgLoaded, organization } = useOrganization()
+  const { organization } = useOrganization()
 
-  if (!isLoaded || !isSignedIn || !user || !orgLoaded || !organization) {
+  if (!isLoaded || !isSignedIn || !user) {
     return null
   }
 
@@ -17,7 +17,7 @@ const Home: NextPage = () => {
 
     const orgData = JSON.stringify(organization);
 
-    const name2 = organization.name;
+    const name2 = organization?.name;
     const data = user.organizationMemberships[0]?.organization.publicMetadata;
     const data1 = data as unknown as DataFromClerk;
 
