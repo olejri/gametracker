@@ -14,7 +14,11 @@ const Home: NextPage = () => {
  //show the greetings message based on the organization membership
   if (user.organizationMemberships && user.organizationMemberships.length == 1) {
 
-    const data = user.organizationMemberships[0].organization.publicMetadata;
+    const data = user.organizationMemberships[0]?.organization.publicMetadata;
+
+    if (data === undefined) {
+      return null
+    }
 
     return (
       <>
@@ -24,7 +28,7 @@ const Home: NextPage = () => {
         <main>
           <h1>Dashboard</h1>
           <h2>Welcome user: {user.firstName}</h2>
-          <p>Welcome to {data.name}</p>
+          <div>Welcome to {data.name}</div>
         </main>
       </>
     );
