@@ -12,34 +12,36 @@ datasource db {
 }
 
 model Game {
-  id              String            @id @default(uuid())
-  name            String
-  description     String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  GameTagJunction GameTagJunction[]
+  id          String   @id @default(uuid())
+  name        String   @unique
+  image_url   String   @db.Text
+  description String   @db.Text
+  players     String
+  playtime    String
+  mechanics   String   @db.Text
+  categories  String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-model GameTagJunction {
-  id     String @id @default(uuid())
-  game   Game   @relation(fields: [gameId], references: [id])
-  gameId String
-  tag    Tag    @relation(fields: [tagId], references: [id])
-  tagId  String
-}
-
-model Tag {
-  id              String            @id @default(uuid())
-  name            String
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  GameTagJunction GameTagJunction[]
+model Organizations {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String   @unique
+  image_url   String   @db.Text
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Player      Player[]
 }
 
 model Player {
   id                        String                      @id @default(uuid())
+  clerkId                   String
   name                      String
-  email                     String
+  email                     String?
+  organization              Organizations               @relation(fields: [organizationId], references: [id])
+  organizationId            String
   createdAt                 DateTime                    @default(now())
   updatedAt                 DateTime                    @updatedAt
   PlayerGameSessionJunction PlayerGameSessionJunction[]

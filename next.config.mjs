@@ -20,5 +20,23 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
+  },
+  async redirects() {
+    return [
+      {
+        source: '/old-blog/:slug',
+        destination: '/news/:slug', // Matched parameters can be used in the destination
+        permanent: true,
+      },
+    ]
+  },
 };
+
 export default config;

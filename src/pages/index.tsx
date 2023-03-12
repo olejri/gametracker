@@ -1,61 +1,32 @@
 import { type NextPage } from "next";
-import Head from "next/head";
-import { useUser, useOrganization} from "@clerk/nextjs";
-import { type DataFromClerk } from "npm/components/Types";
-import OrganizationList from "npm/components/OrganizationList";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/router";
 
-
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 const Home: NextPage = () => {
-  const { isLoaded, isSignedIn, user } = useUser()
-  const { organization } = useOrganization()
+  const { isLoaded, isSignedIn, user } = useUser();
+  const { pathname, push } = useRouter();
 
   if (!isLoaded || !isSignedIn || !user) {
-    return null
+    return null;
   }
 
- //show the greetings message based on the organization membership
-  if (user.organizationMemberships && user.organizationMemberships.length > 0) {
+  //show the greetings message based on the organization membership
+  if (user.organizationMemberships && user.organizationMemberships.length == 1) {
+    const slug = user.organizationMemberships[0]?.organization.slug
 
-    const orgData = JSON.stringify(organization);
-
-    const name2 = organization?.name;
-    const data = user.organizationMemberships[0]?.organization.publicMetadata;
-    const data1 = data as unknown as DataFromClerk;
-
-    if (data === undefined) {
-      return null
+    if (slug === undefined || slug === null) {
+      return <></>;
     }
+    const url = `/dashboard/${slug}`;
 
-    return (
-      <>
-        <Head>
-          <title>Game Tracker</title>
-        </Head>
-        <main>
-          <h1>Dashboard</h1>
-          <h2>Welcome user: {user.firstName}</h2>
-          <div>Welcome to {data1.name}</div>
-          <div>{name2}</div>
-          <div>{orgData}</div>
-          <OrganizationList />
-        </main>
-      </>
-    );
+    if (pathname == "/") {
+      void push(url).then(r => console.log(r));
+    }
+  } else {
+    return <>Welcome to game tracker, ask for a invite for an organization</>;
   }
-
-  return (
-    <>
-      <Head>
-        <title>Game Tracker</title>
-      </Head>
-      <main>
-        <h1>Game Tracker</h1>
-        <h2>Welcome user: {user.firstName}</h2>
-        <OrganizationList />
-
-      </main>
-    </>
-  );
 };
 
 export default Home;

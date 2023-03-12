@@ -15,6 +15,7 @@ const OrganizationList = () => {
       {organizationList.length === 0 ? (
         <div>You do not belong to any organizations yet.</div>
       ) : (
+        organizationList.length === 1 ? (
         <ul>
           {organizationList.map(({ organization, membership }) => (
             <li key={organization.id}>
@@ -25,7 +26,9 @@ const OrganizationList = () => {
             </li>
           ))}
         </ul>
-      )}
+      ) : (
+        <div>Error</div>
+        ))}
     </div>
   );
 };
