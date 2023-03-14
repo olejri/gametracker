@@ -66,6 +66,7 @@ const Dashboard = (props: DashboardProps) => {
       <p>Clerk ID: {data?.data?.clerkId || player?.clerkId}</p>
       <p>Slug from database: {data?.data?.organizationSlug || player?.organizationSlug}</p>
       <p>Slug from Clerk: {user.slug}</p>
+      <p>From DB: {JSON.stringify(data)}</p>
     </div>
   );
 };
