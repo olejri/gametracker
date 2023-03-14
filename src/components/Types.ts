@@ -52,3 +52,18 @@ export interface Mechanic {
     name?: string
     id: string
 }
+
+export type Player = {
+    id: string;
+    name: string;
+    clerkId: string;
+    organizationSlug: string;
+};
+
+export type GetPlayerInput = {
+    clerkId: string;
+};
+
+export type GetPlayerOutput = {
+    data: Player;
+};

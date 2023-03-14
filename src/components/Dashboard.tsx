@@ -1,33 +1,20 @@
 import { api } from "npm/utils/api";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import { type DashboardProps } from "npm/components/Types";
-
-type Player = {
-  id: string;
-  name: string;
-  clerkId: string;
-  organizationSlug: string;
-};
-
-type GetPlayerInput = {
-  clerkId: string;
-};
-
-type GetPlayerOutput = {
-  data: Player;
-};
+import { type DashboardProps, type GetPlayerInput, type GetPlayerOutput, type Player } from "npm/components/Types";
 
 const Dashboard = (props: DashboardProps) => {
-  const slug = props.id
-  const useUser1 = useUser();
+  const slug = props.id;
+  const clerk = useUser();
+  const [player, setPlayer] = useState<Player>();
+  const [isLoadingPlayer, setIsLoadingPlayer] = useState<boolean>(false);
+  const [errorPlayer, setErrorPlayer] = useState<Error | undefined>();
+
   const user = {
-    clerkId: useUser1.user?.id || "",
-    name: useUser1.user?.fullName || "",
-    hasOnlyOneOrg: useUser1.user?.organizationMemberships?.length == 1,
-    // hasOnlyOneOrg: true,
-    // slug: "mock",
-    slug: useUser1.user?.organizationMemberships?.[0]?.organization.slug,
+    clerkId: clerk.user?.id || "",
+    name: clerk.user?.fullName || "",
+    hasOnlyOneOrg: clerk.user?.organizationMemberships?.length == 1,
+    slug: clerk.user?.organizationMemberships?.[0]?.organization.slug,
   };
 
   const { data, error, isLoading } = api.player.getPlayer.useQuery<
@@ -39,34 +26,45 @@ const Dashboard = (props: DashboardProps) => {
 
   useEffect(() => {
     if (!isLoading && !data?.data && slug === user.slug) {
+      setIsLoadingPlayer(true);
+      setErrorPlayer(undefined);
       // Call the addPlayer mutation to add the player
       addedPlayer.mutate({
         clerkId: user.clerkId,
         name: user.name,
         organizationSlug: user.slug,
+      }, {
+        onSuccess: (data) => {
+          setPlayer(data.data);
+          setIsLoadingPlayer(false);
+        },
+        onError: (error) => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          setErrorPlayer(error);
+          setIsLoadingPlayer(false);
+        }
       });
     }
   }, [data]); // add
 
-  if (isLoading) {
+  if (isLoading || isLoadingPlayer) {
     return <div>Loading...</div>;
   }
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
+  if (error || errorPlayer) {
+    return <div>Error: {error?.message || errorPlayer?.message}</div>;
   }
 
   if(!user.hasOnlyOneOrg || slug !== user.slug) {
     return <div>Ask admin about a invite to {slug}</div>
   }
 
-  const player = data?.data;
-
   return (
     <div>
-      <h1>Player Name: {player?.name}</h1>
-      <p>Clerk ID: {player?.clerkId}</p>
-      <p>Slug from database: {player?.organizationSlug}</p>
+      <h1>Player Name: {data?.data?.name || player?.name}</h1>
+      <p>Clerk ID: {data?.data?.clerkId || player?.clerkId}</p>
+      <p>Slug from database: {data?.data?.organizationSlug || player?.organizationSlug}</p>
       <p>Slug from Clerk: {user.slug}</p>
     </div>
   );
