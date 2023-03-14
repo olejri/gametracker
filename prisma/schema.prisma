@@ -27,6 +27,7 @@ model Game {
 model Player {
   id                        String                      @id @default(uuid())
   name                      String
+  nickname                  String?
   clerkId                   String
   organizationSlug          String
   createdAt                 DateTime                    @default(now())

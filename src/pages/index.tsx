@@ -27,7 +27,7 @@ const Home: NextPage = () => {
   } else {
     return (
       <>
-        Welcome to game tracker, ask for a invite for an organization
+        Welcome to Game Tracker. Please ask for an invitation to access the dashboard for your group.
       </>
     );
   }
