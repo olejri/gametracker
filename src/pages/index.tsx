@@ -25,7 +25,11 @@ const Home: NextPage = () => {
       void push(url).then(r => console.log(r));
     }
   } else {
-    return <>Welcome to game tracker, ask for a invite for an organization</>;
+    return (
+      <>
+        Welcome to game tracker, ask for a invite for an organization
+      </>
+    );
   }
 };
 

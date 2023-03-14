@@ -26,8 +26,7 @@ export interface Game  {
 }
 
 export interface DashboardProps {
-    name: string
-    slug: string
+    id: string
 }
 
 
