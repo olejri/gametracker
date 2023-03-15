@@ -3,12 +3,13 @@ import { useState } from "react";
 import { type AtlasResponse, type CategoriesResponse, type AtlasGame, type MechanicsResponse } from "npm/components/Types";
 import Image from "next/image";
 import { api } from "npm/utils/api";
+import { useRouter } from "next/navigation";
 
 
 const GameSearch = () => {
   const mechanismUrl = "https://api.boardgameatlas.com/api/game/mechanics?client_id=QWFcgdyEt7";
   const categoryUrl = "https://api.boardgameatlas.com/api/game/categories?client_id=QWFcgdyEt7";
-
+  const router = useRouter();
   const { data: mechanicsData, error: mechanicsError } = useFetch<MechanicsResponse>(mechanismUrl);
   const { data: categoriesData, error: categoriesError } = useFetch<CategoriesResponse>(categoryUrl);
 
@@ -46,6 +47,10 @@ const GameSearch = () => {
   if (!data) return (
     <div>
       <h1 className="text-xl font-bold mb-4">Game Data</h1>
+      <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push(`/`)}>
+        Back to dashboard
+      </button>
+      <br/>
       <input className="border border-gray-300 rounded py-2 px-4" type="text" placeholder="Name of the game"
              onChange={(e) => setSearchName(e.target.value)} />
       <select

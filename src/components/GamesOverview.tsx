@@ -2,11 +2,13 @@ import useFetch from "npm/lib/FetchFromAtlas";
 import { useState } from "react";
 import { type AtlasResponse, type CategoriesResponse, type AtlasGame, type MechanicsResponse } from "npm/components/Types";
 import Image from 'next/image'
+import { useRouter } from "next/navigation";
 
 
 const GamesOverview = () => {
   const mechanismUrl = "https://api.boardgameatlas.com/api/game/mechanics?client_id=QWFcgdyEt7";
   const categoryUrl = "https://api.boardgameatlas.com/api/game/categories?client_id=QWFcgdyEt7";
+  const router = useRouter();
   // const options: RequestInit = {
   //   method: "GET",
   //   mode: "no-cors",
@@ -53,6 +55,10 @@ const GamesOverview = () => {
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">Game Data</h1>
+      <button className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push(`/`)}>
+        Back to dashboard
+      </button>
+      <br/>
       <p>Current range is {skip} to {skip + 10}</p>
       <div className="grid grid-cols-24 gap-1">
         <button className="col-start-1 col-end-2 bg-gray-200 hover:bg-gray-300 rounded-full py-2 px-4"
