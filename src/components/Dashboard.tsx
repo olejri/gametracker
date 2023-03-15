@@ -2,6 +2,7 @@ import { api } from "npm/utils/api";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { type DashboardProps, type GetPlayerInput, type GetPlayerOutput, type Player } from "npm/components/Types";
+import { useRouter } from 'next/navigation';
 
 const Dashboard = (props: DashboardProps) => {
   const slug = props.id;
@@ -9,6 +10,7 @@ const Dashboard = (props: DashboardProps) => {
   const [player, setPlayer] = useState<Player>();
   const [isLoadingPlayer, setIsLoadingPlayer] = useState<boolean>(false);
   const [errorPlayer, setErrorPlayer] = useState<Error | undefined>();
+  const router = useRouter();
 
   const user = {
     clerkId: clerk.user?.id || "",
@@ -63,10 +65,15 @@ const Dashboard = (props: DashboardProps) => {
   return (
     <div>
       <h1>Player Name: {data?.data?.name || player?.name}</h1>
-      <p>Clerk ID: {data?.data?.clerkId || player?.clerkId}</p>
-      <p>Slug from database: {data?.data?.organizationSlug || player?.organizationSlug}</p>
-      <p>Slug from Clerk: {user.slug}</p>
-      <p>From DB: {JSON.stringify(data)}</p>
+      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push(`/games/collection`)}>
+        Check game collection
+      </button>
+      <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push(`/games/search`)}>
+        Add a new board game
+      </button>
+      <button className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push(`/games/overview`)}>
+        Overview of boardgames
+      </button>
     </div>
   );
 };
