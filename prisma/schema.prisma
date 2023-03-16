@@ -29,18 +29,28 @@ model Player {
   name                      String
   nickname                  String?
   clerkId                   String
-  organizationSlug          String
   createdAt                 DateTime                    @default(now())
   updatedAt                 DateTime                    @updatedAt
   PlayerGameSessionJunction PlayerGameSessionJunction[]
+  GameGroup                 GameGroup?                  @relation(fields: [groupId], references: [id])
+  groupId                   String?
 
   @@unique(clerkId)
+}
+
+model GameGroup {
+  id        String   @id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Player    Player[]
 }
 
 model PlayerGameSessionJunction {
   id            String      @id @default(uuid())
   player        Player      @relation(fields: [playerId], references: [id])
   playerId      String
+  position      Int?
+  score         String?
   gameSession   GameSession @relation(fields: [gameSessionId], references: [id])
   gameSessionId String
 }

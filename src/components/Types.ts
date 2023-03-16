@@ -56,8 +56,9 @@ export interface Mechanic {
 export type Player = {
     id: string;
     name: string;
+    nickname?: string | null;
     clerkId: string;
-    organizationSlug: string;
+    groupId?: string | null;
 };
 
 export type GetPlayerInput = {

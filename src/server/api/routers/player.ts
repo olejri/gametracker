@@ -7,7 +7,7 @@ export const playerRouter = createTRPCRouter({
       z.object({
         name: z.string(),
         clerkId: z.string(),
-        organizationSlug: z.string()
+        groupId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
       const player = await ctx.prisma.player.create({

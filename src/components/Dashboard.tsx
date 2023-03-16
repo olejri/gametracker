@@ -2,7 +2,7 @@ import { api } from "npm/utils/api";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { type DashboardProps, type GetPlayerInput, type GetPlayerOutput, type Player } from "npm/components/Types";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
 const Dashboard = (props: DashboardProps) => {
   const slug = props.id;
@@ -25,16 +25,20 @@ const Dashboard = (props: DashboardProps) => {
   >(user);
 
   const addedPlayer = api.player.addPlayer.useMutation();
+  const addGroup = api.group.addOrGetGroup.useMutation();
 
   useEffect(() => {
     if (!isLoading && !data?.data && slug === user.slug) {
       setIsLoadingPlayer(true);
       setErrorPlayer(undefined);
+      addGroup.mutate({
+        id: user.slug
+      });
       // Call the addPlayer mutation to add the player
       addedPlayer.mutate({
         clerkId: user.clerkId,
         name: user.name,
-        organizationSlug: user.slug,
+        groupId: user.slug
       }, {
         onSuccess: (data) => {
           setPlayer(data.data);
@@ -58,22 +62,34 @@ const Dashboard = (props: DashboardProps) => {
     return <div>Error: {error?.message || errorPlayer?.message}</div>;
   }
 
-  if(!user.hasOnlyOneOrg || slug !== user.slug) {
-    return <div>Ask admin about a invite to {slug}</div>
+  if (!user.hasOnlyOneOrg || slug !== user.slug) {
+    return <div>Ask admin about a invite to {slug}</div>;
   }
 
   return (
-    <div>
-      <h1>Player Name: {data?.data?.name || player?.name}</h1>
-      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push(`/games/collection`)}>
-        Check game collection
-      </button>
-      <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push(`/games/search`)}>
-        Add a new board game
-      </button>
-      <button className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push(`/games/overview`)}>
-        Overview of boardgames
-      </button>
+    <div className="container mt-5">
+      <h1>Player Name: {(data?.data?.nickname ?? data?.data?.name) || player?.name}</h1>
+      <div className="grid gap-4">
+        <div className="flex">
+          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => router.push(`/games/collection`)}>
+            Check game collection
+          </button>
+        </div>
+        <div className="flex ">
+          <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => router.push(`/games/search`)}>
+            Add a new board game
+          </button>
+        </div>
+
+        <div className="flex">
+          <button className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => router.push(`/games/overview`)}>
+            Overview of boardgames
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
