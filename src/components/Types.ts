@@ -68,3 +68,18 @@ export type GetPlayerInput = {
 export type GetPlayerOutput = {
     data: Player;
 };
+
+export type PlayerWithScore = {
+    playerId: string;
+    position: number;
+    score: string;
+};
+
+export type RecordedSession = {
+    players: PlayerWithScore[];
+    gameName: string;
+    groupId: string
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+}

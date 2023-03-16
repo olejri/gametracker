@@ -58,6 +58,7 @@ model PlayerGameSessionJunction {
 model GameSession {
   id                        String                      @id @default(uuid())
   gameId                    String
+  groupId                   String                      @default("game-night")
   result                    String?
   status                    String
   createdAt                 DateTime                    @default(now())
