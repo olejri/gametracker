@@ -19,7 +19,7 @@ const Home: NextPage = () => {
     if (slug === undefined || slug === null) {
       return <></>;
     }
-    const url = `/dashboard/${slug}`;
+    const url = `${slug}/dashboard/`;
 
     if (pathname == "/") {
       void push(url).then(r => console.log(r));
