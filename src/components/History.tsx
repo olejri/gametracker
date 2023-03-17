@@ -17,6 +17,7 @@ const History = (props: DashboardProps) => {
         newVar.data.map((session, i) => (
           <div key={i}>
             <p>Game name: {session.gameName}</p>
+            <p>Played at: {session.updatedAt}</p>
             <Image src={session.image_url} alt="My Image" width={200} height={200} />
             <ul>
               {session.players.map((player, j) => (
