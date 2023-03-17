@@ -12,6 +12,10 @@ const Home: NextPage = () => {
 
   const slug1 = organization?.slug;
 
+  console.log(JSON.stringify(slug1));
+
+  console.log(JSON.stringify(organization));
+
 
   if (!isLoaded || !isSignedIn || !user) {
     return null;
