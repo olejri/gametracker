@@ -1,7 +1,6 @@
 import { type NextPage } from "next";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/router";
-import OrganizationList from "npm/components/OrganizationList";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -26,7 +25,7 @@ const Home: NextPage = () => {
       void push(url).then(r => console.log(r));
     }
   } else if (user.organizationMemberships && user.organizationMemberships.length > 1) {
-    return <OrganizationList/>
+    return <>Not supported yet...</>;
   }
   else {
     return (
