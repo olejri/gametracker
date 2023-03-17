@@ -1,46 +1,75 @@
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "npm/server/api/trpc";
+import { type Game, type GameSessionWithPlayers, type Player } from "npm/components/Types";
 
 export const sessionRouter = createTRPCRouter({
-  startNewSession: publicProcedure
+  getAllCompletedSessions: publicProcedure
     .input(
       z.object({
         data: z.object({
-          name: z.string(),
-          description: z.string(),
-          image_url: z.string(),
-          players: z.string(),
-          playtime: z.string(),
-          mechanics: z.string(),
-          categories: z.string()
+          groupId: z.string()
         })
-      })
+        })
     )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const game = await ctx.prisma.game.create({
-          data: input.data
-        });
-        return { game };
-      } catch (err) {
-        const err1 = err as Error;
-        throw new Error(`Failed to create game: ${err1.message}`);
-      }
-    }),
-
-  getAllFinishSession: publicProcedure
-    .query(async ({ ctx }) => {
+    .query(async ({ ctx, input }) => {
         try {
-          const games = await ctx.prisma.game.findMany();
-          return { games };
+          const playerMap = new Map<string, Player>();
+          const gameMap = new Map<string, Game>();
+          const players = await ctx.prisma.player.findMany({
+            where: {
+              groupId: input.data.groupId
+            },
+          });
+
+          const gameInfo = await ctx.prisma.game.findMany();
+
+          //make a map that has the player id as the key and the player object as the value
+
+          players.forEach((player) => {
+            playerMap.set(player.id, player);
+          });
+
+          gameInfo.forEach((game) => {
+            gameMap.set(game.id, game);
+          });
+
+          const games = await ctx.prisma.gameSession.findMany({
+            where: {
+              groupId: input.data.groupId
+            },
+            include: {
+              PlayerGameSessionJunction: true,
+            },
+            orderBy: {
+              createdAt: "desc",
+            }
+          });
+
+          return games.map((game) => {
+            const playerGameSessions = game.PlayerGameSessionJunction;
+            // Map over each playerGameSession to extract player information
+            const players = playerGameSessions.map((playerGameSession) => ({
+              nickname: playerMap.get(playerGameSession.playerId)?.nickname ?? "",
+              clerkId: playerMap.get(playerGameSession.playerId)?.clerkId ?? "",
+              score: playerGameSession.score ?? "",
+              position: playerGameSession.position ?? 0
+            }));
+            const gameSessionWithoutPlayers: GameSessionWithPlayers = {
+              gameName: gameMap.get(game.gameId)?.name ?? "",
+              image_url: gameMap.get(game.gameId)?.image_url ?? "",
+              updatedAt: game.updatedAt,
+              players: players
+            }
+            // Return a new object that includes players and their scores and positions
+            return gameSessionWithoutPlayers;
+          });
         } catch (err) {
           const err1 = err as Error;
           throw new Error(`Failed to get games: ${err1.message}`);
         }
       }
     ),
-
   addACompletedSession: publicProcedure
     .input(
       z.object({

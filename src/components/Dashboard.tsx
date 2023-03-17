@@ -5,7 +5,7 @@ import { type DashboardProps, type GetPlayerInput, type GetPlayerOutput, type Pl
 import { useRouter } from "next/navigation";
 
 const Dashboard = (props: DashboardProps) => {
-  const slug = props.id;
+  const slug = props.groupName;
   const clerk = useUser();
   const [player, setPlayer] = useState<Player>();
   const [isLoadingPlayer, setIsLoadingPlayer] = useState<boolean>(false);

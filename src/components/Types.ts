@@ -26,7 +26,7 @@ export interface Game  {
 }
 
 export interface DashboardProps {
-    id: string
+    groupName: string
 }
 
 
@@ -75,6 +75,13 @@ export type PlayerWithScore = {
     score: string;
 };
 
+export type PlayerNicknameAndScore = {
+    nickname: string;
+    clerkId: string;
+    position: number;
+    score: string;
+};
+
 export type RecordedSession = {
     players: PlayerWithScore[];
     gameName: string;
@@ -82,4 +89,12 @@ export type RecordedSession = {
     status: string;
     createdAt: Date;
     updatedAt: Date;
+}
+
+
+export type GameSessionWithPlayers = {
+    gameName: string,
+    image_url: string,
+    players: PlayerNicknameAndScore[],
+    updatedAt: Date,
 }

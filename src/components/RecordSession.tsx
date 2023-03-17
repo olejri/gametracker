@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { api } from "npm/utils/api";
-import { type RecordedSession } from "npm/components/Types";
+import { type DashboardProps, type RecordedSession } from "npm/components/Types";
 
-const RecordSession = () => {
+const RecordSession = (props: DashboardProps) => {
   const [inputValue, setInputValue] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -21,7 +21,7 @@ const RecordSession = () => {
       const session: RecordedSession = {
         players: parsedData.players,
         gameName: parsedData.gameName,
-        groupId: parsedData.groupId,
+        groupId: props.groupName,
         status: parsedData.status,
         createdAt: new Date(parsedData.createdAt),
         updatedAt: new Date(parsedData.updatedAt),
@@ -58,7 +58,7 @@ const RecordSession = () => {
         className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         onClick={handleSaveButtonClick}
       >
-        Save Recorded Session
+        Save Recorded Session for {props.groupName}
       </button>
       {errorMessage && <div className="mt-4 text-red-600">{errorMessage}</div>}
       {successMessage && <div className="mt-4 text-green-600">{successMessage}</div>}
