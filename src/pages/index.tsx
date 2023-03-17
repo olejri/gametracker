@@ -1,15 +1,27 @@
 import { type NextPage } from "next";
-import { useUser } from "@clerk/nextjs";
+import { OrganizationSwitcher, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/router";
+import { useOrganizationContext } from "@clerk/shared";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const Home: NextPage = () => {
   const { isLoaded, isSignedIn, user } = useUser();
   const { pathname, push } = useRouter();
+  const { organization } = useOrganizationContext()
+
+  const slug1 = organization?.slug;
+
 
   if (!isLoaded || !isSignedIn || !user) {
     return null;
+  }
+
+  if(slug1 !== undefined && slug1 !== null) {
+    const url = `/dashboard/${slug1}`;
+    if (pathname == "/") {
+      void push(url).then(r => console.log(r));
+    }
   }
 
   //show the greetings message based on the organization membership
@@ -24,7 +36,10 @@ const Home: NextPage = () => {
     if (pathname == "/") {
       void push(url).then(r => console.log(r));
     }
-  } else {
+  } else if (user.organizationMemberships && user.organizationMemberships.length > 1) {
+    return (<OrganizationSwitcher />);
+  }
+  else {
     return (
       <>
         Welcome to Game Tracker. Please ask for an invitation to access the dashboard for your group.
