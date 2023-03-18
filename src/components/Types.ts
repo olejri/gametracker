@@ -24,7 +24,7 @@ export interface Game  {
     description: string
     image_url: string
     isExpansion: boolean
-    baseGameId?: string
+    baseGameId: string | undefined
 }
 
 export interface DashboardProps {
