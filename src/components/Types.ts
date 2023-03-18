@@ -23,6 +23,8 @@ export interface Game  {
     categories: string
     description: string
     image_url: string
+    isExpansion: boolean
+    baseGameId?: string
 }
 
 export interface DashboardProps {

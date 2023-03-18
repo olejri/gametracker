@@ -13,11 +13,28 @@ export const gameRouter = createTRPCRouter({
           players: z.string(),
           playtime: z.string(),
           mechanics: z.string(),
-          categories: z.string()
+          categories: z.string(),
+          isExpansion: z.boolean(),
+          baseGameId: z.string().optional()
         })
       })
     )
     .mutation(async ({ ctx, input }) => {
+      let baseGame = null;
+      if(input.data.baseGameId) {
+        baseGame = await ctx.prisma.game.findUnique(
+          {
+            where: {
+              id: input.data.baseGameId
+            }
+          }
+        )
+      }
+
+      if(input.data.baseGameId && baseGame === null) {
+        throw new Error(`Failed to create game: baseGame ${input.data.baseGameId} not found`);
+      }
+
       try {
         const game = await ctx.prisma.game.create({
           data: input.data

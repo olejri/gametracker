@@ -1,6 +1,12 @@
 import useFetch from "npm/lib/FetchFromAtlas";
 import { useState } from "react";
-import { type AtlasResponse, type CategoriesResponse, type AtlasGame, type MechanicsResponse } from "npm/components/Types";
+import {
+  type AtlasResponse,
+  type CategoriesResponse,
+  type AtlasGame,
+  type MechanicsResponse,
+  Category
+} from "npm/components/Types";
 import Image from "next/image";
 import { api } from "npm/utils/api";
 import { useRouter } from "next/navigation";
@@ -17,6 +23,7 @@ const GameSearch = () => {
   const [searchName, setSearchName] = useState("");
   const [mechanic, setMechanic] = useState<string>("");
   const [category, setCategory] = useState<string>("");
+  const [baseGameId, setBaseGameId] = useState<string>();
 
   const { data: collections } = api.game.getAllGames.useQuery();
   const mutation = api.game.addGame.useMutation();
@@ -98,6 +105,20 @@ const GameSearch = () => {
     return collections.games.some((collection) => collection.name === game.name);
   }
 
+  const isGameAnExpansion = (game: AtlasGame) => {
+    let isExpansion = false;
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    game.categories.forEach((category : string) => {
+      if(category == "Expansion") {
+        isExpansion = true;
+      }
+    });
+
+    return isExpansion
+  }
+
   return (
     <div>
       <div>
@@ -153,7 +174,24 @@ const GameSearch = () => {
               <td className="py-2 px-4 border border-gray-300 text-left">
                 {game.name}
                 {isGameInCollection(game) ? <span className="ml-2 text-green-500">In collection</span>
-                  : <button className={"ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"}
+                  : (
+                    <>
+                      {isGameAnExpansion(game) &&
+                        <select
+                          value={baseGameId}
+                          onChange={(event) => {
+                            setBaseGameId(event.target.value);
+                          }}
+                        >
+                          <option value="">Select base game</option>
+                          {collections.games.map((game) => (
+                            <option key={game.id} value={game.id}>
+                              {game.name ?? "Unnamed mechanic"}
+                            </option>
+                          ))}
+                        </select>
+                      }
+                    <button className={"ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"}
                   onClick={ (event) => {
                     event.preventDefault();
                     mutation.mutate( {
@@ -162,11 +200,14 @@ const GameSearch = () => {
                         players: `${game.min_players}-${game.max_players}`,
                         playtime: `${game.min_playtime}-${game.max_playtime}`,
                         mechanics: game.mechanics.join(", "),
-                        categories: game.categories.join(", ")
+                        categories: game.categories.join(", "),
+                        isExpansion: isGameAnExpansion(game),
+                        baseGameId: baseGameId
                       }
                     })
                   }
-                }>Add game to collection</button>}
+                }>Add {isGameAnExpansion(game) ? "expansion" : "game"} to collection</button>
+                    </>)}
               </td>
               <td className="py-2 px-4 border border-gray-300 text-left">{
                 <div className="w-64 h-64">
