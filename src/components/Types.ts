@@ -87,8 +87,10 @@ export type PlayerNicknameAndScore = {
 export type RecordedSession = {
     players: PlayerWithScore[];
     gameName: string;
+    expansionNames: string[];
     groupId: string
     status: string;
+    description?: string;
     createdAt: Date;
     updatedAt: Date;
 }

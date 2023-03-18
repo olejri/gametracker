@@ -12,18 +12,19 @@ datasource db {
 }
 
 model Game {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  image_url   String   @db.Text
-  description String   @db.Text
-  players     String
-  playtime    String
-  mechanics   String   @db.Text
-  categories  String   @db.Text
-  isExpansion Boolean  @default(false)
-  baseGameId  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                      String                    @id @default(uuid())
+  name                    String                    @unique
+  image_url               String                    @db.Text
+  description             String                    @db.Text
+  players                 String
+  playtime                String
+  mechanics               String                    @db.Text
+  categories              String                    @db.Text
+  isExpansion             Boolean                   @default(false)
+  baseGameId              String?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  GameSessionGameJunction GameSessionGameJunction[]
 }
 
 model Player {
@@ -57,13 +58,23 @@ model PlayerGameSessionJunction {
   gameSessionId String
 }
 
+model GameSessionGameJunction {
+  id            String      @id @default(uuid())
+  game          Game        @relation(fields: [gameId], references: [id])
+  gameId        String
+  gameSession   GameSession @relation(fields: [gameSessionId], references: [id])
+  gameSessionId String
+}
+
 model GameSession {
   id                        String                      @id @default(uuid())
   gameId                    String
   groupId                   String                      @default("game-night")
   result                    String?
   status                    String
+  description               String?
   createdAt                 DateTime                    @default(now())
   updatedAt                 DateTime                    @updatedAt
   PlayerGameSessionJunction PlayerGameSessionJunction[]
+  GameSessionGameJunction   GameSessionGameJunction[]
 }

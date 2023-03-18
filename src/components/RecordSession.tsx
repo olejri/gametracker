@@ -20,6 +20,7 @@ const RecordSession = (props: DashboardProps) => {
       const parsedData: RecordedSession = JSON.parse(inputValue);
       const session: RecordedSession = {
         players: parsedData.players,
+        expansionNames: parsedData.expansionNames,
         gameName: parsedData.gameName,
         groupId: props.groupName,
         status: parsedData.status,

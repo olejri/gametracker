@@ -80,8 +80,10 @@ export const sessionRouter = createTRPCRouter({
             score: z.string()
           })),
           gameName: z.string(),
+          expansionNames: z.array(z.string()),
           groupId: z.string(),
           status: z.string(),
+          description: z.string().optional(),
           createdAt: z.date(),
           updatedAt: z.date()
         })
@@ -125,9 +127,9 @@ export const sessionRouter = createTRPCRouter({
             gameId: foundGame.id,
             groupId: input.data.groupId,
             status: input.data.status,
+            description: input.data.description,
             createdAt: input.data.createdAt,
             updatedAt: input.data.updatedAt,
-
           }
         });
 
@@ -148,6 +150,25 @@ export const sessionRouter = createTRPCRouter({
               gameSessionId: session.id,
               position: player.position,
               score: player.score
+            }
+          });
+        }
+
+        for (const expansionName of input.data.expansionNames) {
+          const foundExpansion = await ctx.prisma.game.findUnique({
+            where: {
+              name: expansionName
+            }
+          });
+
+          if (foundExpansion === null) {
+            throw new Error(`Expansion ${expansionName} does not exist`);
+          }
+
+          await ctx.prisma.gameSessionGameJunction.create({
+            data: {
+              gameId: foundExpansion.id,
+              gameSessionId: session.id
             }
           });
         }
