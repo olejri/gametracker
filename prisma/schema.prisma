@@ -20,6 +20,8 @@ model Game {
   playtime    String
   mechanics   String   @db.Text
   categories  String   @db.Text
+  isExpansion Boolean  @default(false)
+  baseGameId  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
