@@ -22,11 +22,11 @@ const History = (props: DashboardProps) => {
               <p>Status: {session.status}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-0">
                 <div className={""}>
-                  <Image src={session.image_url} alt="My Image" width={300} height={200} className="rounded-lg mt-4" />
+                  <Image src={session.image_url} alt="My Image" width={400} height={300} className="rounded-lg mt-4" />
                 </div>
                 {session.expansions.map((expansion, j) =>
                 <div className={""} key={j} >
-                  <Image src={expansion.image_url} alt="My Image" width={150} height={200} className="rounded-lg mt-4" />
+                  <Image src={expansion.image_url} alt="My Image" width={400} height={300} className="rounded-lg mt-4" />
                 </div>
                 )}
                 <div className={"order-last"}></div>
