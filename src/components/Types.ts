@@ -31,6 +31,11 @@ export interface DashboardProps {
     groupName: string
 }
 
+export interface GameSessionProps {
+    groupName: string
+    gameId: string
+}
+
 
 export interface AtlasResponse {
     games: AtlasGame[]

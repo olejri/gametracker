@@ -1,5 +1,8 @@
+import { type GameSessionProps } from "npm/components/Types";
 
-const GameSession = () => {
+const GameSession = (props: GameSessionProps) => {
+
+
 
   return <></>;
 };

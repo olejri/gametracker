@@ -185,5 +185,27 @@ export const sessionRouter = createTRPCRouter({
         const err1 = err as Error;
         throw new Error(`Failed to create session: ${err1.message}`);
       }
-    } )
+    }),
+  getGameASession: publicProcedure
+    .input(
+      z.object({
+        data: z.object({
+          id: z.string()
+        })
+      })
+    ).query(async ({ ctx, input }) => {
+        const game = await ctx.prisma.gameSession.findUnique({
+          where: {
+            id: input.data.id
+          },
+          include: {
+            PlayerGameSessionJunction: true,
+            GameSessionGameJunction: true
+          },
+        });
+      if (game === null || game === undefined) {
+        return { data: null };
+      }
+
+    }),
 });
