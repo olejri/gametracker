@@ -91,8 +91,8 @@ export type RecordedSession = {
     groupId: string
     status: string;
     description?: string;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: string;
+    updatedAt: string;
 }
 
 
@@ -101,4 +101,19 @@ export type GameSessionWithPlayers = {
     image_url: string,
     players: PlayerNicknameAndScore[],
     updatedAt: Date,
+}
+
+export type OldDataFormat = {
+     "createdAt": string,
+      "updatedAt": string,
+      "gameName": string,
+      "status": string,
+      "description":string,
+      "groupId": string,
+      "47cb209e-314f-43b5-be68-7cd971fe2f9a": string,
+      "aa6ad37e-8cdb-46f8-a40a-b083920d91a7": string,
+      "e8e9450e-5349-4fdb-9a89-b00bd5d8ee83": string,
+      "0021cf9f-864e-42ff-bde1-1f6d8b58d750": string,
+      "ba629ff2-31af-44b7-8729-25057fea4b40": string,
+      "expansionNames": string[],
 }

@@ -80,7 +80,7 @@ export const sessionRouter = createTRPCRouter({
             score: z.string()
           })),
           gameName: z.string(),
-          expansionNames: z.array(z.string()),
+          expansionNames: z.array(z.string()).optional(),
           groupId: z.string(),
           status: z.string(),
           description: z.string().optional(),
@@ -154,7 +154,7 @@ export const sessionRouter = createTRPCRouter({
           });
         }
 
-        for (const expansionName of input.data.expansionNames) {
+        for (const expansionName of input.data.expansionNames ?? []) {
           const foundExpansion = await ctx.prisma.game.findUnique({
             where: {
               name: expansionName

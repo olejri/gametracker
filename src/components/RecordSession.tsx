@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { api } from "npm/utils/api";
-import { type DashboardProps, type RecordedSession } from "npm/components/Types";
+import { type DashboardProps, OldDataFormat, type RecordedSession } from "npm/components/Types";
 
 const RecordSession = (props: DashboardProps) => {
   const [inputValue, setInputValue] = useState("");
@@ -14,32 +14,68 @@ const RecordSession = (props: DashboardProps) => {
 
   const result = api.session.addACompletedSession.useMutation()
 
+  const convertDateString = (updatedAt: string) => {
+    const parts = updatedAt.split('.');
+    const year = parts[2];
+    const month = parts[1];
+    const day = parts[0];
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    const date = new Date(`${year}-${month}-${day}T00:00:00Z`);
+    return date.toISOString();
+  }
+
+  const transformData = (data: OldDataFormat) => {
+    const players = Object.entries(data)
+      .filter(([key, value]) => key.match(/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/))
+      .map(([playerId, score]) => ({ playerId, score: Number(score) }))
+      .sort((a, b) => b.score - a.score)
+      .map((player, index) => ({
+        playerId: player.playerId,
+        position: index + 1,
+        score: player.score.toString()
+      }));
+
+
+    const newVar = {
+      ...data,
+      updatedAt: convertDateString(data.updatedAt),
+      createdAt: convertDateString(data.createdAt),
+      players,
+    } as RecordedSession;
+    debugger;
+    return newVar;
+  }
+
   const handleSaveButtonClick = () => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const parsedData: RecordedSession = JSON.parse(inputValue);
-      const session: RecordedSession = {
-        players: parsedData.players,
-        expansionNames: parsedData.expansionNames,
-        gameName: parsedData.gameName,
-        groupId: props.groupName,
-        status: parsedData.status,
-        createdAt: new Date(parsedData.createdAt),
-        updatedAt: new Date(parsedData.updatedAt),
-      };
-      setSessionData(session);
-      result.mutate({
-        data : session
+      const oldDataFormats: OldDataFormat[] = JSON.parse(inputValue);
+      const parsedData = oldDataFormats.map(transformData);
+
+      //loop through the parsed data and add it to the database
+      parsedData.forEach( (session) => {
+        result.mutate({
+          data: {
+            ...session,
+            updatedAt: new Date(session.updatedAt),
+            createdAt: new Date(session.createdAt),
+          }
+        })
+        {
+          if (result.isSuccess) {
+            setSuccessMessage("Session saved successfully!");
+            setInputValue("")
+          }
+          if (result.error) {
+            setErrorMessage(result.error.message);
+            return;
+          }
+        }
+        // wait for 1 sec
+        setTimeout(() => {
+          setSuccessMessage("saved "+ session.gameName + " successfully! wait for 1 sec before saving the next game")
+        }, 1000);
       })
-      {
-        if (result.isSuccess) {
-          setSuccessMessage("Session saved successfully!");
-          setInputValue("")
-        }
-        if (result.error) {
-          setErrorMessage(result.error.message);
-        }
-      }
     } catch (error) {
       setErrorMessage("Invalid JSON data");
     }

@@ -31,6 +31,10 @@ export const gameRouter = createTRPCRouter({
         )
       }
 
+      if(input.data.isExpansion && baseGame === null) {
+        throw new Error(`Failed to create game: baseGameId is required for expansions`);
+      }
+
       if(input.data.baseGameId && baseGame === null) {
         throw new Error(`Failed to create game: baseGame ${input.data.baseGameId} not found`);
       }
