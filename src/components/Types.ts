@@ -95,12 +95,19 @@ export type RecordedSession = {
     updatedAt: string;
 }
 
+export type Expansions = {
+    gameName: string,
+    image_url: string,
+}
 
 export type GameSessionWithPlayers = {
     gameName: string,
     image_url: string,
+    description?: string,
     players: PlayerNicknameAndScore[],
+    expansions: Expansions[],
     updatedAt: Date,
+    status: string,
 }
 
 export type OldDataFormat = {

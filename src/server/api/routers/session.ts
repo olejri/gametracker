@@ -25,7 +25,6 @@ export const sessionRouter = createTRPCRouter({
           const gameInfo = await ctx.prisma.game.findMany();
 
           //make a map that has the player id as the key and the player object as the value
-
           players.forEach((player) => {
             playerMap.set(player.id, player);
           });
@@ -40,6 +39,7 @@ export const sessionRouter = createTRPCRouter({
             },
             include: {
               PlayerGameSessionJunction: true,
+              GameSessionGameJunction: true
             },
             orderBy: {
               createdAt: "desc",
@@ -55,11 +55,19 @@ export const sessionRouter = createTRPCRouter({
               score: playerGameSession.score ?? "",
               position: playerGameSession.position ?? 0
             }));
+            // Map over each gameSessionGame to extract game information
+            const expansions = game.GameSessionGameJunction.map((gameSessionGame) => ({
+              gameName: gameMap.get(gameSessionGame.gameId)?.name ?? "",
+              image_url: gameMap.get(gameSessionGame.gameId)?.image_url ?? ""
+            }));
             const gameSessionWithoutPlayers: GameSessionWithPlayers = {
               gameName: gameMap.get(game.gameId)?.name ?? "",
               image_url: gameMap.get(game.gameId)?.image_url ?? "",
               updatedAt: game.updatedAt,
-              players: players
+              players: players,
+              expansions: expansions,
+              description: game.description ?? "",
+              status: game.status ?? ""
             }
             // Return a new object that includes players and their scores and positions
             return gameSessionWithoutPlayers;
