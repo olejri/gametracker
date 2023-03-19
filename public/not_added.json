@@ -1,0 +1,62 @@
+[
+  {
+    "createdAt": "20.05.2019",
+    "updatedAt": "20.05.2019",
+    "gameName": "Piratkortspill",
+    "47cb209e-314f-43b5-be68-7cd971fe2f9a": "8",
+    "aa6ad37e-8cdb-46f8-a40a-b083920d91a7": "5",
+    "e8e9450e-5349-4fdb-9a89-b00bd5d8ee83": "10",
+    "0021cf9f-864e-42ff-bde1-1f6d8b58d750": "12",
+    "ba629ff2-31af-44b7-8729-25057fea4b40": "8"
+  },
+  {
+    "createdAt": "20.05.2019",
+    "updatedAt": "20.05.2019",
+    "gameName": "Piratkortspill",
+    "47cb209e-314f-43b5-be68-7cd971fe2f9a": "12 (3g)",
+    "aa6ad37e-8cdb-46f8-a40a-b083920d91a7": "3",
+    "e8e9450e-5349-4fdb-9a89-b00bd5d8ee83": "3",
+    "0021cf9f-864e-42ff-bde1-1f6d8b58d750": "3",
+    "ba629ff2-31af-44b7-8729-25057fea4b40": "12 (0g)"
+  },
+  {
+    "createdAt": "05.02.2019",
+    "updatedAt": "05.02.2019",
+    "gameName": "Mario Party",
+    "47cb209e-314f-43b5-be68-7cd971fe2f9a": "Taper",
+    "aa6ad37e-8cdb-46f8-a40a-b083920d91a7": "Vinner",
+    "e8e9450e-5349-4fdb-9a89-b00bd5d8ee83": "",
+    "0021cf9f-864e-42ff-bde1-1f6d8b58d750": "Taper",
+    "ba629ff2-31af-44b7-8729-25057fea4b40": "Taper"
+  },
+  {
+    "createdAt": "12.03.2019",
+    "updatedAt": "12.03.2019",
+    "gameName": "Smash Bros tourn",
+    "47cb209e-314f-43b5-be68-7cd971fe2f9a": "27",
+    "aa6ad37e-8cdb-46f8-a40a-b083920d91a7": "14",
+    "e8e9450e-5349-4fdb-9a89-b00bd5d8ee83": "12",
+    "0021cf9f-864e-42ff-bde1-1f6d8b58d750": "",
+    "ba629ff2-31af-44b7-8729-25057fea4b40": "21"
+  },
+  {
+    "createdAt": "22.11.2022",
+    "updatedAt": "22.11.2022",
+    "gameName": "Mario Party",
+    "47cb209e-314f-43b5-be68-7cd971fe2f9a": "3",
+    "aa6ad37e-8cdb-46f8-a40a-b083920d91a7": "4",
+    "e8e9450e-5349-4fdb-9a89-b00bd5d8ee83": "1",
+    "0021cf9f-864e-42ff-bde1-1f6d8b58d750": "2",
+    "ba629ff2-31af-44b7-8729-25057fea4b40": ""
+  },
+  {
+    "createdAt": "09.12.2022",
+    "updatedAt": "09.12.2022",
+    "gameName": "Oche(dart)",
+    "47cb209e-314f-43b5-be68-7cd971fe2f9a": "7",
+    "aa6ad37e-8cdb-46f8-a40a-b083920d91a7": "2",
+    "e8e9450e-5349-4fdb-9a89-b00bd5d8ee83": "10",
+    "0021cf9f-864e-42ff-bde1-1f6d8b58d750": "1",
+    "ba629ff2-31af-44b7-8729-25057fea4b40": "1"
+  }
+]
