@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { api } from "npm/utils/api";
-import { type DashboardProps, OldDataFormat, type RecordedSession } from "npm/components/Types";
+import { type DashboardProps, type RecordedSession } from "npm/components/Types";
 
 const RecordSession = (props: DashboardProps) => {
   const [inputValue, setInputValue] = useState("");
@@ -24,41 +24,17 @@ const RecordSession = (props: DashboardProps) => {
     return date.toISOString();
   }
 
-  const transformData = (data: OldDataFormat) => {
-    const players = Object.entries(data)
-      .filter(([key, value]) => key.match(/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/))
-      .map(([playerId, score]) => ({ playerId, score: Number(score) }))
-      .sort((a, b) => b.score - a.score)
-      .map((player, index) => ({
-        playerId: player.playerId,
-        position: index + 1,
-        score: player.score.toString()
-      }));
-
-
-    const newVar = {
-      ...data,
-      updatedAt: convertDateString(data.updatedAt),
-      createdAt: convertDateString(data.createdAt),
-      players,
-    } as RecordedSession;
-    debugger;
-    return newVar;
-  }
-
   const handleSaveButtonClick = () => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const oldDataFormats: OldDataFormat[] = JSON.parse(inputValue);
-      const parsedData = oldDataFormats.map(transformData);
-
+      const parsedData: RecordedSession[] = JSON.parse(inputValue);
       //loop through the parsed data and add it to the database
       parsedData.forEach( (session) => {
         result.mutate({
           data: {
             ...session,
-            updatedAt: new Date(session.updatedAt),
-            createdAt: new Date(session.createdAt),
+            updatedAt: new Date(convertDateString(session.updatedAt)),
+            createdAt: new Date(convertDateString(session.createdAt)),
           }
         })
         {
