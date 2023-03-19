@@ -1,5 +1,6 @@
 import { createTRPCRouter, publicProcedure } from "npm/server/api/trpc";
 import { z } from "zod";
+import { Player } from "npm/components/Types";
 
 export const playerRouter = createTRPCRouter({
   addPlayer: publicProcedure
@@ -32,5 +33,21 @@ export const playerRouter = createTRPCRouter({
       return {
         data: player
       };
+    }),
+
+  getPlayers: publicProcedure
+    .input(
+      z.object({
+        groupId: z.string()
+      })
+    ).query(async ({ ctx, input }) => {
+      const newVar = await ctx.prisma.player.findMany({
+        where: {
+          groupId: input.groupId
+        }
+      });
+      return {
+        data: newVar
+      }
     })
 });

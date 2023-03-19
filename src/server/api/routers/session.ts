@@ -33,7 +33,7 @@ export const sessionRouter = createTRPCRouter({
             gameMap.set(game.id, game);
           });
 
-          const games = await ctx.prisma.gameSession.findMany({
+          const sessions = await ctx.prisma.gameSession.findMany({
             where: {
               groupId: input.data.groupId
             },
@@ -46,28 +46,34 @@ export const sessionRouter = createTRPCRouter({
             }
           });
 
-          return games.map((game) => {
-            const playerGameSessions = game.PlayerGameSessionJunction;
+          return sessions.map((session) => {
+            const playerGameSessions = session.PlayerGameSessionJunction;
             // Map over each playerGameSession to extract player information
             const players = playerGameSessions.map((playerGameSession) => ({
               nickname: playerMap.get(playerGameSession.playerId)?.nickname ?? "",
               clerkId: playerMap.get(playerGameSession.playerId)?.clerkId ?? "",
               score: playerGameSession.score ?? "",
-              position: playerGameSession.position ?? 0
+              position: playerGameSession.position ?? 0,
+              playerId: playerGameSession.playerId
             }));
             // Map over each gameSessionGame to extract game information
-            const expansions = game.GameSessionGameJunction.map((gameSessionGame) => ({
+            const expansions = session.GameSessionGameJunction.map((gameSessionGame) => ({
               gameName: gameMap.get(gameSessionGame.gameId)?.name ?? "",
-              image_url: gameMap.get(gameSessionGame.gameId)?.image_url ?? ""
+              image_url: gameMap.get(gameSessionGame.gameId)?.image_url ?? "",
+              gameId: gameSessionGame.gameId
+
             }));
             const gameSessionWithoutPlayers: GameSessionWithPlayers = {
-              gameName: gameMap.get(game.gameId)?.name ?? "",
-              image_url: gameMap.get(game.gameId)?.image_url ?? "",
-              updatedAt: game.updatedAt,
+              gameName: gameMap.get(session.gameId)?.name ?? "",
+              image_url: gameMap.get(session.gameId)?.image_url ?? "",
+              updatedAt: session.updatedAt,
+              sessionId: session.id,
               players: players,
               expansions: expansions,
-              description: game.description ?? "",
-              status: game.status ?? ""
+              description: session.description ?? "",
+              status: session.status ?? "",
+              baseGameId: session.gameId,
+              groupId: session.groupId
             }
             // Return a new object that includes players and their scores and positions
             return gameSessionWithoutPlayers;
@@ -194,7 +200,7 @@ export const sessionRouter = createTRPCRouter({
         })
       })
     ).query(async ({ ctx, input }) => {
-        const game = await ctx.prisma.gameSession.findUnique({
+        const session = await ctx.prisma.gameSession.findUnique({
           where: {
             id: input.data.id
           },
@@ -203,9 +209,82 @@ export const sessionRouter = createTRPCRouter({
             GameSessionGameJunction: true
           },
         });
-      if (game === null || game === undefined) {
+      if (session === null || session === undefined) {
         return { data: null };
       }
 
+      const playerMap = new Map<string, Player>();
+      const playerIds = session.PlayerGameSessionJunction.map((playerGameSession) => {
+        return playerGameSession.playerId
+      });
+
+      await ctx.prisma.player.findMany({
+        where: {
+          id: {
+            in: playerIds
+          }
+        }
+      }).then((players) => {
+        players.forEach((player) => {
+          playerMap.set(player.id, player);
+        });
+      });
+
+      const playerGameSessions = session.PlayerGameSessionJunction;
+      // Map over each playerGameSession to extract player information
+      const players = playerGameSessions.map((playerGameSession) => ({
+        nickname: playerMap.get(playerGameSession.playerId)?.nickname ?? "",
+        clerkId: playerMap.get(playerGameSession.playerId)?.clerkId ?? "",
+        score: playerGameSession.score ?? "",
+        position: playerGameSession.position ?? 0,
+        playerId: playerGameSession.playerId
+      }));
+
+      const gameMap = new Map<string, Game>();
+      await ctx.prisma.game.findUnique({
+        where: {
+          id: session.gameId
+        }
+      }).then(
+        (game) => {
+          if (game !== null) {
+            gameMap.set(game.id, game);
+          }
+        }
+      );
+
+      await ctx.prisma.game.findMany({
+        where: {
+          id: {
+            in: session.GameSessionGameJunction.map((gameSessionGame) => {  return gameSessionGame.gameId })
+          }
+        }
+      }).then((games) => {
+        games.forEach((game) => {
+          gameMap.set(game.id, game);
+        });
+      });
+
+      // Map over each gameSessionGame to extract game information
+      const expansions = session.GameSessionGameJunction.map((gameSessionGame) => ({
+        gameName: gameMap.get(gameSessionGame.gameId)?.name ?? "",
+        image_url: gameMap.get(gameSessionGame.gameId)?.image_url ?? "",
+        gameId: gameSessionGame.gameId
+
+      }));
+      const gameSessionWithoutPlayers: GameSessionWithPlayers = {
+        gameName: gameMap.get(session.gameId)?.name ?? "",
+        image_url: gameMap.get(session.gameId)?.image_url ?? "",
+        updatedAt: session.updatedAt,
+        sessionId: session.id,
+        players: players,
+        expansions: expansions,
+        description: session.description ?? "",
+        status: session.status ?? "",
+        baseGameId: session.gameId,
+        groupId: session.groupId
+      }
+      // Return a new object that includes players and their scores and positions
+      return { data: gameSessionWithoutPlayers };
     }),
 });
