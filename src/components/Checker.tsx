@@ -1,5 +1,6 @@
 import { useUser } from "@clerk/nextjs";
 import React, { type ReactNode } from "react";
+import { useRouter } from "next/router";
 
 interface Props {
   slug: string;
@@ -11,11 +12,13 @@ const withDashboardChecker = () => (
 ) => {
   const DashboardCheckerWrapper = (props: Props) => {
     const clerk = useUser();
+    const path = useRouter();
     if (!clerk.user) {
       return <p>Not logged in!</p>;
     }
+
     const slugs = clerk.user?.organizationMemberships?.map((org) => org.organization.slug ?? "")
-    if (!slugs.includes(props.slug)) {
+    if (!slugs.includes(props.slug) && path.pathname !== "/") {
       return <p>Ask admin for an invite! :D</p>;
     }
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
