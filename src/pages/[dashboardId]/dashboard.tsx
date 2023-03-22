@@ -1,10 +1,9 @@
+import Dashboard from "npm/components/Dashboard2";
 import { useRouter } from "next/router";
-import Dashboard from "npm/components/Dashboard";
 
+const UserProfilePage = () => {
+  const groupName = useRouter().query.dashboardId as string;
+  return Dashboard(groupName)
+}
 
-const DashboardPage = () => {
-  const dashboardId = useRouter().query.dashboardId as string;
-  return (<Dashboard groupName={dashboardId} />)
-
-};
-export default DashboardPage;
+export default UserProfilePage;
