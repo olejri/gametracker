@@ -4,8 +4,7 @@ import {
   type AtlasResponse,
   type CategoriesResponse,
   type AtlasGame,
-  type MechanicsResponse,
-  Category
+  type MechanicsResponse
 } from "npm/components/Types";
 import Image from "next/image";
 import { api } from "npm/utils/api";
@@ -54,7 +53,7 @@ const GameSearch = () => {
   if (!data) return (
     <div>
       <h1 className="text-xl font-bold mb-4">Game Data</h1>
-      <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push(`/`)}>
+      <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.back()}>
         Back to dashboard
       </button>
       <br/>

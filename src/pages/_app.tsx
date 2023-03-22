@@ -13,6 +13,8 @@ import "npm/styles/globals.css";
 import { ThemeProvider } from "styled-components";
 import { useState } from "react";
 import { darkTheme, GlobalStyles, lightTheme } from "npm/styles/ThemeConfig";
+import withDashboardChecker from "npm/components/Checker";
+import { useRouter } from "next/router";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   const [theme, setTheme] = useState("light")
@@ -20,6 +22,8 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   const toggleTheme = () => {
     theme == 'light' ? setTheme('dark') : setTheme('light')
   }
+  const ProtectedComponent = withDashboardChecker()(Component);
+  const dashboardId = useRouter().query.dashboardId as string
 
   return (
     <ClerkProvider {...pageProps} >
@@ -28,7 +32,9 @@ const MyApp: AppType = ({ Component, pageProps }) => {
           <GlobalStyles />
           <button onClick={toggleTheme}>{theme == 'light' ? <p>Switch to dark mode</p> : <p>Switch to light mode</p>}</button>
           <UserButton />
-          <Component {...pageProps} />
+          <ProtectedComponent slug={dashboardId}>
+            <Component {...pageProps} />
+          </ProtectedComponent>
         </ThemeProvider>
       </SignedIn>
       <SignedOut>
