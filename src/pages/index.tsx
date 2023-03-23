@@ -1,5 +1,5 @@
 import { type NextPage } from "next";
-import { useUser } from "@clerk/nextjs";
+import { OrganizationSwitcher, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/router";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -25,7 +25,7 @@ const Home: NextPage = () => {
       void push(url).then(r => console.log(r));
     }
   } else if (user.organizationMemberships && user.organizationMemberships.length > 1) {
-    return <>Not supported yet...</>;
+    return <OrganizationSwitcher afterSwitchOrganizationUrl={"/"} hidePersonal={true}></OrganizationSwitcher>;
   }
   else {
     return (
