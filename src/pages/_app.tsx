@@ -17,24 +17,25 @@ import withDashboardChecker from "npm/components/Checker";
 import { useRouter } from "next/router";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
-  const [theme, setTheme] = useState("light")
+  const [theme, setTheme] = useState("light");
 
   const toggleTheme = () => {
-    theme == 'light' ? setTheme('dark') : setTheme('light')
-  }
+    theme == "light" ? setTheme("dark") : setTheme("light");
+  };
   const ProtectedComponent = withDashboardChecker()(Component);
-  const dashboardId = useRouter().query.dashboardId as string
+  const dashboardId = useRouter().query.dashboardId as string;
 
   return (
     <ClerkProvider {...pageProps} >
       <SignedIn>
-        <ThemeProvider theme={theme == 'light' ? lightTheme : darkTheme}>
+        <ThemeProvider theme={theme == "light" ? lightTheme : darkTheme}>
           <GlobalStyles />
-          <button onClick={toggleTheme}>{theme == 'light' ? <p>Switch to dark mode</p> : <p>Switch to light mode</p>}</button>
+          <button onClick={toggleTheme}>{theme == "light" ? <p>Switch to dark mode</p> :
+            <p>Switch to light mode</p>}</button>
           <UserButton />
-          <ProtectedComponent slug={dashboardId}>
-            <Component {...pageProps} />
-          </ProtectedComponent>
+            <ProtectedComponent slug={dashboardId}>
+              <Component {...pageProps} />
+            </ProtectedComponent>
         </ThemeProvider>
       </SignedIn>
       <SignedOut>

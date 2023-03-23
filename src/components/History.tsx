@@ -13,7 +13,17 @@ const History = (props: DashboardProps) => {
   });
   const playerMap = new Map<string, string>();
 
-  const org = useOrganization();
+  const [members, setMembers] = React.useState<OrganizationMembershipResource[]>([]);
+
+  const org = useOrganization().membership?.organization.getMemberships().then(
+    (members) => {
+      setMembers(members);
+    }
+  )
+
+  if(members.length === 0) {
+    return <div>Loading...</div>;
+  }
 
   if (org === undefined) {
     return <div>Not logged in</div>;
@@ -40,10 +50,8 @@ const History = (props: DashboardProps) => {
   }
 
   if (newVar.data !== undefined) {
-    const membership = org.membershipList as OrganizationMembershipResource[];
-
     // map by m.publicUserData.userId and populate the image_url on the player
-    membership.forEach((m) => {
+    members.forEach((m) => {
       playerMap.set(m.publicUserData.userId ?? "", m.publicUserData.profileImageUrl);
     });
 
