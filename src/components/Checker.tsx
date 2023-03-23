@@ -1,7 +1,8 @@
-import { OrganizationSwitcher, useUser } from "@clerk/nextjs";
+import { OrganizationSwitcher, useClerk, useOrganizations, useUser } from "@clerk/nextjs";
 import React, { type ReactNode } from "react";
 import { useRouter } from "next/router";
 import { useOrganizationContext } from "@clerk/shared";
+import { OrganizationMembershipResource } from "@clerk/types";
 
 interface Props {
   slug: string;
@@ -15,6 +16,12 @@ const withDashboardChecker = () => (
     const clerk = useUser();
     const path = useRouter();
     const org = useOrganizationContext();
+    const membership = useOrganizations();
+
+    console.log("clerk", clerk)
+    console.log("path", path)
+    console.log("org", org)
+    console.log("membership", membership)
 
     if (!clerk.user) {
       return <p>Not logged in!</p>;
