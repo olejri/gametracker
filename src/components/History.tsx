@@ -1,6 +1,8 @@
-import { type DashboardProps } from "npm/components/Types";
+import { type DashboardProps, type PlayerNicknameAndScore } from "npm/components/Types";
 import { api } from "npm/utils/api";
-import Image from "next/image";
+import { useOrganization } from "@clerk/nextjs";
+import { type OrganizationMembershipResource } from "@clerk/types";
+import React from "react";
 import dayjs from "dayjs";
 
 const History = (props: DashboardProps) => {
@@ -9,42 +11,190 @@ const History = (props: DashboardProps) => {
       groupId: props.groupName
     }
   });
+  const playerMap = new Map<string, string>();
+
+  const org = useOrganization();
+
+  if (org === undefined) {
+    return <div>Not logged in</div>;
+  }
+
+  if (org === null) {
+    return <div>Not part of an organization</div>;
+  }
+
+  function classNames(...classes: string[]) {
+    return classes.filter(Boolean).join(" ");
+  }
+
+  function sortPlayers(players: PlayerNicknameAndScore[]) {
+    return players.sort((a, b) => {
+      if (a.position > b.position) {
+        return 1;
+      }
+      if (a.position < b.position) {
+        return -1;
+      }
+      return 0;
+    });
+  }
 
   if (newVar.data !== undefined) {
+    const membership = org.membershipList as OrganizationMembershipResource[];
+
+    // map by m.publicUserData.userId and populate the image_url on the player
+    membership.forEach((m) => {
+      playerMap.set(m.publicUserData.userId ?? "", m.publicUserData.profileImageUrl);
+    });
+
+    // playerMap.set("user_2MeS9z7KY0pMJ4d8gmDxuctEge8", "https://images.clerk.dev/oauth_google/img_2MeSAE88XaY44DzDI7t6g7WUqKT.jpeg?width=80");
+
+
     return (
-      <div className="bg-white p-4 rounded-lg shadow">
-        {newVar.data.length === 0 && <p className="text-gray-500">No game history found</p>}
-        {newVar.data.length > 0 &&
-          newVar.data.map((session, i) => (
-            <div key={i} className="mt-4 border-b pb-4">
-              <p className="text-lg font-bold">{session.gameName}</p>
-              <p>Session played at: {dayjs(session.updatedAt).format("DD.MM.YYYY")}</p>
-              <p>Status: {session.status}</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-0">
-                <div className={""}>
-                  <Image src={session.image_url} alt="My Image" width={400} height={300} className="rounded-lg mt-4" />
-                </div>
-                {session.expansions.map((expansion, j) =>
-                <div className={""} key={j} >
-                  <Image src={expansion.image_url} alt="My Image" width={400} height={300} className="rounded-lg mt-4" />
-                </div>
-                )}
-                <div className={"order-last"}></div>
-              </div>
-              <ul className="mt-4">
-                {session.players.sort((a, b)=> a.position - b.position).map((player, j) => (
-                  <li key={j} className="flex items-center">
-                    <span className="font-bold">{player.nickname + " "}</span>: Score: {player.score} -
-                    Position: {player.position}
-                  </li>
+      <div className="px-4 sm:px-6 lg:px-14">
+        <div className="mt-8 flow-root">
+          <div className="-my-2 -mx-4 sm:-mx-6 lg:-mx-8">
+            <div className="inline-block min-w-full py-2 align-middle">
+              <table className="min-w-full border-separate border-spacing-0">
+                <thead>
+                <tr>
+                  <th
+                    scope="col"
+                    className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
+                  >
+                    Game
+                  </th>
+                  <th
+                    scope="col"
+                    className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
+                  >
+                    Players
+                  </th>
+                  <th
+                    scope="col"
+                    className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
+                  >
+                    Position
+                  </th>
+                  <th
+                    scope="col"
+                    className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
+                  >
+                    Score
+                  </th>
+                  <th
+                    scope="col"
+                    className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
+                  >
+                    Date
+                  </th>
+                  <th
+                    scope="col"
+                    className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
+                  >
+                    Location
+                  </th>
+                </tr>
+                </thead>
+                <tbody>
+                {newVar.data.map((game, gameIdx) => (
+                  <tr key={game.sessionId}>
+                    <td
+                      className={classNames(
+                        gameIdx !== newVar.data.length - 1 ? "border-b border-gray-300" : "",
+                        "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8"
+                      )}
+                    >
+                      <a href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
+                        {game.gameName}
+                      </a>
+                    </td>
+                    <td
+                      className={classNames(
+                        gameIdx !== newVar.data.length - 1 ? "border-b border-gray-300" : "",
+                        "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8"
+                      )}
+                    >
+                      <a href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
+                        <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
+                          <div className="flex -space-x-1 overflow-hidden">
+                            {sortPlayers(game.players).map((player) => (
+                              <img
+                                key={player.playerId}
+                                className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+                                src={playerMap.get(player.clerkId)}
+                                alt={player.nickname ?? player.playerId}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </a>
+                    </td>
+                    <td
+                      className={classNames(
+                        gameIdx !== newVar.data.length - 1 ? "border-b border-gray-300" : "",
+                        "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
+                      )}
+                    >
+                      <a href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
+                        <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
+                          <div className="flex -space-x-1 overflow-hidden">
+                            {sortPlayers(game.players).map((player) => (
+                              <p
+                                key={player.playerId}
+                                className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+                              >{player.position}</p>
+                            ))}
+                          </div>
+                        </div>
+                      </a>
+                    </td>
+                    <td
+                      className={classNames(
+                        gameIdx !== newVar.data.length - 1 ? "border-b border-gray-300" : "",
+                        "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
+                      )}
+                    >
+                      <a href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
+                        <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
+                          <div className="flex -space-x-1 overflow-visible">
+                            {sortPlayers(game.players).map((player) => (
+                              <p
+                                key={player.playerId}
+                                className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+                              >{player.score}</p>
+                            ))}
+                          </div>
+                        </div>
+                      </a>
+                    </td>
+                    <td
+                      className={classNames(
+                        gameIdx !== newVar.data.length - 1 ? "border-b border-gray-300" : "",
+                        "whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                      )}
+                    >
+                      <a href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
+                        {dayjs(game.updatedAt).format("DD.MM.YYYY")}
+                      </a>
+                    </td>
+                    <td
+                      className={classNames(
+                        gameIdx !== newVar.data.length - 1 ? "border-b border-gray-300" : "",
+                        "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
+                      )}
+                    >
+                      <a href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
+                        {"???"}
+                      </a>
+                    </td>
+                  </tr>
                 ))}
-              </ul>
-              <div>
-                <p className="text-lg font-bold">Additional info:</p>
-                <textarea className="">{session.description}</textarea>
-              </div>
+                </tbody>
+              </table>
             </div>
-          ))}
+          </div>
+        </div>
       </div>
     );
   } else {
