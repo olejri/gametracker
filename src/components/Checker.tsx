@@ -20,7 +20,7 @@ const withDashboardChecker = () => (
       return <p>Not logged in!</p>;
     }
 
-    if(org.organization === null) {
+    if(org.organization === null || org.organization === undefined) {
       return <OrganizationSwitcher/>
     }
 
