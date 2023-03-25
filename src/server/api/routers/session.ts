@@ -13,87 +13,81 @@ export const sessionRouter = createTRPCRouter({
         data: z.object({
           groupId: z.string()
         })
-        })
+      })
     )
     .query(async ({ ctx, input }) => {
-        try {
-          const playerMap = new Map<string, Player>();
-          const gameMap = new Map<string, Game>();
-          const players = await ctx.prisma.player.findMany({
-            where: {
-              groupId: input.data.groupId
-            },
-          });
+        const playerMap = new Map<string, Player>();
+        const gameMap = new Map<string, Game>();
+        const players = await ctx.prisma.player.findMany({
+          where: {
+            groupId: input.data.groupId
+          }
+        });
 
-          const gameInfo = await ctx.prisma.game.findMany();
+        const gameInfo = await ctx.prisma.game.findMany();
 
-          //make a map that has the player id as the key and the player object as the value
-          players.forEach((player) => {
-            playerMap.set(player.id, player);
-          });
+        //make a map that has the player id as the key and the player object as the value
+        players.forEach((player) => {
+          playerMap.set(player.id, player);
+        });
 
-          gameInfo.forEach((game) => {
-            gameMap.set(game.id, game);
-          });
+        gameInfo.forEach((game) => {
+          gameMap.set(game.id, game);
+        });
 
-          const sessions = await ctx.prisma.gameSession.findMany({
-            where: {
-              groupId: input.data.groupId
-            },
-            include: {
-              PlayerGameSessionJunction: true,
-              GameSessionGameJunction: true
-            },
-            orderBy: {
-              createdAt: "desc",
-            }
-          });
+        const sessions = await ctx.prisma.gameSession.findMany({
+          where: {
+            groupId: input.data.groupId
+          },
+          include: {
+            PlayerGameSessionJunction: true,
+            GameSessionGameJunction: true
+          },
+          orderBy: {
+            createdAt: "desc"
+          }
+        });
 
-          const usersWithImages = (
-            await clerkClient.users.getUserList({
-              userId: players.map((player) => player.clerkId),
-              limit: 110,
-            })
-          ).map(filterUserForClient);
+        const usersWithImages = (
+          await clerkClient.users.getUserList({
+            userId: players.map((player) => player.clerkId),
+            limit: 110
+          })
+        ).map(filterUserForClient);
 
-          return sessions.map((session) => {
-            const playerGameSessions = session.PlayerGameSessionJunction;
-            // Map over each playerGameSession to extract player information
-            const players = playerGameSessions.map((playerGameSession) => ({
-              nickname: playerMap.get(playerGameSession.playerId)?.nickname ?? "",
-              clerkId: playerMap.get(playerGameSession.playerId)?.clerkId ?? "",
-              score: playerGameSession.score ?? "",
-              position: playerGameSession.position ?? 0,
-              playerId: playerGameSession.playerId,
-              profileImageUrl: usersWithImages.find((user) => user.id === playerMap.get(playerGameSession.playerId)?.clerkId)?.profileImageUrl ?? "",
-            }));
-            // Map over each gameSessionGame to extract game information
-            const expansions = session.GameSessionGameJunction.map((gameSessionGame) => ({
-              gameName: gameMap.get(gameSessionGame.gameId)?.name ?? "",
-              image_url: gameMap.get(gameSessionGame.gameId)?.image_url ?? "",
-              gameId: gameSessionGame.gameId
+        return sessions.map((session) => {
+          const playerGameSessions = session.PlayerGameSessionJunction;
+          // Map over each playerGameSession to extract player information
+          const players = playerGameSessions.map((playerGameSession) => ({
+            nickname: playerMap.get(playerGameSession.playerId)?.nickname ?? "",
+            clerkId: playerMap.get(playerGameSession.playerId)?.clerkId ?? "",
+            score: playerGameSession.score ?? "",
+            position: playerGameSession.position ?? 0,
+            playerId: playerGameSession.playerId,
+            profileImageUrl: usersWithImages.find((user) => user.id === playerMap.get(playerGameSession.playerId)?.clerkId)?.profileImageUrl ?? ""
+          }));
+          // Map over each gameSessionGame to extract game information
+          const expansions = session.GameSessionGameJunction.map((gameSessionGame) => ({
+            gameName: gameMap.get(gameSessionGame.gameId)?.name ?? "",
+            image_url: gameMap.get(gameSessionGame.gameId)?.image_url ?? "",
+            gameId: gameSessionGame.gameId
 
-            }));
-            const gameSessionWithoutPlayers: GameSessionWithPlayers = {
-              gameName: gameMap.get(session.gameId)?.name ?? "",
-              image_url: gameMap.get(session.gameId)?.image_url ?? "",
-              updatedAt: session.updatedAt,
-              sessionId: session.id,
-              players: players,
-              expansions: expansions,
-              description: session.description ?? "",
-              status: session.status ?? "",
-              baseGameId: session.gameId,
-              groupId: session.groupId
-            }
-            // Return a new object that includes players and their scores and positions
-            return gameSessionWithoutPlayers;
-          });
-        } catch (err) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-          });
-        }
+          }));
+          const gameSessionWithoutPlayers: GameSessionWithPlayers = {
+            gameName: gameMap.get(session.gameId)?.name ?? "",
+            image_url: gameMap.get(session.gameId)?.image_url ?? "",
+            updatedAt: session.updatedAt,
+            sessionId: session.id,
+            players: players,
+            expansions: expansions,
+            description: session.description ?? "",
+            status: session.status ?? "",
+            baseGameId: session.gameId,
+            groupId: session.groupId
+          };
+          // Return a new object that includes players and their scores and positions
+          return gameSessionWithoutPlayers;
+        });
       }
     ),
   addACompletedSession: publicProcedure
@@ -155,7 +149,7 @@ export const sessionRouter = createTRPCRouter({
             status: input.data.status,
             description: input.data.description,
             createdAt: input.data.createdAt,
-            updatedAt: input.data.updatedAt,
+            updatedAt: input.data.updatedAt
           }
         });
 
@@ -212,22 +206,22 @@ export const sessionRouter = createTRPCRouter({
         })
       })
     ).query(async ({ ctx, input }) => {
-        const session = await ctx.prisma.gameSession.findUnique({
-          where: {
-            id: input.data.id
-          },
-          include: {
-            PlayerGameSessionJunction: true,
-            GameSessionGameJunction: true
-          },
-        });
+      const session = await ctx.prisma.gameSession.findUnique({
+        where: {
+          id: input.data.id
+        },
+        include: {
+          PlayerGameSessionJunction: true,
+          GameSessionGameJunction: true
+        }
+      });
       if (session === null || session === undefined) {
         return { data: null };
       }
 
       const playerMap = new Map<string, Player>();
       const playerIds = session.PlayerGameSessionJunction.map((playerGameSession) => {
-        return playerGameSession.playerId
+        return playerGameSession.playerId;
       });
 
       await ctx.prisma.player.findMany({
@@ -269,7 +263,9 @@ export const sessionRouter = createTRPCRouter({
       await ctx.prisma.game.findMany({
         where: {
           id: {
-            in: session.GameSessionGameJunction.map((gameSessionGame) => {  return gameSessionGame.gameId })
+            in: session.GameSessionGameJunction.map((gameSessionGame) => {
+              return gameSessionGame.gameId;
+            })
           }
         }
       }).then((games) => {
@@ -296,8 +292,8 @@ export const sessionRouter = createTRPCRouter({
         status: session.status ?? "",
         baseGameId: session.gameId,
         groupId: session.groupId
-      }
+      };
       // Return a new object that includes players and their scores and positions
       return { data: gameSessionWithoutPlayers };
-    }),
+    })
 });
