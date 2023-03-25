@@ -1,24 +1,23 @@
-import { createTRPCRouter, publicProcedure } from "npm/server/api/trpc";
+import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { clerkClient } from "@clerk/nextjs/server"
 import { z } from "zod";
 import { filterUserForClient } from "npm/server/api/helpers/filterUserForClient";
 
 export const playerRouter = createTRPCRouter({
-  addPlayer: publicProcedure
+  addPlayer: privateProcedure
     .input(
       z.object({
         name: z.string(),
-        clerkId: z.string(),
         groupId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
       const player = await ctx.prisma.player.upsert({
         where: {
-          clerkId: input.clerkId
+          clerkId: ctx.userId
         },
         create: {
           name: input.name,
-          clerkId: input.clerkId,
+          clerkId: ctx.userId,
           groupId: input.groupId
         },
         update: {

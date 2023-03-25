@@ -6,7 +6,7 @@ import Link from "next/link";
 import { LoadingPage } from "npm/components/loading";
 
 const History = (props: DashboardProps) => {
-  const { data, isLoading } = api.session.getAllCompletedSessions.useQuery({
+  const { data, isLoading, isError } = api.session.getAllCompletedSessions.useQuery({
     data: {
       groupId: props.groupName
     }
@@ -20,7 +20,9 @@ const History = (props: DashboardProps) => {
     );
   }
 
-  if (!data) return <div>Something went wrong</div>;
+  if (isError) {
+    return <div></div>
+  }
 
   function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(" ");

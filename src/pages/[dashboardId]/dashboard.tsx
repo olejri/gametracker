@@ -1,4 +1,4 @@
-import Dashboard from "npm/components/Dashboard2";
+import Dashboard from "npm/components/Dashboard";
 import { useRouter } from "next/router";
 
 const UserProfilePage = () => {

@@ -8,16 +8,16 @@ export const groupRouter = createTRPCRouter({
         id: z.string(),
       })
     ).mutation(async ({ ctx, input }) => {
-      let group = await ctx.prisma.gameGroup.findUnique({
-        where: { id: input.id },
+      const group = await ctx.prisma.gameGroup.upsert({
+        where: { 
+          id: input.id 
+        },
+        create : {
+          id: input.id,
+        }, update : {
+          id: input.id,
+        }
       });
-      if (!group) {
-        group = await ctx.prisma.gameGroup.create({
-          data: {
-            id: input.id,
-          },
-        });
-      }
       return { data: group };
     }),
 });

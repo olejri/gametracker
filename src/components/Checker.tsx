@@ -17,8 +17,14 @@ const withDashboardChecker = () => (
     if (!clerk.user) {
       return <p>Not logged in!</p>;
     }
+    //dev mode
+    if (location.hostname === "localhost") {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      return <WrappedComponent {...props} />;
+    }
 
-    const slugs = clerk.user?.organizationMemberships?.map((org) => org.organization.slug ?? "")
+    const slugs = clerk.user?.organizationMemberships?.map((org) => org.organization.slug ?? "");
     if (!slugs.includes(props.slug) && path.pathname !== "/") {
       return <p>Welcome to Game Tracker. Please ask for an invitation to access the dashboard for your group.</p>;
     }

@@ -8,35 +8,27 @@ import {
 } from "@clerk/nextjs";
 
 import { api } from "npm/utils/api";
-
 import "npm/styles/globals.css";
-import { ThemeProvider } from "styled-components";
-import { useState } from "react";
-import { darkTheme, GlobalStyles, lightTheme } from "npm/styles/ThemeConfig";
 import withDashboardChecker from "npm/components/Checker";
 import { useRouter } from "next/router";
+import Head from "next/head";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
-  const [theme, setTheme] = useState("light");
-
-  const toggleTheme = () => {
-    theme == "light" ? setTheme("dark") : setTheme("light");
-  };
   const ProtectedComponent = withDashboardChecker()(Component);
   const dashboardId = useRouter().query.dashboardId as string;
 
   return (
     <ClerkProvider {...pageProps} >
       <SignedIn>
-        <ThemeProvider theme={theme == "light" ? lightTheme : darkTheme}>
-          <GlobalStyles />
-          <button onClick={toggleTheme}>{theme == "light" ? <p>Switch to dark mode</p> :
-            <p>Switch to light mode</p>}</button>
-          <UserButton />
-            <ProtectedComponent slug={dashboardId}>
-              <Component {...pageProps} />
-            </ProtectedComponent>
-        </ThemeProvider>
+        <UserButton />
+        <ProtectedComponent slug={dashboardId}>
+          <Head>
+            <title>Game Tracker</title>
+            <meta name="description" content="Game Tracker" />
+            <link rel="icon" href="/favicon.ico" />
+          </Head>
+          <Component {...pageProps} />
+        </ProtectedComponent>
       </SignedIn>
       <SignedOut>
         <SignInButton mode="modal">

@@ -26,8 +26,13 @@ const GameSearch = () => {
   const [baseGameId, setBaseGameId] = useState<string>();
 
   const { data: collections } = api.game.getAllGames.useQuery();
-  const mutation = api.game.addGame.useMutation();
+  const ctx = api.useContext()
 
+  const mutation = api.game.addGame.useMutation({
+    onSuccess: () => {
+      void ctx.game.getAllGames.invalidate();
+    }
+  });
 
   function search(searchName: string, mechanic: string, category: string) {
     if (searchName.length === 0 && category.length === 0 && mechanic.length > 0) {
