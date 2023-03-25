@@ -109,7 +109,6 @@ export const sessionRouter = createTRPCRouter({
         })
       })
     ).mutation(async ({ ctx, input }) => {
-      try {
         const foundGame = await ctx.prisma.game.findUnique({
           where: {
             name: input.data.gameName
@@ -117,7 +116,10 @@ export const sessionRouter = createTRPCRouter({
         });
 
         if (foundGame === null) {
-          throw new Error(`Game ${input.data.gameName} does not exist`);
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Game ${input.data.gameName} does not exist`
+          });
         }
 
         const foundGroup = await ctx.prisma.gameGroup.findUnique({
@@ -193,10 +195,6 @@ export const sessionRouter = createTRPCRouter({
           });
         }
         return { session };
-      } catch (err) {
-        const err1 = err as Error;
-        throw new Error(`Failed to create session: ${err1.message}`);
-      }
     }),
   getGameASession: publicProcedure
     .input(
