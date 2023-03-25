@@ -1,6 +1,8 @@
 import { type GameSessionProps } from "npm/components/Types";
 import { api } from "npm/utils/api";
 import Image from "next/image";
+import { LoadingPage } from "npm/components/loading";
+import React from "react";
 
 const GameSession = (props: GameSessionProps) => {
   const getPlayers = api.player.getPlayers.useQuery({
@@ -52,7 +54,11 @@ const GameSession = (props: GameSessionProps) => {
       </div>
     );
   } else {
-    return <div className="text-center mt-4">Loading...</div>;
+    return (
+      <div className="flex grow">
+        <LoadingPage />
+      </div>
+    );
   }
 };
 export default GameSession;

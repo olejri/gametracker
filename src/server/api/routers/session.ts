@@ -2,6 +2,9 @@ import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "npm/server/api/trpc";
 import { type Game, type GameSessionWithPlayers, type Player } from "npm/components/Types";
+import { clerkClient } from "@clerk/nextjs/server";
+import { TRPCError } from "@trpc/server";
+import { filterUserForClient } from "npm/server/api/helpers/filterUserForClient";
 
 export const sessionRouter = createTRPCRouter({
   getAllCompletedSessions: publicProcedure
@@ -46,6 +49,13 @@ export const sessionRouter = createTRPCRouter({
             }
           });
 
+          const usersWithImages = (
+            await clerkClient.users.getUserList({
+              userId: players.map((player) => player.clerkId),
+              limit: 110,
+            })
+          ).map(filterUserForClient);
+
           return sessions.map((session) => {
             const playerGameSessions = session.PlayerGameSessionJunction;
             // Map over each playerGameSession to extract player information
@@ -54,7 +64,8 @@ export const sessionRouter = createTRPCRouter({
               clerkId: playerMap.get(playerGameSession.playerId)?.clerkId ?? "",
               score: playerGameSession.score ?? "",
               position: playerGameSession.position ?? 0,
-              playerId: playerGameSession.playerId
+              playerId: playerGameSession.playerId,
+              profileImageUrl: usersWithImages.find((user) => user.id === playerMap.get(playerGameSession.playerId)?.clerkId)?.profileImageUrl ?? "",
             }));
             // Map over each gameSessionGame to extract game information
             const expansions = session.GameSessionGameJunction.map((gameSessionGame) => ({
@@ -79,8 +90,9 @@ export const sessionRouter = createTRPCRouter({
             return gameSessionWithoutPlayers;
           });
         } catch (err) {
-          const err1 = err as Error;
-          throw new Error(`Failed to get games: ${err1.message}`);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+          });
         }
       }
     ),
@@ -237,7 +249,8 @@ export const sessionRouter = createTRPCRouter({
         clerkId: playerMap.get(playerGameSession.playerId)?.clerkId ?? "",
         score: playerGameSession.score ?? "",
         position: playerGameSession.position ?? 0,
-        playerId: playerGameSession.playerId
+        playerId: playerGameSession.playerId,
+        profileImageUrl: ""
       }));
 
       const gameMap = new Map<string, Game>();

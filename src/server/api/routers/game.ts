@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "npm/server/api/trpc";
+import { TRPCError } from "@trpc/server";
+import useFetch from "npm/lib/FetchFromAtlas";
+import type { Mechanic, MechanicsResponse } from "npm/components/Types";
 
 export const gameRouter = createTRPCRouter({
   addGame: publicProcedure
@@ -32,13 +35,20 @@ export const gameRouter = createTRPCRouter({
       }
 
       if(input.data.isExpansion && baseGame === null) {
-        throw new Error(`Failed to create game: baseGameId is required for expansions`);
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Failed to create game: baseGameId is required for expansions`
+        });
       }
 
       if(input.data.baseGameId && baseGame === null) {
-        throw new Error(`Failed to create game: baseGame ${input.data.baseGameId} not found`);
+        throw new TRPCError(
+          {
+            code: 'BAD_REQUEST',
+            message: `Failed to create game: baseGameId ${input.data.baseGameId} does not exist`
+          }
+        );
       }
-
       try {
         const game = await ctx.prisma.game.create({
           data: input.data

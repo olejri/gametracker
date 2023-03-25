@@ -1,8 +1,6 @@
-import { OrganizationSwitcher, useClerk, useOrganizations, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import React, { type ReactNode } from "react";
 import { useRouter } from "next/router";
-import { useOrganizationContext } from "@clerk/shared";
-import { OrganizationMembershipResource } from "@clerk/types";
 
 interface Props {
   slug: string;
@@ -15,25 +13,14 @@ const withDashboardChecker = () => (
   const DashboardCheckerWrapper = (props: Props) => {
     const clerk = useUser();
     const path = useRouter();
-    const org = useOrganizationContext();
-    const membership = useOrganizations();
-
-    console.log("clerk", clerk)
-    console.log("path", path)
-    console.log("org", org)
-    console.log("membership", membership)
 
     if (!clerk.user) {
       return <p>Not logged in!</p>;
     }
 
-    if(org.organization === null || org.organization === undefined) {
-      return <OrganizationSwitcher/>
-    }
-
     const slugs = clerk.user?.organizationMemberships?.map((org) => org.organization.slug ?? "")
     if (!slugs.includes(props.slug) && path.pathname !== "/") {
-      return <p>Ask admin for an invite! :D</p>;
+      return <p>Welcome to Game Tracker. Please ask for an invitation to access the dashboard for your group.</p>;
     }
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

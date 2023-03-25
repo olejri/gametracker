@@ -1,5 +1,5 @@
 import useFetch from "npm/lib/FetchFromAtlas";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   type AtlasResponse,
   type CategoriesResponse,
@@ -9,6 +9,7 @@ import {
 import Image from "next/image";
 import { api } from "npm/utils/api";
 import { useRouter } from "next/navigation";
+import { LoadingPage } from "npm/components/loading";
 
 
 const GameSearch = () => {
@@ -48,7 +49,11 @@ const GameSearch = () => {
 
   const { data, error, loading } = useFetch<AtlasResponse>(url);
   if (error || mechanicsError || categoriesError) return <p>There is an error.</p>;
-  if (!mechanicsData || !categoriesData || loading || !collections) return <p>Loading...</p>;
+  if (!mechanicsData || !categoriesData || loading || !collections) return (
+    <div className="flex grow">
+      <LoadingPage />
+    </div>
+  );
 
   if (!data) return (
     <div>

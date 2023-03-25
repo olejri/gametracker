@@ -1,6 +1,7 @@
 import { createTRPCRouter, publicProcedure } from "npm/server/api/trpc";
+import { clerkClient } from "@clerk/nextjs/server"
 import { z } from "zod";
-import { Player } from "npm/components/Types";
+import { filterUserForClient } from "npm/server/api/helpers/filterUserForClient";
 
 export const playerRouter = createTRPCRouter({
   addPlayer: publicProcedure
@@ -11,8 +12,19 @@ export const playerRouter = createTRPCRouter({
         groupId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
-      const player = await ctx.prisma.player.create({
-        data: input
+      const player = await ctx.prisma.player.upsert({
+        where: {
+          clerkId: input.clerkId
+        },
+        create: {
+          name: input.name,
+          clerkId: input.clerkId,
+          groupId: input.groupId
+        },
+        update: {
+          name: input.name,
+          groupId: input.groupId
+        }
       });
       return {
         data: player
@@ -41,13 +53,26 @@ export const playerRouter = createTRPCRouter({
         groupId: z.string()
       })
     ).query(async ({ ctx, input }) => {
-      const newVar = await ctx.prisma.player.findMany({
+      const players = await ctx.prisma.player.findMany({
         where: {
           groupId: input.groupId
         }
       });
+      const users = (
+        await clerkClient.users.getUserList({
+        userId: players.map((player) => player.clerkId),
+        limit: 100
+      })
+      ).map((user) => filterUserForClient(user));
+
       return {
-        data: newVar
-      }
+        data: players.map((player) => {
+          const user = users.find((user) => user.id === player.clerkId);
+          return {
+            ...player,
+            profileImageUrl: user?.profileImageUrl ?? ""
+          };
+        })
+      };
     })
 });

@@ -99,6 +99,7 @@ export type PlayerNicknameAndScore = {
     position: number;
     score: string;
     playerId: string;
+    profileImageUrl: string;
 };
 
 export type Expansions = {

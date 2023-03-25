@@ -1,7 +1,8 @@
 import { api } from "npm/utils/api";
 import Image from "next/image";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { LoadingPage } from "npm/components/loading";
 
 const GameCollections = () => {
   const router = useRouter();
@@ -20,8 +21,11 @@ const GameCollections = () => {
     return description.substring(0, 300) + " ...";
   };
 
-
-  if (!data) return <p>Loading...</p>;
+  if (!data) return (
+    <div className="flex grow">
+      <LoadingPage />
+    </div>
+  );
 
   const games = data.games;
 

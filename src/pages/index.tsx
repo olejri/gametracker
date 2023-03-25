@@ -22,7 +22,7 @@ const Home: NextPage = () => {
     const url = `${slug}/dashboard/`;
 
     if (pathname == "/") {
-      void push(url).then(r => console.log(r));
+      void push(url);
     }
   } else if (user.organizationMemberships && user.organizationMemberships.length > 1) {
     return <OrganizationSwitcher afterSwitchOrganizationUrl={"/"} hidePersonal={true}></OrganizationSwitcher>;
