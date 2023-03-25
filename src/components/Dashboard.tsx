@@ -18,7 +18,7 @@ const actions = (groupName: string) => {
   {
     title: 'Start a new game',
     message: 'Choose a game start a session with your friends',
-    href: '#',
+    href: '/'+groupName+'/session/create',
     icon: PlayIcon,
     iconForeground: 'text-sky-700',
     iconBackground: 'bg-sky-50',

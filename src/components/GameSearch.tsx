@@ -111,7 +111,7 @@ const GameSearch = () => {
   }) as unknown as AtlasGame[];
 
   const isGameInCollection = (game: AtlasGame) => {
-    return collections.games.some((collection) => collection.name === game.name);
+    return collections.some((collection) => collection.name === game.name);
   }
 
   const isGameAnExpansion = (game: AtlasGame) => {
@@ -193,7 +193,7 @@ const GameSearch = () => {
                           }}
                         >
                           <option value="">Select base game</option>
-                          {collections.games.map((game) => (
+                          {collections.map((game) => (
                             <option key={game.id} value={game.id}>
                               {game.name ?? "Unnamed mechanic"}
                             </option>

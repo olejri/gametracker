@@ -4,6 +4,7 @@ import React from "react";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { LoadingPage } from "npm/components/loading";
+import Image from 'next/image'
 
 const History = (props: DashboardProps) => {
   const { data, isLoading, isError } = api.session.getAllCompletedSessions.useQuery({
@@ -109,7 +110,9 @@ const History = (props: DashboardProps) => {
                       <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
                         <div className="flex -space-x-1 overflow-hidden">
                           {sortPlayers(game.players).map((player) => (
-                            <img
+                            <Image
+                              width={300}
+                              height={300}
                               key={player.playerId}
                               className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
                               src={player.profileImageUrl}

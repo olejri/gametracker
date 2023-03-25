@@ -2,8 +2,6 @@ import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "npm/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import useFetch from "npm/lib/FetchFromAtlas";
-import type { Mechanic, MechanicsResponse } from "npm/components/Types";
 
 export const gameRouter = createTRPCRouter({
   addGame: publicProcedure
@@ -61,14 +59,20 @@ export const gameRouter = createTRPCRouter({
     }),
 
   getAllGames: publicProcedure
-    .query(async ({ ctx }) => {
-        try {
-          const games = await ctx.prisma.game.findMany();
-          return { games };
-        } catch (err) {
-          const err1 = err as Error;
-          throw new Error(`Failed to get games: ${err1.message}`);
-        }
-      }
+    .input(
+      z.object({
+        withExpansions: z.boolean().optional()
+      }).optional()
     )
+    .query(async ({ ctx, input }) => {
+      if(input?.withExpansions === undefined)  {
+        return await ctx.prisma.game.findMany();
+      } else {
+        return await ctx.prisma.game.findMany({
+          where: {
+            isExpansion: input.withExpansions
+          }
+        });
+      }
+    }),
 });

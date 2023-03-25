@@ -27,8 +27,6 @@ const GameCollections = () => {
     </div>
   );
 
-  const games = data.games;
-
   return (
     <div>
       <div>
@@ -52,7 +50,7 @@ const GameCollections = () => {
           </tr>
           </thead>
           <tbody>
-          {games.map((game) => (
+          {data.map((game) => (
             <tr key={game.name} className="hover:bg-gray-50">
               <td className="py-2 px-4 border border-gray-300 text-left">
                 {game.name}

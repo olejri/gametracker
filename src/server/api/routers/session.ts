@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "npm/server/api/trpc";
+import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { type Game, type GameSessionWithPlayers, type Player } from "npm/components/Types";
 import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
@@ -23,14 +23,12 @@ export const sessionRouter = createTRPCRouter({
             groupId: input.data.groupId
           }
         });
-
         const gameInfo = await ctx.prisma.game.findMany();
 
         //make a map that has the player id as the key and the player object as the value
         players.forEach((player) => {
           playerMap.set(player.id, player);
         });
-
         gameInfo.forEach((game) => {
           gameMap.set(game.id, game);
         });
@@ -109,92 +107,92 @@ export const sessionRouter = createTRPCRouter({
         })
       })
     ).mutation(async ({ ctx, input }) => {
-        const foundGame = await ctx.prisma.game.findUnique({
+      const foundGame = await ctx.prisma.game.findUnique({
+        where: {
+          name: input.data.gameName
+        }
+      });
+
+      if (foundGame === null) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Game ${input.data.gameName} does not exist`
+        });
+      }
+
+      const foundGroup = await ctx.prisma.gameGroup.findUnique({
+        where: {
+          id: input.data.groupId
+        }
+      });
+
+      if (foundGroup === null) {
+        throw new Error(`GameGroup ${input.data.groupId} does not exist`);
+      }
+
+      for (const player of input.data.players) {
+        const foundPlayer = await ctx.prisma.player.findUnique({
           where: {
-            name: input.data.gameName
+            id: player.playerId
           }
         });
 
-        if (foundGame === null) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `Game ${input.data.gameName} does not exist`
-          });
+        if (foundPlayer === null) {
+          throw new Error(`Player ${player.playerId} does not exist`);
         }
+      }
 
-        const foundGroup = await ctx.prisma.gameGroup.findUnique({
+      const session = await ctx.prisma.gameSession.create({
+        data: {
+          gameId: foundGame.id,
+          groupId: input.data.groupId,
+          status: input.data.status,
+          description: input.data.description,
+          createdAt: input.data.createdAt,
+          updatedAt: input.data.updatedAt
+        }
+      });
+
+      for (const player of input.data.players) {
+        const foundPlayer = await ctx.prisma.player.findUnique({
           where: {
-            id: input.data.groupId
+            id: player.playerId
           }
         });
 
-        if (foundGroup === null) {
-          throw new Error(`GameGroup ${input.data.groupId} does not exist`);
+        if (foundPlayer === null) {
+          throw new Error(`Player ${player.playerId} does not exist`);
         }
 
-        for (const player of input.data.players) {
-          const foundPlayer = await ctx.prisma.player.findUnique({
-            where: {
-              id: player.playerId
-            }
-          });
-
-          if (foundPlayer === null) {
-            throw new Error(`Player ${player.playerId} does not exist`);
-          }
-        }
-
-        const session = await ctx.prisma.gameSession.create({
+        await ctx.prisma.playerGameSessionJunction.create({
           data: {
-            gameId: foundGame.id,
-            groupId: input.data.groupId,
-            status: input.data.status,
-            description: input.data.description,
-            createdAt: input.data.createdAt,
-            updatedAt: input.data.updatedAt
+            playerId: foundPlayer.id,
+            gameSessionId: session.id,
+            position: player.position,
+            score: player.score
+          }
+        });
+      }
+
+      for (const expansionName of input.data.expansionNames ?? []) {
+        const foundExpansion = await ctx.prisma.game.findUnique({
+          where: {
+            name: expansionName
           }
         });
 
-        for (const player of input.data.players) {
-          const foundPlayer = await ctx.prisma.player.findUnique({
-            where: {
-              id: player.playerId
-            }
-          });
-
-          if (foundPlayer === null) {
-            throw new Error(`Player ${player.playerId} does not exist`);
-          }
-
-          await ctx.prisma.playerGameSessionJunction.create({
-            data: {
-              playerId: foundPlayer.id,
-              gameSessionId: session.id,
-              position: player.position,
-              score: player.score
-            }
-          });
+        if (foundExpansion === null) {
+          throw new Error(`Expansion ${expansionName} does not exist`);
         }
 
-        for (const expansionName of input.data.expansionNames ?? []) {
-          const foundExpansion = await ctx.prisma.game.findUnique({
-            where: {
-              name: expansionName
-            }
-          });
-
-          if (foundExpansion === null) {
-            throw new Error(`Expansion ${expansionName} does not exist`);
+        await ctx.prisma.gameSessionGameJunction.create({
+          data: {
+            gameId: foundExpansion.id,
+            gameSessionId: session.id
           }
-
-          await ctx.prisma.gameSessionGameJunction.create({
-            data: {
-              gameId: foundExpansion.id,
-              gameSessionId: session.id
-            }
-          });
-        }
-        return { session };
+        });
+      }
+      return { session };
     }),
   getGameASession: publicProcedure
     .input(
@@ -293,5 +291,180 @@ export const sessionRouter = createTRPCRouter({
       };
       // Return a new object that includes players and their scores and positions
       return { data: gameSessionWithoutPlayers };
+    }),
+
+  startANewGameSession: privateProcedure
+    .input(
+      z.object({
+        gameId: z.string(),
+        groupId: z.string(),
+        players: z.array(z.string()),
+        expansions: z.array(z.string())
+      })
+    ).mutation(async ({ ctx, input }) => {
+
+      const foundGame = await ctx.prisma.game.findUnique({
+        where: {
+          id: input.gameId
+        }
+      });
+
+      if (foundGame === null) {
+        throw new TRPCError(
+          {
+            code: "BAD_REQUEST",
+            message: "Game does not exist"
+          }
+        );
+      }
+      const session = await ctx.prisma.gameSession.create({
+        data: {
+          gameId: input.gameId,
+          groupId: input.groupId,
+          status: "Ongoing"
+        }
+      });
+
+      for (const playerId of input.players) {
+        const foundPlayer = await ctx.prisma.player.findUnique({
+          where: {
+            id: playerId
+          }
+        });
+
+        if (foundPlayer === null) {
+          throw new Error(`Player ${playerId} does not exist`);
+        }
+
+        await ctx.prisma.playerGameSessionJunction.create({
+          data: {
+            playerId: foundPlayer.id,
+            gameSessionId: session.id,
+          }
+        });
+      }
+
+      for (const expansionId of input.expansions) {
+        const foundExpansion = await ctx.prisma.game.findUnique({
+          where: {
+            id: expansionId
+          }
+        });
+
+        if (foundExpansion === null) {
+          throw new TRPCError(
+            {
+              code: "BAD_REQUEST",
+              message: `Expansion with ${expansionId} does not exist`
+            })
+        }
+
+        await ctx.prisma.gameSessionGameJunction.create({
+          data: {
+            gameId: foundExpansion.id,
+            gameSessionId: session.id
+          }
+        });
+      }
+      return session;
+    }),
+
+  updateGameSession: privateProcedure
+    .input(
+      z.object({
+        gameSessionId: z.string(),
+        status: z.enum(["Ongoing", "Completed", "Canceled"]),
+        description: z.string().optional(),
+        players: z.array(
+          z.object({
+            playerId: z.string(),
+            score: z.string().optional(),
+            position: z.number().optional()
+          })
+        ).optional(),
+        expansions: z.array(
+          z.object({
+            gameId: z.string()
+          })
+        ).optional()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      await ctx.prisma.gameSession.update({
+        where: {
+          id: input.gameSessionId
+        },
+        data: {
+          status: input.status,
+          description: input.description
+        }
+      });
+
+      //old state
+      const playersOldState = await ctx.prisma.playerGameSessionJunction.findMany({
+        where: {
+          gameSessionId: input.gameSessionId
+        }
+      });
+
+      //delete players that are not in the new state
+      const playersToDelete = playersOldState.filter((player) => {
+        return !input.players?.find((playerNew) => playerNew.playerId === player.playerId);
+      });
+
+      await ctx.prisma.playerGameSessionJunction.deleteMany({
+        where: {
+          id: {
+            in: playersToDelete.map((player) => player.id)
+          }
+        }
+      });
+
+
+      input.players?.map((async (player) => {
+        await ctx.prisma.playerGameSessionJunction.upsert({
+          create: {
+            gameSessionId: input.gameSessionId,
+            playerId: player.playerId,
+            score: player.score,
+            position: player.position
+          }, update: {
+            score: player.score,
+            position: player.position
+          },
+          where: {
+            id: player.playerId
+          }
+        });
+      }));
+
+      //old expansions state
+      const expansionsOldState = await ctx.prisma.gameSessionGameJunction.findMany({
+        where: {
+          gameSessionId: input.gameSessionId
+        }
+      });
+
+      //delete expansions that are not in the new state
+      const expansionsToDelete = expansionsOldState.filter((expansion) => {
+        return !input.expansions?.find((expansionNew) => expansionNew.gameId === expansion.gameId);
+      });
+
+      await ctx.prisma.gameSessionGameJunction.deleteMany({
+        where: {
+          id: {
+            in: expansionsToDelete.map((expansion) => expansion.id)
+          }
+        }
+      });
+
+      //add new expansions
+      input.expansions?.map((async (expansion) => {
+        await ctx.prisma.gameSessionGameJunction.create({
+          data: {
+            gameSessionId: input.gameSessionId,
+            gameId: expansion.gameId
+          }
+        });
+      }));
     })
 });
