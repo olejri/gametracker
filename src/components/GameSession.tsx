@@ -47,6 +47,7 @@ const GameSession = (props: GameSessionProps) => {
       void path.push("/[dashboardId]/dashboard", `/${props.groupName}/dashboard`);
     },
     onError: () => {
+      setIsUpdating(false);
       setHaveError(true);
     },
     onMutate: () => {
@@ -161,7 +162,7 @@ const GameSession = (props: GameSessionProps) => {
               Delete session
             </button>
           </div>
-          {haveError ? <div className="text-center mt-4 text-red-600">Error while finishing session</div> : <></>}
+          {haveError ? <div className="text-center mt-4 text-red-600">Error while finish or deleting the session</div> : <></>}
         </div>
       </div> : <> </>}
     </div>
