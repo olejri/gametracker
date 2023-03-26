@@ -27,15 +27,12 @@ import { prisma } from "npm/server/db";
  */
 export const createTRPCContext = (opts: CreateNextContextOptions) => {
   const { req } = opts;
-  const sesh = getAuth(req);
-
-  const userId = sesh.userId;
-  const role = sesh.orgRole;
+  const {userId, orgRole} = getAuth(req);
 
   return {
     prisma,
     userId,
-    role
+    orgRole
   };
 };
 
@@ -96,6 +93,7 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
   return next({
     ctx: {
       userId: ctx.userId,
+      orgRole: ctx.orgRole,
     },
   });
 });

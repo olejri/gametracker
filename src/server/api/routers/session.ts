@@ -474,10 +474,10 @@ export const sessionRouter = createTRPCRouter({
         sessionId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
-      if(ctx.role !== "admin") {
+      if(ctx.orgRole !== "admin") {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: ctx.role ?? "No role"
+          message: JSON.stringify(ctx)
         });
       }
       await ctx.prisma.playerGameSessionJunction.deleteMany({
