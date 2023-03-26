@@ -7,8 +7,9 @@ const PlayerView = (props: {
   player: PlayerNicknameAndScore,
   updatePlayer: (player: PlayerNicknameAndScore) => void,
   isInReadOnlyMode: boolean
+  numberOfPlayers: number
 }) => {
-  const { updatePlayer, isInReadOnlyMode } = props;
+  const { updatePlayer, isInReadOnlyMode, numberOfPlayers } = props;
   const [player, setPlayer] = React.useState<PlayerNicknameAndScore>(props.player);
 
   return (
@@ -50,22 +51,29 @@ const PlayerView = (props: {
           </div>
           <div className="grid grid-cols-1">
             <label>Position</label>
-            <input type="text" id={"position" + player.playerId}
-                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
-                   value={player.position}
-                   readOnly={isInReadOnlyMode}
-                   required
-                   onChange={(e) => {
-                     setPlayer({
-                       ...player,
-                       position: +e.target.value,
-                     });
-                   }}
-                   onBlur={() => {
-                     if(isInReadOnlyMode) return;
-                     updatePlayer(player);}
-                   }
-            />
+            <select
+              disabled={isInReadOnlyMode}
+              id={player.playerId}
+              name={"position" + player.playerId}
+              className="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              defaultValue={player.position}
+              onChange={(e) => {
+                setPlayer({
+                  ...player,
+                  position: +e.target.value,
+                });
+              }}
+              onBlur={() => {
+                if(isInReadOnlyMode) return;
+                updatePlayer(player);}
+              }
+            >
+              {Array.from(Array(numberOfPlayers).keys()).map((i) => {
+                if (i !== 0) {
+                  return <option key={i} value={i}>{i}</option>;
+                }
+              })}
+            </select>
           </div>
         </div>
       </div>

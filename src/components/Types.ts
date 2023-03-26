@@ -1,6 +1,3 @@
-export interface DataFromClerk {
-    name: string;
-}
 
 export interface AtlasGame {
     name: string

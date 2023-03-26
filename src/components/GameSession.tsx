@@ -16,11 +16,17 @@ const GameSession = (props: GameSessionProps) => {
   } = api.session.getGameASession.useQuery({ data: { id: props.gameId } });
   const ctx = api.useContext();
   const [haveError, setHaveError] = React.useState(false);
+  const [isUpdating, setIsUpdating] = React.useState(false);
 
   const updateGameSession = api.session.updateGameSession.useMutation({
     onSuccess: () => {
+      setIsUpdating(false);
       void ctx.session.getGameASession.invalidate();
-    }
+    },
+    onMutate: () => {
+      setHaveError(false);
+      // setIsUpdating(true);
+    },
   });
 
   const finishGameSession = api.session.finishGameSession.useMutation({
@@ -33,7 +39,7 @@ const GameSession = (props: GameSessionProps) => {
     }
   });
 
-  if (sessionIsLoading) {
+  if (sessionIsLoading || isUpdating) {
     return (
       <div className="flex grow">
         <LoadingPage />
@@ -101,6 +107,7 @@ const GameSession = (props: GameSessionProps) => {
                 player={player}
                 updatePlayer={updatePlayer}
                 isInReadOnlyMode={isInReadOnlyMode}
+                numberOfPlayers={game.players.length+1}
               ></PlayerView>
             ))}
           </div>
