@@ -1,7 +1,8 @@
 import type { PlayerNicknameAndScore } from "npm/components/Types";
 import Image from "next/image";
 import React from "react";
-
+import { api } from "npm/utils/api";
+import { LoadingSpinner } from "npm/components/loading";
 
 const PlayerView = (props: {
   player: PlayerNicknameAndScore,
@@ -9,8 +10,30 @@ const PlayerView = (props: {
   isInReadOnlyMode: boolean
   numberOfPlayers: number
 }) => {
-  const { updatePlayer, isInReadOnlyMode, numberOfPlayers } = props;
+  const { isInReadOnlyMode, numberOfPlayers } = props;
   const [player, setPlayer] = React.useState<PlayerNicknameAndScore>(props.player);
+  const [isUpdatingPos, setIsUpdatingPos] = React.useState(false);
+  const [isUpdatingScore, setIsUpdatingScore] = React.useState(false);
+  const ctx = api.useContext();
+  const mutateScore = api.session.updatePlayerScoreJunction.useMutation({
+    onSuccess: () => {
+      setIsUpdatingScore(false);
+      void ctx.session.getGameASession.invalidate();
+    },
+    onMutate: () => {
+      setIsUpdatingScore(true);
+    }
+  });
+  const mutatePos = api.session.updatePlayerPosJunction.useMutation({
+    onSuccess: () => {
+      setIsUpdatingPos(false);
+      void ctx.session.getGameASession.invalidate();
+    },
+    onMutate: () => {
+      setIsUpdatingPos(true);
+    }
+  });
+
 
   return (
     <div
@@ -32,7 +55,7 @@ const PlayerView = (props: {
           <p className="text-sm font-medium text-gray-900">{player.nickname}</p>
           <div className="grid grid-cols-1">
             <label>Score</label>
-            <input type="text" id={"score" + player.playerId}
+            {!isUpdatingScore ? <input type="text" id={"score" + player.playerId}
                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
                    value={player.score}
                    readOnly={isInReadOnlyMode}
@@ -45,13 +68,13 @@ const PlayerView = (props: {
                    }}
                    onBlur={() => {
                      if(isInReadOnlyMode) return;
-                     updatePlayer(player);}
+                     mutateScore.mutate(player);}
                    }
-            />
+            />: <LoadingSpinner />}
           </div>
           <div className="grid grid-cols-1">
             <label>Position</label>
-            <select
+            {!isUpdatingPos ? <select
               disabled={isInReadOnlyMode}
               id={player.playerId}
               name={"position" + player.playerId}
@@ -65,7 +88,7 @@ const PlayerView = (props: {
               }}
               onBlur={() => {
                 if(isInReadOnlyMode) return;
-                updatePlayer(player);}
+                mutatePos.mutate(player);}
               }
             >
               {Array.from(Array(numberOfPlayers).keys()).map((i) => {
@@ -73,7 +96,7 @@ const PlayerView = (props: {
                   return <option key={i} value={i}>{i}</option>;
                 }
               })}
-            </select>
+            </select>: <LoadingSpinner />}
           </div>
         </div>
       </div>

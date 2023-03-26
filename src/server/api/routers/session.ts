@@ -434,6 +434,40 @@ export const sessionRouter = createTRPCRouter({
       }));
     }),
 
+  updatePlayerScoreJunction: privateProcedure
+    .input(
+      z.object({
+        junctionId: z.string(),
+        score: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      await ctx.prisma.playerGameSessionJunction.update({
+        data: {
+          score: input.score,
+        },
+        where: {
+          id: input.junctionId,
+        }
+      });
+    }),
+
+  updatePlayerPosJunction: privateProcedure
+    .input(
+      z.object({
+        junctionId: z.string(),
+        position: z.number()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      await ctx.prisma.playerGameSessionJunction.update({
+        data: {
+          position: input.position
+        },
+        where: {
+          id: input.junctionId,
+        }
+      });
+    }),
+
   finishGameSession: privateProcedure
     .input(
       z.object({
