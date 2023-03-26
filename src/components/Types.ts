@@ -99,6 +99,7 @@ export type PlayerNicknameAndScore = {
     position: number;
     score: string;
     playerId: string;
+    junctionId: string;
     profileImageUrl: string;
 };
 
@@ -117,7 +118,13 @@ export type GameSessionWithPlayers = {
     players: PlayerNicknameAndScore[]
     expansions: Expansions[]
     updatedAt: Date
-    status: string
+    status: GameSessionStatus
     groupId: string
+}
+
+export enum GameSessionStatus {
+    Ongoing = "Ongoing",
+    Completed = "Completed",
+    Cancelled = "Cancelled"
 }
 

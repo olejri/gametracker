@@ -1,4 +1,5 @@
-import { type DashboardProps, type PlayerNicknameAndScore } from "npm/components/Types";
+import { type DashboardProps } from "npm/components/Types";
+import { sortPlayers } from "npm/components/HelperFunctions";
 import { api } from "npm/utils/api";
 import React from "react";
 import dayjs from "dayjs";
@@ -27,18 +28,6 @@ const History = (props: DashboardProps) => {
 
   function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(" ");
-  }
-
-  function sortPlayers(players: PlayerNicknameAndScore[]) {
-    return players.sort((a, b) => {
-      if (a.position > b.position) {
-        return 1;
-      }
-      if (a.position < b.position) {
-        return -1;
-      }
-      return 0;
-    });
   }
 
   return (

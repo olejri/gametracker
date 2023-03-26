@@ -56,6 +56,8 @@ model PlayerGameSessionJunction {
   score         String?
   gameSession   GameSession @relation(fields: [gameSessionId], references: [id])
   gameSessionId String
+
+  @@unique([playerId, gameSessionId])
 }
 
 model GameSessionGameJunction {
@@ -64,6 +66,8 @@ model GameSessionGameJunction {
   gameId        String
   gameSession   GameSession @relation(fields: [gameSessionId], references: [id])
   gameSessionId String
+
+  @@unique([gameId, gameSessionId])
 }
 
 model GameSession {

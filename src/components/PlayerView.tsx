@@ -1,0 +1,78 @@
+import type { PlayerNicknameAndScore } from "npm/components/Types";
+import Image from "next/image";
+import React from "react";
+
+
+const PlayerView = (props: {
+  player: PlayerNicknameAndScore,
+  updatePlayer: (player: PlayerNicknameAndScore) => void,
+  isInReadOnlyMode: boolean
+}) => {
+  const { updatePlayer, isInReadOnlyMode } = props;
+  const [player, setPlayer] = React.useState<PlayerNicknameAndScore>(props.player);
+
+  return (
+    <div
+      key={player.playerId}
+      className="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400"
+    >
+      <div className="flex-shrink-0">
+        <Image
+          width={30}
+          height={30}
+          key={player.playerId}
+          className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+          src={player.profileImageUrl}
+          alt={player.nickname ?? player.playerId}
+        />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="grid grid-flow-row-dense grid-cols-3 gap-10">
+          <p className="text-sm font-medium text-gray-900">{player.nickname}</p>
+          <div className="grid grid-cols-1">
+            <label>Score</label>
+            <input type="text" id={"score" + player.playerId}
+                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                   value={player.score}
+                   readOnly={isInReadOnlyMode}
+                   required
+                   onChange={(e) => {
+                      setPlayer({
+                        ...player,
+                        score: e.target.value,
+                      });
+                   }}
+                   onBlur={() => {
+                     if(isInReadOnlyMode) return;
+                     updatePlayer(player);}
+                   }
+            />
+          </div>
+          <div className="grid grid-cols-1">
+            <label>Position</label>
+            <input type="text" id={"position" + player.playerId}
+                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                   value={player.position}
+                   readOnly={isInReadOnlyMode}
+                   required
+                   onChange={(e) => {
+                     setPlayer({
+                       ...player,
+                       position: +e.target.value,
+                     });
+                   }}
+                   onBlur={() => {
+                     if(isInReadOnlyMode) return;
+                     updatePlayer(player);}
+                   }
+            />
+          </div>
+        </div>
+      </div>
+      <div>
+      </div>
+    </div>
+  );
+};
+
+export default PlayerView;
