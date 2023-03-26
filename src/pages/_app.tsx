@@ -4,7 +4,7 @@ import {
   SignedIn,
   SignedOut,
   SignInButton,
-  UserButton
+  UserButton,
 } from "@clerk/nextjs";
 
 import { api } from "npm/utils/api";
@@ -20,15 +20,15 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <ClerkProvider {...pageProps} >
       <SignedIn>
-        <UserButton />
-        <ProtectedComponent slug={dashboardId}>
-          <Head>
-            <title>Game Tracker</title>
-            <meta name="description" content="Game Tracker" />
-            <link rel="icon" href="/favicon.ico" />
-          </Head>
-          <Component {...pageProps} />
-        </ProtectedComponent>
+          <UserButton />
+          <ProtectedComponent slug={dashboardId}>
+            <Head>
+              <title>Game Tracker</title>
+              <meta name="description" content="Game Tracker" />
+              <link rel="icon" href="/favicon.ico" />
+            </Head>
+            <Component {...pageProps} />
+          </ProtectedComponent>
       </SignedIn>
       <SignedOut>
         <SignInButton mode="modal">

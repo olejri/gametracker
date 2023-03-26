@@ -2,6 +2,7 @@ import React, { type ReactNode } from "react";
 import { useRouter } from "next/router";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
+import { useUser } from "@clerk/nextjs";
 
 interface Props {
   slug: string;
@@ -12,32 +13,22 @@ const withDashboardChecker = () => (
   WrappedComponent: React.ComponentType
 ) => {
   const DashboardCheckerWrapper = (props: Props) => {
-    const {data: userData, isLoading: userIsLoading, error, isError} = api.user.getClerkUser.useQuery();
+    api.user.getClerkUser.useQuery();
+
+    const clerk = useUser();
     const path = useRouter();
 
-    if (userIsLoading) {
+    if (clerk.isLoaded && !clerk.user) {
       return (
         <div className="flex grow">
           <LoadingPage />
         </div>
       );
     }
-    if(isError) {
-      return <p>{error?.message}</p>;
-    }
 
-    if (userData.id === undefined) {
-      return <p>Not logged in!</p>;
-    }
-    //dev mode
-    if (location.hostname === "localhost") {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      return <WrappedComponent {...props} />;
-    }
-
-    if (props.slug !== userData.organizationSlug && path.pathname !== "/") {
-      return <p>Welcome to Game Tracker. Please ask for an invitation to access the dashboard for your group.</p>;
+    const slugs = clerk.user?.organizationMemberships?.map((org) => org.organization.slug ?? "") ?? [];
+    if (!slugs.includes(props.slug) && path.pathname !== "/") {
+      return <p>Ask admin for an invite! :D</p>;
     }
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

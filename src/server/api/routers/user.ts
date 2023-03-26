@@ -6,6 +6,17 @@ import { TRPCError } from "@trpc/server";
 
 export const userRouter = createTRPCRouter({
   getClerkUser: privateProcedure.query(async ({ ctx }) => {
+
+    //dev mode
+    if (process.env.NODE_ENV === "development") {
+      return {
+        id: "user.id",
+        username: "user.username",
+        profileImageUrl: "user.profileImageUrl",
+        organizationSlug: "game-night",
+      }
+    }
+
     const user = await clerkClient.users.getUser(ctx.userId);
     if (!user) {
       throw new TRPCError(
