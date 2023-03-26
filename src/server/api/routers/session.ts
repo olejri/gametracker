@@ -474,12 +474,12 @@ export const sessionRouter = createTRPCRouter({
         sessionId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
-      // if(ctx.role !== "admin") {
-      //   throw new TRPCError({
-      //     code: "BAD_REQUEST",
-      //     message: "You are not authorized to delete a game session"
-      //   });
-      // }
+      if(ctx.role !== "admin") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You are not authorized to delete a game session"
+        });
+      }
       await ctx.prisma.playerGameSessionJunction.deleteMany({
         where: {
           gameSessionId: input.sessionId,
