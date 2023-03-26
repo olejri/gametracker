@@ -1,6 +1,7 @@
-import { useUser } from "@clerk/nextjs";
 import React, { type ReactNode } from "react";
 import { useRouter } from "next/router";
+import { api } from "npm/utils/api";
+import { LoadingPage } from "npm/components/loading";
 
 interface Props {
   slug: string;
@@ -11,10 +12,21 @@ const withDashboardChecker = () => (
   WrappedComponent: React.ComponentType
 ) => {
   const DashboardCheckerWrapper = (props: Props) => {
-    const clerk = useUser();
+    const {data: userData, isLoading: userIsLoading, error, isError} = api.user.getClerkUser.useQuery();
     const path = useRouter();
 
-    if (!clerk.user) {
+    if (userIsLoading) {
+      return (
+        <div className="flex grow">
+          <LoadingPage />
+        </div>
+      );
+    }
+    if(isError) {
+      return <p>{error?.message}</p>;
+    }
+
+    if (userData.id === undefined) {
       return <p>Not logged in!</p>;
     }
     //dev mode
@@ -24,8 +36,7 @@ const withDashboardChecker = () => (
       return <WrappedComponent {...props} />;
     }
 
-    const slugs = clerk.user?.organizationMemberships?.map((org) => org.organization.slug ?? "");
-    if (!slugs.includes(props.slug) && path.pathname !== "/") {
+    if (props.slug !== userData.organizationSlug && path.pathname !== "/") {
       return <p>Welcome to Game Tracker. Please ask for an invitation to access the dashboard for your group.</p>;
     }
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

@@ -6,11 +6,7 @@ import {
   PuzzlePieceIcon,
   Square3Stack3DIcon
 } from "@heroicons/react/24/outline";
-import { useUser } from "@clerk/nextjs";
-import React, { useEffect, useState } from "react";
-import type{ GetPlayerInput, GetPlayerOutput } from "npm/components/Types";
-import { api } from "npm/utils/api";
-import { LoadingPage } from "npm/components/loading";
+import React from "react";
 import Link from "next/link";
 
 const actions = (groupName: string) => {
@@ -70,62 +66,6 @@ function classNames(...classes: string[]) {
 }
 
 export default function Dashboard(groupName: string) {
-  const clerk = useUser();
-  const [isLoadingPlayer, setIsLoadingPlayer] = useState<boolean>(false);
-  const [errorPlayer, setErrorPlayer] = useState<Error | undefined>();
-
-  const user = {
-    clerkId: clerk.user?.id || "",
-    name: clerk.user?.fullName || "",
-    hasOnlyOneOrg: clerk.user?.organizationMemberships?.length == 1,
-    slug: clerk.user?.organizationMemberships?.[0]?.organization.slug,
-  };
-
-  const { data, error, isLoading } = api.player.getPlayer.useQuery<
-    GetPlayerInput,
-    GetPlayerOutput
-  >(user);
-
-  const addedPlayer = api.player.addPlayer.useMutation();
-  const addGroup = api.group.addOrGetGroup.useMutation();
-
-  useEffect(() => {
-    if (!isLoading && !data?.data && groupName === user.slug) {
-      setIsLoadingPlayer(true);
-      setErrorPlayer(undefined);
-      addGroup.mutate({
-        id: user.slug
-      });
-      // Call the addPlayer mutation to add the player
-      addedPlayer.mutate({
-        name: user.name,
-        groupId: user.slug
-      }, {
-        onSuccess: () => {
-          setIsLoadingPlayer(false);
-        },
-        onError: (error) => {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          setErrorPlayer(error);
-          setIsLoadingPlayer(false);
-        }
-      });
-    }
-  }, [data]); // add
-
-  if (isLoading || isLoadingPlayer) {
-    return (
-      <div className="flex grow">
-        <LoadingPage />
-      </div>
-    );
-  }
-
-  if (error || errorPlayer) {
-    return <></>
-  }
-
   return (
     <div className="divide-y divide-gray-200 overflow-hidden rounded-lg bg-gray-200 shadow sm:grid sm:grid-cols-2 sm:gap-px sm:divide-y-0">
       {actions(groupName).map((action, actionIdx) => (
