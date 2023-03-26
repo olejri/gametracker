@@ -1,4 +1,4 @@
-import { type GameSessionProps, GameSessionStatus,type PlayerNicknameAndScore } from "npm/components/Types";
+import { type GameSessionProps, GameSessionStatus, type PlayerNicknameAndScore } from "npm/components/Types";
 import { sortPlayers } from "npm/components/HelperFunctions";
 import { api } from "npm/utils/api";
 import Image from "next/image";
@@ -6,6 +6,7 @@ import { LoadingPage } from "npm/components/loading";
 import React from "react";
 import PlayerView from "npm/components/PlayerView";
 import dayjs from "dayjs";
+import { useRouter } from "next/router";
 
 const GameSession = (props: GameSessionProps) => {
   const {
@@ -17,6 +18,7 @@ const GameSession = (props: GameSessionProps) => {
   const ctx = api.useContext();
   const [haveError, setHaveError] = React.useState(false);
   const [isUpdating, setIsUpdating] = React.useState(false);
+  const path = useRouter();
 
   const updateGameSession = api.session.updateGameSession.useMutation({
     onSuccess: () => {
@@ -26,7 +28,7 @@ const GameSession = (props: GameSessionProps) => {
     onMutate: () => {
       setHaveError(false);
       // setIsUpdating(true);
-    },
+    }
   });
 
   const finishGameSession = api.session.finishGameSession.useMutation({
@@ -36,6 +38,19 @@ const GameSession = (props: GameSessionProps) => {
     },
     onError: () => {
       setHaveError(true);
+    }
+  });
+
+  const deleteGameSession = api.session.deleteAGameSession.useMutation({
+    onSuccess: () => {
+      setHaveError(false);
+      void path.push("/[dashboardId]/dashboard", `/${props.groupName}/dashboard`);
+    },
+    onError: () => {
+      setHaveError(true);
+    },
+    onMutate: () => {
+      setIsUpdating(true);
     }
   });
 
@@ -107,7 +122,7 @@ const GameSession = (props: GameSessionProps) => {
                 player={player}
                 updatePlayer={updatePlayer}
                 isInReadOnlyMode={isInReadOnlyMode}
-                numberOfPlayers={game.players.length+1}
+                numberOfPlayers={game.players.length + 1}
               ></PlayerView>
             ))}
           </div>
@@ -115,6 +130,7 @@ const GameSession = (props: GameSessionProps) => {
       </div>
       {game.status === GameSessionStatus.Ongoing ? <div className="overflow-hidden bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6">
+          <div className="gap-2">
             <button
               type="button"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -133,7 +149,19 @@ const GameSession = (props: GameSessionProps) => {
               }}>
               Finish session
             </button>
-            {haveError ? <div className="text-center mt-4 text-red-600">Error while finishing session</div> : <></>}
+            <button
+              type="button"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isInReadOnlyMode}
+              onClick={() => {
+                setHaveError(false);
+                deleteGameSession.mutate({ sessionId: game.sessionId })
+              }}
+            >
+              Delete session
+            </button>
+          </div>
+          {haveError ? <div className="text-center mt-4 text-red-600">Error while finishing session</div> : <></>}
         </div>
       </div> : <> </>}
     </div>

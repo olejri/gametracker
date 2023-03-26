@@ -468,6 +468,35 @@ export const sessionRouter = createTRPCRouter({
       });
     }),
 
+  deleteAGameSession: privateProcedure
+    .input(
+      z.object({
+        sessionId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      // if(ctx.role !== "admin") {
+      //   throw new TRPCError({
+      //     code: "BAD_REQUEST",
+      //     message: "You are not authorized to delete a game session"
+      //   });
+      // }
+      await ctx.prisma.playerGameSessionJunction.deleteMany({
+        where: {
+          gameSessionId: input.sessionId,
+        }
+      });
+      await ctx.prisma.gameSessionGameJunction.deleteMany({
+        where: {
+          gameSessionId: input.sessionId,
+        }
+      });
+      await ctx.prisma.gameSession.delete({
+        where: {
+          id: input.sessionId
+        }
+      });
+    }),
+
   finishGameSession: privateProcedure
     .input(
       z.object({

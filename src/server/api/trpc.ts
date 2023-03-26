@@ -30,10 +30,12 @@ export const createTRPCContext = (opts: CreateNextContextOptions) => {
   const sesh = getAuth(req);
 
   const userId = sesh.userId;
+  const role = sesh.orgRole;
 
   return {
     prisma,
     userId,
+    role
   };
 };
 
