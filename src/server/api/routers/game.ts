@@ -8,13 +8,13 @@ export const gameRouter = createTRPCRouter({
     .input(
       z.object({
         data: z.object({
-          name: z.string(),
-          description: z.string(),
-          image_url: z.string(),
-          players: z.string(),
-          playtime: z.string(),
-          mechanics: z.string(),
-          categories: z.string(),
+          name: z.string().min(1),
+          description: z.string().min(1),
+          image_url: z.string().min(1),
+          players: z.string().min(1),
+          playtime: z.string().min(1),
+          mechanics: z.string().min(1),
+          categories: z.string().min(1),
           isExpansion: z.boolean(),
           baseGameId: z.string().optional()
         })

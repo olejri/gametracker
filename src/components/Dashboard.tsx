@@ -1,13 +1,13 @@
 import {
   ChartPieIcon,
   CircleStackIcon,
-  QuestionMarkCircleIcon,
   PlayIcon,
   PuzzlePieceIcon,
   Square3Stack3DIcon
 } from "@heroicons/react/24/outline";
 import React from "react";
 import Link from "next/link";
+import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 
 const actions = (groupName: string) => {
   return [
@@ -37,17 +37,17 @@ const actions = (groupName: string) => {
   },
   {
     title: 'Game collection',
-    message: 'Cant decide? Get a random game based on some parameters',
+    message: 'Can\'t decide? Get a random game based on some parameters',
     href: '/'+groupName+'/games/collection',
     icon: Square3Stack3DIcon,
     iconForeground: 'text-red-700',
     iconBackground: 'bg-red-50',
   },
   {
-    title: 'Random game',
-    message: 'Cant decide? Get a random game based on some parameters',
-    href: '#',
-    icon: QuestionMarkCircleIcon,
+    title: 'Make a custom game',
+    message: 'Can\'t find the game you are looking for? Add it yourself!',
+    href: '/'+groupName+'/games/make-custom',
+    icon: PlusIcon,
     iconForeground: 'text-yellow-700',
     iconBackground: 'bg-yellow-50',
   },

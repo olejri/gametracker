@@ -18,6 +18,12 @@ const withDashboardChecker = () => (
     const clerk = useUser();
     const path = useRouter();
 
+    if (location.hostname === "localhost") {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      return <WrappedComponent {...props} />;
+    }
+
     if (clerk.isLoaded && !clerk.user) {
       return (
         <div className="flex grow">
