@@ -161,6 +161,7 @@ const GameSession = (props: GameSessionProps) => {
                   </label>
                   {!updateDescription.isLoading  ? <input
                     onBlur={(e) => {
+                      if(isInReadOnlyMode) return;
                       updateDescription.mutate({
                         gameSessionId: game.sessionId,
                         description: e.target.value
@@ -201,6 +202,7 @@ const GameSession = (props: GameSessionProps) => {
                   {!updateDate.isLoading  ?
                     <input
                       onBlur={() => {
+                        if(isInReadOnlyMode) return;
                         const newDateText = transformDate(dateText);
                         const date = dayjs(newDateText).toDate();
                         updateDate.mutate({
