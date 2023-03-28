@@ -76,7 +76,7 @@ export const sessionRouter = createTRPCRouter({
           const gameSessionWithoutPlayers: GameSessionWithPlayers = {
             gameName: gameMap.get(session.gameId)?.name ?? "",
             image_url: gameMap.get(session.gameId)?.image_url ?? "",
-            updatedAt: session.updatedAt,
+            createdAt: session.createdAt,
             sessionId: session.id,
             players: players,
             expansions: expansions,
@@ -301,7 +301,7 @@ export const sessionRouter = createTRPCRouter({
       const gameSession: GameSessionWithPlayers = {
         gameName: gameMap.get(session.gameId)?.name ?? "",
         image_url: gameMap.get(session.gameId)?.image_url ?? "",
-        updatedAt: session.updatedAt,
+        createdAt: session.createdAt,
         sessionId: session.id,
         players: players,
         expansions: expansions,
@@ -513,4 +513,45 @@ export const sessionRouter = createTRPCRouter({
         }
       });
     }),
+
+  updateGameSessionDescription: privateProcedure
+    .input(
+      z.object({
+        description: z.string().min(1),
+        gameSessionId: z.string().min(1)
+      }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await ctx.prisma.gameSession.update({
+        where: {
+          id: input.gameSessionId
+        },
+        data: {
+          description: input.description
+        }
+      });
+      if(session.description === null) throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Game session does not exist"
+      });
+
+      return session.description;
+    }),
+
+  updateGameSessionDate: privateProcedure
+    .input(
+      z.object({
+        date: z.date(),
+        gameSessionId: z.string().min(1)
+      }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.prisma.gameSession.update({
+        where: {
+          id: input.gameSessionId
+        },
+        data: {
+          createdAt: input.date
+        }
+      });
+    }),
+
 });

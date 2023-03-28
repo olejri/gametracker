@@ -157,7 +157,7 @@ const History = (props: DashboardProps) => {
                     )}
                   >
                     <Link href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
-                      {dayjs(game.updatedAt).format("DD.MM.YYYY")}
+                      {dayjs(game.createdAt).format("DD.MM.YYYY")}
                     </Link>
                   </td>
                   <td

@@ -2,11 +2,11 @@ import { type GameSessionProps, GameSessionStatus, type PlayerNicknameAndScore }
 import { sortPlayers } from "npm/components/HelperFunctions";
 import { api } from "npm/utils/api";
 import Image from "next/image";
-import { LoadingPage } from "npm/components/loading";
-import React from "react";
+import { LoadingPage, LoadingSpinner } from "npm/components/loading";
+import { useEffect, useState } from "react";
 import PlayerView from "npm/components/PlayerView";
-import dayjs from "dayjs";
 import { useRouter } from "next/router";
+import dayjs from "dayjs";
 
 const GameSession = (props: GameSessionProps) => {
   const {
@@ -16,8 +16,8 @@ const GameSession = (props: GameSessionProps) => {
     error
   } = api.session.getGameASession.useQuery({ data: { id: props.gameId } });
   const ctx = api.useContext();
-  const [haveError, setHaveError] = React.useState(false);
-  const [isUpdating, setIsUpdating] = React.useState(false);
+  const [haveError, setHaveError] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const path = useRouter();
 
   const updateGameSession = api.session.updateGameSession.useMutation({
@@ -28,6 +28,22 @@ const GameSession = (props: GameSessionProps) => {
     onMutate: () => {
       setHaveError(false);
       // setIsUpdating(true);
+    }
+  });
+
+  const updateDescription = api.session.updateGameSessionDescription.useMutation({
+    onSuccess: (description) => {
+      void ctx.session.getGameASession.invalidate();
+      setDescription(description);
+    }
+  });
+
+  const updateDate = api.session.updateGameSessionDate.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    },
+    onError: () => {
+      void ctx.session.getGameASession.invalidate();
     }
   });
 
@@ -54,6 +70,33 @@ const GameSession = (props: GameSessionProps) => {
       setIsUpdating(true);
     }
   });
+
+  //function that take date and return a string using dayjs format DD.MM.YYYY
+  const formatDate = (date: Date | undefined) => {
+    if (date === undefined) {
+      return "";
+    }
+    return dayjs(date).format("DD.MM.YYYY");
+  }
+
+  //transform string from format DD-MM-YYYY to YYYY-MM-DD
+  const transformDate = (date: string) => {
+    const dateArray = date.split(".");
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    return `${dateArray[2]}-${dateArray[1]}-${dateArray[0]}`;
+  }
+
+
+  const [description, setDescription] = useState<string>(game?.description ?? "");
+  const [dateText, setDateText] = useState<string>("");
+
+  useEffect(() => {
+    setDateText(formatDate(game?.createdAt) ?? "");
+  }, [game?.createdAt]);
+
+  useEffect(() => {
+    setDescription(game?.description ?? "");
+  }, [game?.description]);
 
   if (sessionIsLoading || isUpdating) {
     return (
@@ -116,14 +159,23 @@ const GameSession = (props: GameSessionProps) => {
                   <label htmlFor="description" className="block text-xs font-medium text-gray-900">
                     Description
                   </label>
-                  <input
+                  {!updateDescription.isLoading  ? <input
+                    onBlur={(e) => {
+                      updateDescription.mutate({
+                        gameSessionId: game.sessionId,
+                        description: e.target.value
+                      });
+                    }}
+                    onChange={(e) => {
+                      setDescription(e.target.value);}
+                    }
                     type="text"
                     readOnly={isInReadOnlyMode}
-                    value={game.description}
+                    value={description}
                     name="description"
                     id="description"
                     className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-                  />
+                  />: <LoadingSpinner size={30} />}
                 </div>
                 {game.expansions.length > 0 && <div
                   className="relative rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
@@ -142,18 +194,30 @@ const GameSession = (props: GameSessionProps) => {
                   </div>
                 </div>}
                 <div
-                  className="relative rounded-b-none rounded-b-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
+                  className="relative rounded-b-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
                   <label htmlFor="date" className="block text-xs font-medium text-gray-900">
                     Date
                   </label>
-                  <input
-                    type="datetime"
-                    readOnly={isInReadOnlyMode}
-                    value={dayjs(game.updatedAt).format("DD.MM.YYYY")}
-                    name="date"
-                    id="date"
-                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-                  />
+                  {!updateDate.isLoading  ?
+                    <input
+                      onBlur={() => {
+                        const newDateText = transformDate(dateText);
+                        const date = dayjs(newDateText).toDate();
+                        updateDate.mutate({
+                          gameSessionId: game.sessionId,
+                          date: date
+                        });
+                      }}
+                      onChange={(event) => {
+                        setDateText(event.target.value)
+                      }}
+                      type="text"
+                      readOnly={isInReadOnlyMode}
+                      value={dateText}
+                      name="date"
+                      id="date"
+                      className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    />: <LoadingSpinner size={30} />}
                 </div>
               </div>
             </div>

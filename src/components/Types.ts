@@ -114,7 +114,7 @@ export type GameSessionWithPlayers = {
     description?: string
     players: PlayerNicknameAndScore[]
     expansions: Expansions[]
-    updatedAt: Date
+    createdAt: Date
     status: GameSessionStatus
     groupId: string
 }

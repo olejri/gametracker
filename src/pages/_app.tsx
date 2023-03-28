@@ -12,6 +12,7 @@ import "npm/styles/globals.css";
 import withDashboardChecker from "npm/components/Checker";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import "react-datepicker/dist/react-datepicker.css";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   const ProtectedComponent = withDashboardChecker()(Component);
