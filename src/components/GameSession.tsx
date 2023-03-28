@@ -93,24 +93,70 @@ const GameSession = (props: GameSessionProps) => {
             {game.status}
           </span>
           </div>
-          <div className="grid grid-cols-2">
-            <p>GAME INFO:</p>
-            <label></label>
-            <label>Name:</label>
-            <label>{game.gameName}</label>
-            <label>Expansions:</label>
-            <div>
-              {game.expansions.map((expansion) => (
-                <span
-                  key={expansion.gameId}
-                  className="inline-flex items-center rounded-md bg-green-100 px-2.5 py-0.5 text-sm font-medium text-green-800">
+          <div className="overflow-hidden rounded-lg bg-white shadow">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="isolate -space-y-px rounded-md shadow-sm">
+                <div
+                  className="relative rounded-md rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
+                  <label htmlFor="name" className="block text-xs font-medium text-gray-900">
+                    Game Name
+                  </label>
+                  <input
+                    type="text"
+                    readOnly={true}
+                    value={game.gameName}
+                    name="name"
+                    id="name"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    placeholder="Game Name"
+                  />
+                </div>
+                <div
+                  className="relative rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
+                  <label htmlFor="description" className="block text-xs font-medium text-gray-900">
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    readOnly={isInReadOnlyMode}
+                    value={game.description}
+                    name="description"
+                    id="description"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  />
+                </div>
+                {game.expansions.length > 0 && <div
+                  className="relative rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
+                  <label htmlFor="expansion" className="block text-xs font-medium text-gray-900">
+                    Expansions
+                  </label>
+                  <div
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  >
+                    {game.expansions.map((expansion) => (
+                      <span
+                        key={expansion.gameId}
+                        className="inline-flex items-center rounded-md bg-green-100 px-2.5 py-0.5 text-sm font-medium text-green-800">
                   {expansion.gameName}
                 </span>))}
+                  </div>
+                </div>}
+                <div
+                  className="relative rounded-b-none rounded-b-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
+                  <label htmlFor="date" className="block text-xs font-medium text-gray-900">
+                    Date
+                  </label>
+                  <input
+                    type="datetime"
+                    readOnly={isInReadOnlyMode}
+                    value={dayjs(game.updatedAt).format("DD.MM.YYYY")}
+                    name="date"
+                    id="date"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  />
+                </div>
+              </div>
             </div>
-            <label>Description:</label>
-            <label>{game.description}</label>
-            <label>Date</label>
-            <p>{dayjs(game.updatedAt).format("DD.MM.YYYY")}</p>
           </div>
         </div>
       </div>
