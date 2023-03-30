@@ -21,9 +21,6 @@ const withMainLayout = () => (
       { name: "Go to dashboard", href: "/" + props.slug + "/dashboard", current: false }
     ];
 
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     return (
       <>
         <div className="min-h-full">
@@ -107,7 +104,7 @@ const withMainLayout = () => (
               </div>
             </header>
             <main>
-              <div className="mx-auto max-w-7xl sm:px-6 lg:px-8"><WrappedComponent {...props} /></div>
+              <div className="mx-auto max-w-7xl sm:px-6 lg:px-8"><WrappedComponent /></div>
             </main>
           </div>
         </div>
