@@ -1,11 +1,9 @@
 import { api } from "npm/utils/api";
 import Image from "next/image";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { LoadingPage } from "npm/components/loading";
 
 const GameCollections = () => {
-  const router = useRouter();
   const { data } = api.game.getAllGames.useQuery();
   const [expandedGame, setExpandedGame] = useState<string | null>(null);
 
@@ -29,13 +27,6 @@ const GameCollections = () => {
 
   return (
     <div>
-      <div>
-        <h1 className="text-xl font-bold mb-4">Game Collection</h1>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push(`/`)}>
-        Back to Dashboard
-      </button>
-        <br/>
-      </div>
       <div className="overflow-x-auto">
         <table className="mt-4 w-full border-collapse">
           <thead>

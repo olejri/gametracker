@@ -4,7 +4,6 @@ import {
   SignedIn,
   SignedOut,
   SignInButton,
-  UserButton,
 } from "@clerk/nextjs";
 
 import { api } from "npm/utils/api";
@@ -13,15 +12,17 @@ import withDashboardChecker from "npm/components/Checker";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import "react-datepicker/dist/react-datepicker.css";
+import withMainLayout from "npm/components/MainLayout";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   const ProtectedComponent = withDashboardChecker()(Component);
+  const MainComponent = withMainLayout()(Component);
   const dashboardId = useRouter().query.dashboardId as string;
 
   return (
     <ClerkProvider {...pageProps} >
       <SignedIn>
-          <UserButton />
+          <MainComponent slug={dashboardId}>
           <ProtectedComponent slug={dashboardId}>
             <Head>
               <title>Game Tracker</title>
@@ -30,6 +31,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
             </Head>
             <Component {...pageProps} />
           </ProtectedComponent>
+        </MainComponent>
       </SignedIn>
       <SignedOut>
         <SignInButton mode="modal">
