@@ -30,6 +30,18 @@ const History = (props: DashboardProps) => {
     return classes.filter(Boolean).join(" ");
   }
 
+  function customRingBasedOnPosition(position: number) {
+    if (position === 1) {
+      return "inline-block h-9 w-9 rounded-full border-2 border-yellow-500";
+    } else if (position === 2) {
+      return "inline-block h-8 w-8 rounded-full border-2 border-neutral-500";
+    } else if (position === 3) {
+      return "inline-block h-7 w-7 rounded-full border-2 border-orange-700";
+    } else {
+      return "inline-block h-6 w-6 rounded-full border-2 border-white";
+    }
+  }
+
   return (
     <div className="px-4 sm:px-6 lg:px-14">
       <div className="mt-8 flow-root">
@@ -98,12 +110,12 @@ const History = (props: DashboardProps) => {
                     <Link href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
                       <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
                         <div className="flex -space-x-1 overflow-hidden">
-                          {sortPlayers(game.players).map((player) => (
+                          {sortPlayers(game.players).map((player, index) => (
                             <Image
                               width={300}
                               height={300}
                               key={player.playerId}
-                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+                              className={customRingBasedOnPosition(index+1)}
                               src={player.profileImageUrl}
                               alt={player.nickname ?? player.playerId}
                             />
