@@ -82,7 +82,7 @@ const History = (props: DashboardProps) => {
                   <td
                     className={classNames(
                       gameIdx !== data.length - 1 ? "border-b border-gray-300" : "",
-                      "w-6 py-4 pl-4 pr-3 text-sm font-smale truncate text-gray-900 sm:pl-6 lg:pl-8"
+                      "w-6 py-4 pl-4 pr-3 text-sm font-smale text-gray-900 sm:pl-6 lg:pl-8"
                     )}
                   >
                     <Link href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
