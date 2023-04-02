@@ -54,7 +54,7 @@ const actions = (groupName: string) => {
   {
     title: 'Statistics',
     message: 'Who won the most games? Who is the best player?',
-    href: '#',
+    href: '/'+groupName+'/stats/all',
     icon: ChartPieIcon,
     iconForeground: 'text-indigo-700',
     iconBackground: 'bg-indigo-50',
