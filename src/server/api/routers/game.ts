@@ -13,8 +13,8 @@ export const gameRouter = createTRPCRouter({
           image_url: z.string().min(1),
           players: z.string().min(1),
           playtime: z.string().min(1),
-          mechanics: z.string().min(1),
-          categories: z.string().min(1),
+          mechanics: z.string(),
+          categories: z.string(),
           isExpansion: z.boolean(),
           baseGameId: z.string().optional()
         })
