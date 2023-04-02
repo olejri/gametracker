@@ -31,9 +31,9 @@ const Stats = (props: DashboardProps) => {
     const winsPerPlayer = new Map<string, number>();
     data?.forEach((session) => {
       session.players.forEach((player) => {
-        if (winsPerPlayer.has(player.nickname)) {
+        if (winsPerPlayer.has(player.nickname) && player.position === 1) {
           winsPerPlayer.set(player.nickname, winsPerPlayer.get(player.nickname)! + 1);
-        } else {
+        } else if (player.position === 1) {
           winsPerPlayer.set(player.nickname, 1);
         }
       });
