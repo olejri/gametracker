@@ -8,6 +8,89 @@ import { TRPCError } from "@trpc/server";
 import { filterUserForClient } from "npm/server/api/helpers/filterUserForClient";
 
 export const sessionRouter = createTRPCRouter({
+  getAllCompletedSessionsAsc: publicProcedure
+    .input(
+      z.object({
+        data: z.object({
+          groupId: z.string()
+        })
+      })
+    )
+    .query(async ({ ctx, input }) => {
+        const playerMap = new Map<string, Player>();
+        const gameMap = new Map<string, Game>();
+        const players = await ctx.prisma.player.findMany({
+          where: {
+            groupId: input.data.groupId
+          }
+        });
+        const gameInfo = await ctx.prisma.game.findMany();
+
+        //make a map that has the player id as the key and the player object as the value
+        players.forEach((player) => {
+          playerMap.set(player.id, player);
+        });
+        gameInfo.forEach((game) => {
+          gameMap.set(game.id, game);
+        });
+
+        const sessions = await ctx.prisma.gameSession.findMany({
+          where: {
+            groupId: input.data.groupId
+          },
+          include: {
+            PlayerGameSessionJunction: true,
+            GameSessionGameJunction: true
+          },
+          orderBy: {
+            createdAt: "asc"
+          }
+        });
+
+        const usersWithImages = (
+          await clerkClient.users.getUserList({
+            userId: players.map((player) => player.clerkId),
+            limit: 110
+          })
+        ).map(filterUserForClient);
+
+        return sessions.map((session) => {
+          const playerGameSessions = session.PlayerGameSessionJunction;
+          // Map over each playerGameSession to extract player information
+          const players = playerGameSessions.map((playerGameSession) => ({
+            nickname: playerMap.get(playerGameSession.playerId)?.nickname ?? "",
+            clerkId: playerMap.get(playerGameSession.playerId)?.clerkId ?? "",
+            score: playerGameSession.score ?? "",
+            position: playerGameSession.position ?? 0,
+            playerId: playerGameSession.playerId,
+            junctionId: playerMap.get(playerGameSession.playerId)?.id ?? "",
+            profileImageUrl: usersWithImages.find((user) => user.id === playerMap.get(playerGameSession.playerId)?.clerkId)?.profileImageUrl ?? ""
+          }));
+          // Map over each gameSessionGame to extract game information
+          const expansions = session.GameSessionGameJunction.map((gameSessionGame) => ({
+            gameName: gameMap.get(gameSessionGame.gameId)?.name ?? "",
+            image_url: gameMap.get(gameSessionGame.gameId)?.image_url ?? "",
+            gameId: gameSessionGame.gameId
+
+          }));
+          const gameSessionWithoutPlayers: GameSessionWithPlayers = {
+            gameName: gameMap.get(session.gameId)?.name ?? "",
+            image_url: gameMap.get(session.gameId)?.image_url ?? "",
+            createdAt: session.createdAt,
+            sessionId: session.id,
+            players: players,
+            expansions: expansions,
+            description: session.description ?? "",
+            status: FindGameSessionStatus(session.status),
+            baseGameId: session.gameId,
+            groupId: session.groupId
+          };
+          // Return a new object that includes players and their scores and positions
+          return gameSessionWithoutPlayers;
+        });
+      }
+    ),
+
   getAllCompletedSessions: publicProcedure
     .input(
       z.object({

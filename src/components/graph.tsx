@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 
 
 const Test = (props: DashboardProps) => {
-  const { data } = api.session.getAllCompletedSessions.useQuery({
+  const { data } = api.session.getAllCompletedSessionsAsc.useQuery({
     data: {
       groupId: props.groupName
     }
