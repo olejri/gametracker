@@ -4,6 +4,7 @@ import { Chart } from "chart.js";
 import { api } from "npm/utils/api";
 import { type DashboardProps } from "npm/components/Types";
 import dayjs from "dayjs";
+import { copy } from "copy-anything";
 
 
 const Test = (props: DashboardProps) => {
@@ -13,15 +14,22 @@ const Test = (props: DashboardProps) => {
     }
   });
 
+  //get a set of nicknames of all players
+  const nicknames = new Set<string>();
+  data?.forEach((session) => {
+    session.players.forEach((player) => {
+      nicknames.add(player.nickname);
+    });
+  });
+
   useEffect(() => {
-    const days = data?.map((session) => {
+    const numberOfGames = data?.map((session) => {
       return dayjs(session.createdAt.toString()).format("DD.MM.YYYY");
     }) ?? [];
 
-
     const hash = new Map<string, number[]>();
-
     data?.forEach((session) => {
+      const players = new Set(copy(nicknames));
       session.players.forEach((player) => {
         if (hash.has(player.nickname)) {
           if(player.position === 1) {
@@ -54,16 +62,28 @@ const Test = (props: DashboardProps) => {
             hash.set(player.nickname, [0]);
           }
         }
+        players.delete(player.nickname);
+      });
+      players.forEach((player) => {
+        const newVar = hash.get(player);
+        if (newVar !== undefined) {
+          const length = newVar.length;
+          const numberOfWins = newVar.at(length - 1) ?? 0;
+          newVar.push(numberOfWins);
+          hash.set(player, newVar);
+        } else {
+          //first game
+          hash.set(player, [0]);
+        }
       });
     });
-
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const newChart = new Chart(document.getElementById("test"), {
       type: "line",
       data: {
-        labels: days,
+        labels: numberOfGames,
         datasets: [
           {
             label: "Nelich",
@@ -71,10 +91,10 @@ const Test = (props: DashboardProps) => {
             data: hash.get("Nelich") ?? [0],
             fill: false,
             pointBackgroundColor: "#4A5568",
-            borderWidth: "3",
-            pointBorderWidth: "4",
-            pointHoverRadius: "6",
-            pointHoverBorderWidth: "8",
+            borderWidth: "1",
+            pointBorderWidth: "1",
+            pointHoverRadius: "1",
+            pointHoverBorderWidth: "1",
             pointHoverBorderColor: "rgb(74,85,104,0.2)"
           },
           {
@@ -83,10 +103,10 @@ const Test = (props: DashboardProps) => {
             data: hash.get("Andriod") ?? [0],
             fill: false,
             pointBackgroundColor: "#51684a",
-            borderWidth: "3",
-            pointBorderWidth: "4",
-            pointHoverRadius: "6",
-            pointHoverBorderWidth: "8",
+            borderWidth: "1",
+            pointBorderWidth: "1",
+            pointHoverRadius: "1",
+            pointHoverBorderWidth: "1",
             pointHoverBorderColor: "rgb(174,85,104,0.2)"
           },
           {
@@ -95,11 +115,12 @@ const Test = (props: DashboardProps) => {
             data: hash.get("Oivind") ?? [0],
             fill: false,
             pointBackgroundColor: "#51684a",
-            borderWidth: "3",
-            pointBorderWidth: "4",
-            pointHoverRadius: "6",
-            pointHoverBorderWidth: "8",
-            pointHoverBorderColor: "rgb(174,85,104,0.2)"
+            borderWidth: "1",
+            pointBorderWidth: "1",
+            pointHoverRadius: "1",
+            pointHoverBorderWidth: "1",
+            pointHoverBorderColor: "rgb(174,85,104,0.2)",
+            cubicInterpolationMode: "default",
           },
           {
             label: "Jinxen",
@@ -107,10 +128,10 @@ const Test = (props: DashboardProps) => {
             data: hash.get("Jinxen") ?? [0],
             fill: false,
             pointBackgroundColor: "#51684a",
-            borderWidth: "3",
-            pointBorderWidth: "4",
-            pointHoverRadius: "6",
-            pointHoverBorderWidth: "8",
+            borderWidth: "1",
+            pointBorderWidth: "1",
+            pointHoverRadius: "1",
+            pointHoverBorderWidth: "1",
             pointHoverBorderColor: "rgb(174,85,104,0.2)"
           },
           {
@@ -119,10 +140,10 @@ const Test = (props: DashboardProps) => {
             data: hash.get("dTd") ?? [0],
             fill: false,
             pointBackgroundColor: "#51684a",
-            borderWidth: "3",
-            pointBorderWidth: "4",
-            pointHoverRadius: "6",
-            pointHoverBorderWidth: "8",
+            borderWidth: "1",
+            pointBorderWidth: "1",
+            pointHoverRadius: "1",
+            pointHoverBorderWidth: "1",
             pointHoverBorderColor: "rgb(174,85,104,0.2)"
           }
         ]
