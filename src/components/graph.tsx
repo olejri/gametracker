@@ -43,7 +43,32 @@ const Test = (props: DashboardProps) => {
               //first win
               hash.set(player.nickname, [1]);
             }
-          } else {
+          }
+          else if(player.position === 2) {
+            const newVar = hash.get(player.nickname);
+            if (newVar !== undefined) {
+              const length = newVar.length;
+              const numberOfWins = newVar.at(length - 1) ?? 0;
+              newVar.push(numberOfWins + 0.5);
+              hash.set(player.nickname, newVar);
+            } else {
+              //first win
+              hash.set(player.nickname, [0.3]);
+            }
+          }
+          else if(player.position === 3) {
+            const newVar = hash.get(player.nickname);
+            if (newVar !== undefined) {
+              const length = newVar.length;
+              const numberOfWins = newVar.at(length - 1) ?? 0;
+              newVar.push(numberOfWins + 0.1);
+              hash.set(player.nickname, newVar);
+            } else {
+              //first win
+              hash.set(player.nickname, [0.1]);
+            }
+          }
+          else {
             const newVar = hash.get(player.nickname);
             if (newVar !== undefined) {
               const length = newVar.length;
