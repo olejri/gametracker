@@ -24,22 +24,28 @@ const Test = (props: DashboardProps) => {
   });
 
   const url = "https://game-night-stats.appspot.com/api/gamenights/";
-  const { data: gameNight } = useFetch<AndyPayload[]>(url);
+  const { data: gameNight } = useFetch<AndyPayload[]>(url, {
+    mode: "no-cors",
+  });
 
   const validGameNights = gameNight?.map(
     (gameNight) => dayjs(gameNight.date_epoch).format("DD.MM.YYYY")
-  ) ?? [];
+  );
 
   useEffect(() => {
     const numberOfGames = data?.map((session) => {
+      if(!validGameNights?.includes(
+        dayjs(session.createdAt.toString()).format("DD.MM.YYYY")
+      )) {
+        return;
+      }
       return dayjs(session.createdAt.toString()).format("DD.MM.YYYY");
     }) ?? [];
 
     const hash = new Map<string, number[]>();
     data?.forEach((session) => {
       const s = dayjs(session.createdAt).format("DD.MM.YYYY");
-      console.log(validGameNights)
-      if (!validGameNights.includes(s)) {
+      if (!validGameNights?.includes(s)) {
         return;
       }
 
@@ -214,7 +220,7 @@ const Test = (props: DashboardProps) => {
     return () => {
       newChart.destroy();
     };
-  }, [data, validGameNights]);
+  }, [data, gameNight, validGameNights]);
 
   return (
     <>
