@@ -125,3 +125,7 @@ export enum GameSessionStatus {
     Cancelled = "Cancelled"
 }
 
+export type AndyPayload = {
+    id: string,
+    date_epoch: number,
+}
