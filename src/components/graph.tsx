@@ -214,7 +214,7 @@ const Test = (props: DashboardProps) => {
     return () => {
       newChart.destroy();
     };
-  }, [data]);
+  }, [data, validGameNights]);
 
   return (
     <>
