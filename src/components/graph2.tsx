@@ -5,6 +5,7 @@ import { api } from "npm/utils/api";
 import { type DashboardProps } from "npm/components/Types";
 import dayjs from "dayjs";
 import { copy } from "copy-anything";
+import { gameNightDates } from "npm/components/HelperFunctions";
 
 
 const Test2 = (props: DashboardProps) => {
@@ -13,8 +14,10 @@ const Test2 = (props: DashboardProps) => {
       groupId: props.groupName
     }
   });
+  const validateGameDates = gameNightDates();
+
   const onlyTerraGame = data?.filter((session) => {
-    return session.gameName === "Terraforming Mars";
+    return session.gameName === "Terraforming Mars" && validateGameDates.includes(dayjs(session.createdAt.toString()).format("DD.MM.YYYY"));
   });
 
   //get a set of nicknames of all players
