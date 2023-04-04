@@ -12,8 +12,8 @@ import { LoadingPage } from "npm/components/loading";
 
 
 const GameSearch = () => {
-  const mechanismUrl = "https://api.boardgameatlas.com/api/game/mechanics?client_id=QWFcgdyEt7";
-  const categoryUrl = "https://api.boardgameatlas.com/api/game/categories?client_id=QWFcgdyEt7";
+  const mechanismUrl = "https://api.boardgameatlas.com/api/game/mechanics?client_id=1rbEg28jEc";
+  const categoryUrl = "https://api.boardgameatlas.com/api/game/categories?client_id=1rbEg28jEc";
   const { data: mechanicsData, error: mechanicsError } = useFetch<MechanicsResponse>(mechanismUrl);
   const { data: categoriesData, error: categoriesError } = useFetch<CategoriesResponse>(categoryUrl);
 
@@ -34,19 +34,19 @@ const GameSearch = () => {
 
   function search(searchName: string, mechanic: string, category: string) {
     if (searchName.length === 0 && category.length === 0 && mechanic.length > 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&mechanics=${mechanic}&client_id=QWFcgdyEt7`);
+      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&mechanics=${mechanic}&client_id=1rbEg28jEc`);
     } else if(searchName.length === 0 && mechanic.length === 0 && category.length > 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&categories=${category}&client_id=QWFcgdyEt7`);
+      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&categories=${category}&client_id=1rbEg28jEc`);
     } else if (searchName.length > 0 && mechanic.length === 0 && category.length === 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&client_id=QWFcgdyEt7`);
+      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&client_id=1rbEg28jEc`);
     } else if (searchName.length === 0 && mechanic.length> 0 && category.length > 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&mechanics=${mechanic}&categories=${category}&client_id=QWFcgdyEt7`);
+      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&mechanics=${mechanic}&categories=${category}&client_id=1rbEg28jEc`);
     } else if (searchName.length > 0 && mechanic.length === 0 && category.length > 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&categories=${category}&client_id=QWFcgdyEt7`);
+      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&categories=${category}&client_id=1rbEg28jEc`);
     } else if (searchName.length > 0 && mechanic.length > 0 && category.length === 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&mechanics=${mechanic}&client_id=QWFcgdyEt7`);
+      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&mechanics=${mechanic}&client_id=1rbEg28jEc`);
     } else {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&mechanics=${mechanic}&categories=${category}&client_id=QWFcgdyEt7`)
+      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&mechanics=${mechanic}&categories=${category}&client_id=1rbEg28jEc`)
     }
   }
 

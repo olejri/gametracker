@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 
 
 const GamesOverview = () => {
-  const mechanismUrl = "https://api.boardgameatlas.com/api/game/mechanics?client_id=QWFcgdyEt7";
-  const categoryUrl = "https://api.boardgameatlas.com/api/game/categories?client_id=QWFcgdyEt7";
+  const mechanismUrl = "https://api.boardgameatlas.com/api/game/mechanics?client_id=1rbEg28jEc";
+  const categoryUrl = "https://api.boardgameatlas.com/api/game/categories?client_id=1rbEg28jEc";
   const router = useRouter();
   // const options: RequestInit = {
   //   method: "GET",
@@ -22,7 +22,7 @@ const GamesOverview = () => {
   const { data: categoriesData, error: categoriesError } = useFetch<CategoriesResponse>(categoryUrl);
 
   const [skip, setSkip] = useState(0);
-  const [url, setUrl] = useState(`https://api.boardgameatlas.com/api/search?fields=name,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&skip=${skip}&limit=10}&client_id=QWFcgdyEt7`);
+  const [url, setUrl] = useState(`https://api.boardgameatlas.com/api/search?fields=name,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&skip=${skip}&limit=10}&client_id=1rbEg28jEc`);
 
   function handleLoadMore(forward: boolean) {
     if (forward) {
@@ -30,7 +30,7 @@ const GamesOverview = () => {
     } else {
       setSkip(notLessThanZero(skip - 10));
     }
-    setUrl(`https://api.boardgameatlas.com/api/search?fields=name,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&skip=${skip}&limit=10}&client_id=QWFcgdyEt7`);
+    setUrl(`https://api.boardgameatlas.com/api/search?fields=name,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&skip=${skip}&limit=10}&client_id=1rbEg28jEc`);
   }
 
   function notLessThanZero(value: number) {
