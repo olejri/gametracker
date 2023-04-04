@@ -26,24 +26,20 @@ const Test = (props: DashboardProps) => {
 
   useEffect(() => {
     const validDates = gameNightDates();
-    const numberOfGames = data?.map((session) => {
-      if(!validDates.includes(
-        dayjs(session.createdAt.toString()).format("DD.MM.YYYY")
-      )) {
-        return;
+    const validSession = data?.map((session) => {
+      if(validDates.includes(dayjs(session.createdAt.toString()).format("DD.MM.YYYY"))) {
+        return session;
       }
-      return dayjs(session.createdAt.toString()).format("DD.MM.YYYY");
+    });
+
+    const numberOfGames = validSession?.map((session) => {
+      return dayjs(session?.createdAt.toString()).format("DD.MM.YYYY");
     });
 
     const hash = new Map<string, number[]>();
-    data?.forEach((session) => {
-      const s = dayjs(session.createdAt).format("DD.MM.YYYY");
-      if (!validDates?.includes(s)) {
-        return;
-      }
-
+    validSession?.forEach((session) => {
       const players = new Set(copy(nicknames));
-      session.players.forEach((player) => {
+      session?.players.forEach((player) => {
         if (hash.has(player.nickname)) {
           if(player.position === 1) {
             const newVar = hash.get(player.nickname);
