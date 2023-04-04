@@ -124,8 +124,3 @@ export enum GameSessionStatus {
     Completed = "Completed",
     Cancelled = "Cancelled"
 }
-
-export type AndyPayload = {
-    id: string,
-    date_epoch: number,
-}

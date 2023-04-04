@@ -2,10 +2,10 @@ import React, { useEffect } from "react";
 import "chart.js/auto";
 import { Chart } from "chart.js";
 import { api } from "npm/utils/api";
-import { type AndyPayload, type DashboardProps } from "npm/components/Types";
+import { type DashboardProps } from "npm/components/Types";
 import dayjs from "dayjs";
 import { copy } from "copy-anything";
-import useFetch from "npm/lib/FetchFromAtlas";
+import { gameNightDates } from "npm/components/HelperFunctions";
 
 
 const Test = (props: DashboardProps) => {
@@ -23,29 +23,22 @@ const Test = (props: DashboardProps) => {
     });
   });
 
-  const url = "https://game-night-stats.appspot.com/api/gamenights/";
-  const { data: gameNight } = useFetch<AndyPayload[]>(url, {
-    mode: "no-cors",
-  });
-
-  const validGameNights = gameNight?.map(
-    (gameNight) => dayjs(gameNight.date_epoch).format("DD.MM.YYYY")
-  );
 
   useEffect(() => {
+    const validDates = gameNightDates();
     const numberOfGames = data?.map((session) => {
-      if(!validGameNights?.includes(
+      if(!validDates.includes(
         dayjs(session.createdAt.toString()).format("DD.MM.YYYY")
       )) {
         return;
       }
       return dayjs(session.createdAt.toString()).format("DD.MM.YYYY");
-    }) ?? [];
+    });
 
     const hash = new Map<string, number[]>();
     data?.forEach((session) => {
       const s = dayjs(session.createdAt).format("DD.MM.YYYY");
-      if (!validGameNights?.includes(s)) {
+      if (!validDates?.includes(s)) {
         return;
       }
 
@@ -220,7 +213,7 @@ const Test = (props: DashboardProps) => {
     return () => {
       newChart.destroy();
     };
-  }, [data, gameNight, validGameNights]);
+  }, [data]);
 
   return (
     <>
