@@ -5,4 +5,4 @@ const GameSearchPage = () => (
   <GameSearch />
 );
 
-export default GameSearch;
+export default GameSearchPage;

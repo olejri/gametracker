@@ -1,29 +1,36 @@
-import { GameSessionStatus, type PlayerNicknameAndScore } from "npm/components/Types";
+import type {
+  AtlasGame,
+  Category,
+  Game,
+  Mechanic,
+  PlayerNicknameAndScore
+} from "npm/components/Types";
+import { GameSessionStatus } from "npm/components/Types";
 import dayjs from "dayjs";
 
 export function FindGameSessionStatus(status: string): GameSessionStatus {
-switch (status) {
-        case "Ongoing":
-            return GameSessionStatus.Ongoing;
-        case "Completed":
-            return GameSessionStatus.Completed;
-        case "Cancelled":
-            return GameSessionStatus.Cancelled;
-        default:
-            throw new Error(`Invalid GameSessionStatus: ${status}`);
-    }
+  switch (status) {
+    case "Ongoing":
+      return GameSessionStatus.Ongoing;
+    case "Completed":
+      return GameSessionStatus.Completed;
+    case "Cancelled":
+      return GameSessionStatus.Cancelled;
+    default:
+      throw new Error(`Invalid GameSessionStatus: ${status}`);
+  }
 }
 
 export function sortPlayers(players: PlayerNicknameAndScore[]) {
-    return players.sort((a, b) => {
-        if (a.position > b.position) {
-            return 1;
-        }
-        if (a.position < b.position) {
-            return -1;
-        }
-        return 0;
-    });
+  return players.sort((a, b) => {
+    if (a.position > b.position) {
+      return 1;
+    }
+    if (a.position < b.position) {
+      return -1;
+    }
+    return 0;
+  });
 }
 
 export function gameNightDates() {
@@ -175,8 +182,54 @@ export function gameNightDates() {
     1447113600
   ];
   return numbers.map((number) => {
-    return dayjs(number*1000).format("DD.MM.YYYY");
+    return dayjs(number * 1000).format("DD.MM.YYYY");
   });
 }
 
+export function makeBoardGameAtlasSearchUrl(searchName: string, mechanic: string, category: string) {
+  if (searchName.length === 0 && category.length === 0 && mechanic.length > 0) {
+    return `https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&mechanics=${mechanic}&client_id=1rbEg28jEc`;
+  } else if (searchName.length === 0 && mechanic.length === 0 && category.length > 0) {
+    return `https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&categories=${category}&client_id=1rbEg28jEc`;
+  } else if (searchName.length > 0 && mechanic.length === 0 && category.length === 0) {
+    return `https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&client_id=1rbEg28jEc`;
+  } else if (searchName.length === 0 && mechanic.length > 0 && category.length > 0) {
+    return `https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&mechanics=${mechanic}&categories=${category}&client_id=1rbEg28jEc`;
+  } else if (searchName.length > 0 && mechanic.length === 0 && category.length > 0) {
+    return `https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&categories=${category}&client_id=1rbEg28jEc`;
+  } else if (searchName.length > 0 && mechanic.length > 0 && category.length === 0) {
+    return `https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&mechanics=${mechanic}&client_id=1rbEg28jEc`;
+  } else {
+    return `https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&mechanics=${mechanic}&categories=${category}&client_id=1rbEg28jEc`;
+  }
+}
 
+export const addMechanicAndCategoryToGame = (atlasGamesResult: AtlasGame[], mechanics: Mechanic[], categories: Category[]) => {
+  return atlasGamesResult.map((atlasGame) => {
+    const gameMechanics = atlasGame.mechanics.map((mechanic) => {
+      return mechanics.find((mechanicData) => mechanicData.id === mechanic.id)?.name ?? "Unknown";
+    });
+    const gameCategories = atlasGame.categories.map((category) => {
+      return categories.find((categoryData) => categoryData.id === category.id)?.name ?? "Unknown";
+    });
+
+    return { ...atlasGame, mechanics: gameMechanics, categories: gameCategories };
+  });
+};
+
+export const isGameInCollection = (game: AtlasGame, collections: Game[]) => {
+  return collections.some((collection) => collection.name === game.name);
+};
+
+export const isGameAnExpansion = (game: AtlasGame) => {
+  let isExpansion = false;
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  game.categories.forEach((category: string) => {
+    if (category == "Expansion") {
+      isExpansion = true;
+    }
+  });
+  return isExpansion;
+};

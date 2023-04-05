@@ -1,27 +1,25 @@
-import useFetch from "npm/lib/FetchFromAtlas";
 import React, { useState } from "react";
 import {
-  type AtlasResponse,
-  type CategoriesResponse,
   type AtlasGame,
-  type MechanicsResponse
 } from "npm/components/Types";
 import Image from "next/image";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
-
+import SearchBar from "npm/components/SearchBar";
+import { addMechanicAndCategoryToGame, isGameAnExpansion, isGameInCollection } from "npm/components/HelperFunctions";
 
 const GameSearch = () => {
-  const mechanismUrl = "https://api.boardgameatlas.com/api/game/mechanics?client_id=1rbEg28jEc";
-  const categoryUrl = "https://api.boardgameatlas.com/api/game/categories?client_id=1rbEg28jEc";
-  const { data: mechanicsData, error: mechanicsError } = useFetch<MechanicsResponse>(mechanismUrl);
-  const { data: categoriesData, error: categoriesError } = useFetch<CategoriesResponse>(categoryUrl);
-
-  const [url, setUrl] = useState("");
-  const [searchName, setSearchName] = useState("");
-  const [mechanic, setMechanic] = useState<string>("");
-  const [category, setCategory] = useState<string>("");
   const [baseGameId, setBaseGameId] = useState<string>();
+  const [atlasGamesResult, setAtlasGamesResult] = useState<AtlasGame[]>();
+  const { data: mechanics, isLoading: mechanicsIsLoading, error: mechanicsErrors } = api.game.getAllMechanics.useQuery();
+  const { data: categories, isLoading: categoriesIsLoading, error: categoriesError } = api.game.getAllCategories.useQuery();
+  const mutationSearch= api.game.searchForGame.useMutation(
+    {
+      onSuccess: (data) => {
+        setAtlasGamesResult(data);
+      }
+    }
+  )
 
   const { data: collections } = api.game.getAllGames.useQuery();
   const ctx = api.useContext()
@@ -32,131 +30,23 @@ const GameSearch = () => {
     }
   });
 
-  function search(searchName: string, mechanic: string, category: string) {
-    if (searchName.length === 0 && category.length === 0 && mechanic.length > 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&mechanics=${mechanic}&client_id=1rbEg28jEc`);
-    } else if(searchName.length === 0 && mechanic.length === 0 && category.length > 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&categories=${category}&client_id=1rbEg28jEc`);
-    } else if (searchName.length > 0 && mechanic.length === 0 && category.length === 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&client_id=1rbEg28jEc`);
-    } else if (searchName.length === 0 && mechanic.length> 0 && category.length > 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&mechanics=${mechanic}&categories=${category}&client_id=1rbEg28jEc`);
-    } else if (searchName.length > 0 && mechanic.length === 0 && category.length > 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&categories=${category}&client_id=1rbEg28jEc`);
-    } else if (searchName.length > 0 && mechanic.length > 0 && category.length === 0) {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&mechanics=${mechanic}&client_id=1rbEg28jEc`);
-    } else {
-      setUrl(`https://api.boardgameatlas.com/api/search?fields=name,description,image_url,min_players,max_players,min_playtime,max_playtime,mechanics,categories&fuzzy_match=true&name=${searchName}&mechanics=${mechanic}&categories=${category}&client_id=1rbEg28jEc`)
-    }
-  }
-
-  const { data, error, loading } = useFetch<AtlasResponse>(url);
-  if (error || mechanicsError || categoriesError) return <p>There is an error.</p>;
-  if (!mechanicsData || !categoriesData || loading || !collections) return (
+  if (categoriesError || mechanicsErrors) return <p>There is an error.</p>;
+  if (!categories || !collections || mechanicsIsLoading || categoriesIsLoading || mutationSearch.isLoading) return (
     <div className="flex grow">
       <LoadingPage />
     </div>
   );
 
-  if (!data) return (
-    <div>
-      <h1 className="text-xl font-bold mb-4">Search after a game</h1>
-      <input className="border border-gray-300 rounded py-2 px-4" type="text" placeholder="Name of the game"
-             onChange={(e) => setSearchName(e.target.value)} />
-      <select
-        value={mechanic}
-        onChange={(event) => {
-          setMechanic(event.target.value);
-        }}
-      >
-        <option value="">Select a mechanic</option>
-        {mechanicsData.mechanics.map((mechanic) => (
-          <option key={mechanic.id} value={mechanic.id}>
-            {mechanic.name ?? "Unnamed mechanic"}
-          </option>
-        ))}
-      </select>
-      <select
-        value={category}
-        onChange={(event) => {
-          setCategory(event.target.value);
-      }}>
-        <option value="">Select a category</option>
-        {categoriesData.categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name ?? "Unnamed category"}
-          </option>
-        ))}
-      </select>
-      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              onClick={() => search(searchName, mechanic, category)}>Search
-      </button>
-    </div>
+  if (atlasGamesResult === undefined) return (
+   <SearchBar setAtlasGamesResult={setAtlasGamesResult} />
   );
 
-  const games = data.games.map((game) => {
-    const gameMechanics = game.mechanics.map((mechanic) => {
-      return mechanicsData.mechanics.find((mechanicData) => mechanicData.id === mechanic.id)?.name ?? "Unknown";
-    });
-    const gameCategories = game.categories.map((category) => {
-      return categoriesData.categories.find((categoryData) => categoryData.id === category.id)?.name ?? "Unknown";
-    });
-    return { ...game, mechanics: gameMechanics, categories: gameCategories };
-  }) as unknown as AtlasGame[];
-
-  const isGameInCollection = (game: AtlasGame) => {
-    return collections.some((collection) => collection.name === game.name);
-  }
-
-  const isGameAnExpansion = (game: AtlasGame) => {
-    let isExpansion = false;
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    game.categories.forEach((category : string) => {
-      if(category == "Expansion") {
-        isExpansion = true;
-      }
-    });
-
-    return isExpansion
-  }
+  const games : AtlasGame[] = addMechanicAndCategoryToGame(atlasGamesResult, mechanics, categories) as unknown as AtlasGame[];
 
   return (
     <div>
       <div>
-        <h1 className="text-xl font-bold mb-4">Search after a game</h1>
-        <input className="border border-gray-300 rounded py-2 px-4" type="text" placeholder="Name of the game"
-               value={searchName}
-               onChange={(e) => setSearchName(e.target.value)} />
-        <select
-          value={mechanic}
-          onChange={(event) => {
-            setMechanic(event.target.value);
-          }}
-        >
-          <option value="">Select a mechanic</option>
-          {mechanicsData.mechanics.map((mechanic) => (
-            <option key={mechanic.id} value={mechanic.id}>
-              {mechanic.name ?? "Unnamed mechanic"}
-            </option>
-          ))}
-        </select>
-        <select
-          value={category}
-          onChange={(event) => {
-            setCategory(event.target.value);
-          }}>
-          <option value="">Select a category</option>
-          {categoriesData.categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name ?? "Unnamed category"}
-            </option>
-          ))}
-        </select>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                onClick={() => search(searchName, mechanic, category)}>Search
-        </button>
+        <SearchBar setAtlasGamesResult={setAtlasGamesResult} />
       </div>
       <div className="overflow-x-auto">
         <table className="mt-4 w-full border-collapse">
@@ -172,11 +62,11 @@ const GameSearch = () => {
           </tr>
           </thead>
           <tbody>
-          {games.map((game) => (
-            <tr key={game.name} className="hover:bg-gray-50">
+          {games.map((game, index) => (
+            <tr key={game.name + index.toString()} className="hover:bg-gray-50">
               <td className="py-2 px-4 border border-gray-300 text-left">
                 {game.name}
-                {isGameInCollection(game) ? <span className="ml-2 text-green-500">In collection</span>
+                {isGameInCollection(game, collections) ? <span className="ml-2 text-green-500">In collection</span>
                   : (
                     <>
                       {isGameAnExpansion(game) &&
