@@ -124,3 +124,14 @@ export enum GameSessionStatus {
     Completed = "Completed",
     Cancelled = "Cancelled"
 }
+
+export type SearchItem = {
+    id: string,
+    name: string
+}
+
+export type SearchItemProps = {
+    items: SearchItem[],
+    selectedItem: string,
+    setSelectedItem: (item: string) => void
+}

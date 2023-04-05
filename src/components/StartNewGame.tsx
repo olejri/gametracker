@@ -4,6 +4,7 @@ import { LoadingPage } from "npm/components/loading";
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import type { Game } from "npm/components/Types";
+import SelectWithSearch from "npm/components/SelectWithSearch";
 
 const StartNewGame = (props: DashboardProps) => {
   const { data: games } = api.game.getAllGames.useQuery({ withExpansions: false });
@@ -60,33 +61,24 @@ const StartNewGame = (props: DashboardProps) => {
     }
   });
 
+  function setChosenGameAndExpansions(gameObject: string) {
+    const game: Game = gameObject as unknown as Game;
+    setChosenGame(gameObject);
+    setChosenExpansions(gameMap.get(game.id) ?? []);
+  }
 
   return (
   <form id="game">
-    <div>
-      <div className="overflow-hidden rounded-lg bg-white shadow">
+    <div className= "overflow-hidden rounded-lg bg-white sm:shadow w-full sm:w-6/12">
+      <div className="overflow-hidden rounded-lg shadow-none">
         <div className="px-4 py-5 sm:p-6">
-          <select
-            value={chosenGame}
-            onChange={(event) => {
-              setChosenGame(event.target.value);
-              setChosenExpansions(gameMap.get(event.target.value) || []);
-            }}
-          >
-            <option value="">Select a game</option>
-            {games.map((game) => (
-              <option key={game.id} value={game.id}>
-                {game.name}
-              </option>
-            ))}
-          </select>
-
+          <SelectWithSearch items={games} selectedItem={chosenGame} setSelectedItem={setChosenGameAndExpansions} />
         </div>
       </div>
-      <div className="overflow-hidden rounded-lg bg-white shadow">
+      <div className="overflow-hidden rounded-lg bg-white shadow-none">
         <div className="px-4 py-5 sm:p-6">
           {chosenExpansions.length > 0 ? <fieldset>
-            <legend className="text-base font-semibold leading-6 text-gray-900">Expansions</legend>
+            <legend className="text-base font-semibold leading-6 text-gray-900">Pick expansions</legend>
             <div className="mt-4 divide-y divide-gray-200 border-t border-b border-gray-200">
               {chosenExpansions.map((game, personIdx) => (
                 <div key={personIdx} className="relative flex items-start py-4">
@@ -110,10 +102,10 @@ const StartNewGame = (props: DashboardProps) => {
           }
         </div>
       </div>
-      <div className="overflow-hidden rounded-lg bg-white shadow">
+      <div className="overflow-hidden rounded-lg bg-white shadow-none">
         <div className="px-4 py-5 sm:p-6">
           <fieldset>
-            <legend className="text-base font-semibold leading-6 text-gray-900">Players</legend>
+            <legend className="text-base font-semibold leading-6 text-gray-900">Pick players</legend>
             <div className="mt-4 divide-y divide-gray-200 border-t border-b border-gray-200">
               {players.data.map((person, personIdx) => (
                 <div key={personIdx} className="relative flex items-start py-4">
@@ -136,7 +128,7 @@ const StartNewGame = (props: DashboardProps) => {
           </fieldset>
         </div>
       </div>
-      <div className="overflow-hidden rounded-lg bg-white shadow">
+      <div className="overflow-hidden shadow-none">
         <div className="px-4 py-5 sm:p-6">
           <button
             disabled={disabled}
@@ -157,8 +149,9 @@ const StartNewGame = (props: DashboardProps) => {
                   expansionIds.push(name.substr(4));
                 }
               }
+              const game = chosenGame as unknown as Game;
               mutate.mutate({
-                gameId: chosenGame,
+                gameId: game.id,
                 groupId: props.groupName,
                 players: playerIds,
                 expansions: expansionIds
