@@ -10,7 +10,6 @@ export const gameRouter = createTRPCRouter({
   addGame: publicProcedure
     .input(
       z.object({
-        data: z.object({
           name: z.string().min(1),
           description: z.string().min(1),
           image_url: z.string().min(1),
@@ -20,39 +19,38 @@ export const gameRouter = createTRPCRouter({
           categories: z.string(),
           isExpansion: z.boolean(),
           baseGameId: z.string().optional()
-        })
       })
     )
     .mutation(async ({ ctx, input }) => {
       let baseGame = null;
-      if(input.data.baseGameId) {
+      if(input.baseGameId) {
         baseGame = await ctx.prisma.game.findUnique(
           {
             where: {
-              id: input.data.baseGameId
+              id: input.baseGameId
             }
           }
         )
       }
 
-      if(input.data.isExpansion && baseGame === null) {
+      if(input.isExpansion && baseGame === null) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: `Failed to create game: baseGameId is required for expansions`
         });
       }
 
-      if(input.data.baseGameId && baseGame === null) {
+      if(input.baseGameId && baseGame === null) {
         throw new TRPCError(
           {
             code: 'BAD_REQUEST',
-            message: `Failed to create game: baseGameId ${input.data.baseGameId} does not exist`
+            message: `Failed to create game: baseGameId ${input.baseGameId} does not exist`
           }
         );
       }
       try {
         const game = await ctx.prisma.game.create({
-          data: input.data
+          data: input
         });
         return { game };
       } catch (err) {

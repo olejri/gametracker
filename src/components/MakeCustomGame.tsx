@@ -16,7 +16,6 @@ const MakeCustomGame = () => {
   });
 
   const [game, setGame] = React.useState<Game>({
-    data: {
       name: "",
       description: "",
       players: "",
@@ -26,7 +25,6 @@ const MakeCustomGame = () => {
       image_url: "",
       isExpansion: false,
       baseGameId: undefined
-    }
   });
 
   if (!games) {
@@ -50,10 +48,8 @@ const MakeCustomGame = () => {
                 <input
                   onBlur={(e) => {
                     setGame({
-                      data: {
-                        ...game.data,
+                        ...game,
                         name: e.target.value
-                      }
                     });}}
                   type="text"
                   name="name"
@@ -70,10 +66,8 @@ const MakeCustomGame = () => {
                 <input
                   onBlur={(e) => {
                     setGame({
-                      data: {
-                        ...game.data,
+                        ...game,
                         description: e.target.value
-                      }
                     });}}
                   type="text"
                   name="description"
@@ -90,10 +84,8 @@ const MakeCustomGame = () => {
                 <input
                   onBlur={(e) => {
                     setGame({
-                      data: {
-                        ...game.data,
+                        ...game,
                         image_url: e.target.value
-                      }
                     });}}
                   type="text"
                   name="image_url"
@@ -110,10 +102,8 @@ const MakeCustomGame = () => {
                 <input
                   onBlur={(e) => {
                     setGame({
-                      data: {
-                        ...game.data,
+                        ...game,
                         players: e.target.value
-                      }
                     });}}
                   type="text"
                   name="players"
@@ -130,10 +120,8 @@ const MakeCustomGame = () => {
                 <input
                   onBlur={(e) => {
                     setGame({
-                      data: {
-                        ...game.data,
+                        ...game,
                         playtime: e.target.value
-                      }
                     });}}
                   type="text"
                   name="playtime"
@@ -150,10 +138,8 @@ const MakeCustomGame = () => {
                 <input
                   onBlur={(e) => {
                     setGame({
-                      data: {
-                        ...game.data,
+                        ...game,
                         mechanics: e.target.value
-                      }
                     });}}
                   type="text"
                   name="mechanics"
@@ -170,10 +156,8 @@ const MakeCustomGame = () => {
                 <input
                   onBlur={(e) => {
                     setGame({
-                      data: {
-                        ...game.data,
+                        ...game,
                         categories: e.target.value
-                      }
                     });}}
                   type="text"
                   name="categories"
@@ -188,22 +172,18 @@ const MakeCustomGame = () => {
                   Is expansion?
                 </label>
                 <input
-                  checked={game.data.isExpansion}
+                  checked={game.isExpansion}
                   onChange={(event) => {
                     if(event.target.checked) {
                       setGame({
-                        data: {
-                          ...game.data,
+                          ...game,
                           isExpansion: event.target.checked
-                        }
                       });
                     } else {
                       setGame({
-                        data: {
-                          ...game.data,
+                          ...game,
                           isExpansion: event.target.checked,
                           baseGameId: undefined
-                        }
                       });
                     }
                   }}
@@ -214,23 +194,21 @@ const MakeCustomGame = () => {
                   placeholder="Adventure, Animals, Asymmetric"
                 />
               </div>
-              {game.data.isExpansion && (
+              {game.isExpansion && (
                 <div
                   className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
                   <label htmlFor="basegame" className="block text-xs font-medium text-gray-900">
                     Base game
                   </label>
                   <select
-                    value={game.data.baseGameId}
+                    value={game.baseGameId}
                     className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
                     name="basegame"
                     id="basegame"
                     onChange={(event) => {
                       setGame({
-                        data: {
-                          ...game.data,
+                          ...game,
                           baseGameId: event.target.value
-                        }
                       });
                     }}
                   >

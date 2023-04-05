@@ -135,3 +135,8 @@ export type SearchItemProps = {
     selectedItem: string,
     setSelectedItem: (item: string) => void
 }
+
+export type OpenWithGameId = {
+    name: string
+    open: boolean
+}
