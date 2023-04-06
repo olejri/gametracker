@@ -46,15 +46,16 @@ const GameSearch = () => {
   );
 
   if (atlasGamesResult === undefined) return (
+    <div className="sm:w-3/12">
    <SearchBar setAtlasGamesResult={setAtlasGamesResult} />
+    </div>
   );
 
   const baseGames = collections.filter((game) => game.isExpansion === false);
-
   const games : AtlasGame[] = addMechanicAndCategoryToGame(atlasGamesResult, mechanics, categories) as unknown as AtlasGame[];
   return (
     <div>
-      <div>
+      <div className="sm:w-3/12">
         <SearchBar setAtlasGamesResult={setAtlasGamesResult} />
       </div>
       <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">

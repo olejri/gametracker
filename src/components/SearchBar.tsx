@@ -32,26 +32,18 @@ const SearchBar = (props: {
   );
 
  return (
-    <div>
+    <div className="">
       <h1 className="text-xl font-bold mb-4">Search after a game</h1>
       <input className="border border-gray-300 rounded py-2 px-4" type="text" placeholder="Name of the game"
              onChange={(e) => setSearchName(e.target.value)} />
-      <SelectWithSearch items={mechanics.map((m) => {
+      <SelectWithSearch
+        items={mechanics.map((m) => {
         return {id: m.id, name: m.name ?? "Unnamed mechanic"}
       })} selectedItem={mechanic} setSelectedItem={setMechanic} placeholder={"Select a mechanic"} title={null}/>
-
-      <select
-        value={category}
-        onChange={(event) => {
-          setCategory(event.target.value);
-      }}>
-        <option value="">Select a category</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name ?? "Unnamed category"}
-          </option>
-        ))}
-      </select>
+      <SelectWithSearch
+        items={categories.map((c) => {
+          return {id: c.id, name: c.name ?? "Unnamed mechanic"}
+        })} selectedItem={category} setSelectedItem={setCategory} placeholder={"Select a category"} title={null}/>
       <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={() =>
                 mutationSearch.mutate(
