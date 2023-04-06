@@ -1,5 +1,5 @@
-import { Fragment, useRef } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
+import { Fragment, useRef } from "react";
+import { Dialog, Transition } from "@headlessui/react";
 import type { OpenWithGameId } from "npm/components/Types";
 
 const InfoModal = (props: {
@@ -8,13 +8,17 @@ const InfoModal = (props: {
   gameName: string,
   title: string,
   message: string,
+  categories: string,
+  mechanics: string,
 }) => {
 
   const open = props.open.open && props.open.name === props.gameName;
   const setOpen = props.setOpen;
-  const cancelButtonRef = useRef(null)
+  const cancelButtonRef = useRef(null);
   const title = props.title;
   const message = props.message;
+  const categories = props.categories;
+  const mechanics = props.mechanics;
 
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -44,15 +48,34 @@ const InfoModal = (props: {
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+              <Dialog.Panel
+                className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
                 <div>
-                 <div className="mt-3 text-center sm:mt-5">
-                    <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-gray-900">
+                  <div className="mt-3 text-center sm:mt-5">
+                    <Dialog.Title as="h3"   className="block text-2xl font-medium text-gray-700">
                       {title}
                     </Dialog.Title>
                     <div className="mt-2">
-                      <div className="text-sm text-gray-500">
-                        <div dangerouslySetInnerHTML={{ __html: message }} />
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="text-sm text-gray-500">
+                          <div dangerouslySetInnerHTML={{ __html: message }} />
+                        </div>
+                        <div>
+                          <label
+                            className="block text-lg font-medium text-gray-700"
+                          >Categories:</label>
+                          <p
+                            className="text-sm text-gray-500"
+                          >{categories}</p>
+                        </div>
+                        <div>
+                          <label
+                            className="block text-lg font-medium text-gray-700"
+                          >Mechanics:</label>
+                          <p
+                            className="text-sm text-gray-500"
+                          >{mechanics}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -72,7 +95,7 @@ const InfoModal = (props: {
         </div>
       </Dialog>
     </Transition.Root>
-  )
-}
+  );
+};
 
-export default InfoModal
+export default InfoModal;

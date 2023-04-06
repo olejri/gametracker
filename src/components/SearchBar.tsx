@@ -4,6 +4,7 @@ import {
 } from "npm/components/Types";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
+import SelectWithSearch from "npm/components/SelectWithSearch";
 
 
 const SearchBar = (props: {
@@ -35,19 +36,10 @@ const SearchBar = (props: {
       <h1 className="text-xl font-bold mb-4">Search after a game</h1>
       <input className="border border-gray-300 rounded py-2 px-4" type="text" placeholder="Name of the game"
              onChange={(e) => setSearchName(e.target.value)} />
-      <select
-        value={mechanic}
-        onChange={(event) => {
-          setMechanic(event.target.value);
-        }}
-      >
-        <option value="">Select a mechanic</option>
-        {mechanics.map((mechanic) => (
-          <option key={mechanic.id} value={mechanic.id}>
-            {mechanic.name ?? "Unnamed mechanic"}
-          </option>
-        ))}
-      </select>
+      <SelectWithSearch items={mechanics.map((m) => {
+        return {id: m.id, name: m.name ?? "Unnamed mechanic"}
+      })} selectedItem={mechanic} setSelectedItem={setMechanic} placeholder={"Select a mechanic"} title={null}/>
+
       <select
         value={category}
         onChange={(event) => {

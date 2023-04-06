@@ -131,6 +131,8 @@ export type SearchItem = {
 }
 
 export type SearchItemProps = {
+    title: string | null,
+    placeholder: string,
     items: SearchItem[],
     selectedItem: string,
     setSelectedItem: (item: string) => void

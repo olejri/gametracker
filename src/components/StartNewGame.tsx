@@ -72,7 +72,7 @@ const StartNewGame = (props: DashboardProps) => {
     <div className= "overflow-hidden rounded-lg bg-white sm:shadow w-full sm:w-6/12">
       <div className="overflow-hidden rounded-lg shadow-none">
         <div className="px-4 py-5 sm:p-6">
-          <SelectWithSearch items={games} selectedItem={chosenGame} setSelectedItem={setChosenGameAndExpansions} />
+          <SelectWithSearch items={games} selectedItem={chosenGame} setSelectedItem={setChosenGameAndExpansions} title={"Pick a game"} placeholder={""}/>
         </div>
       </div>
       <div className="overflow-hidden rounded-lg bg-white shadow-none">
