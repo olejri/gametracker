@@ -2,6 +2,7 @@ import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/
 import { clerkClient } from "@clerk/nextjs/server"
 import { z } from "zod";
 import { filterUserForClient } from "npm/server/api/helpers/filterUserForClient";
+import { TRPCError } from "@trpc/server";
 
 export const playerRouter = createTRPCRouter({
   addPlayer: privateProcedure
@@ -41,9 +42,15 @@ export const playerRouter = createTRPCRouter({
           clerkId: input.clerkId
         }
       });
-      return {
-        data: player
-      };
+      if (!player) {
+        throw new TRPCError(
+          {
+            code: "NOT_FOUND",
+            message: "Player not found"
+          }
+        )
+      }
+      return player;
     }),
 
   getPlayers: publicProcedure

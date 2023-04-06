@@ -1,7 +1,9 @@
 import React, { type ReactNode } from "react";
 import { Disclosure } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { LoadingPage } from "npm/components/loading";
+import { useRouter } from "next/router";
 
 
 interface Props {
@@ -17,8 +19,16 @@ const withMainLayout = () => (
   WrappedComponent: React.ComponentType
 ) => {
   const MainLayout = (props: Props) => {
+    const { isLoaded, isSignedIn, user } = useUser();
+    const router = useRouter();
+
+    if (!isLoaded || !isSignedIn || !user) {
+      return <LoadingPage />;
+    }
+    const pathname = router.pathname;
     const navigation = [
-      { name: "Go to dashboard", href: "/" + props.slug + "/dashboard", current: false }
+      { name: "Dashboard", href: "/" + props.slug + "/dashboard", current: pathname === "/[dashboardId]/dashboard" },
+      { name: "Profile", href: "/" + props.slug + "/player/"+user.id, current: pathname === "/[dashboardId]/player/[playerId]" }
     ];
 
     return (
@@ -32,15 +42,15 @@ const withMainLayout = () => (
                     <div className="flex">
                       <div className="flex flex-shrink-0 items-center">
                         <div
-                          className="block h-8 w-auto lg:hidden"
+                          className="block h-8 w-auto sm:hidden"
                         >
                           <UserButton />
                         </div>
                       </div>
                       <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-                        {navigation.map((item) => (
+                        {navigation.map((item, index) => (
                           <a
-                            key={1}
+                            key={index}
                             href={item.href}
                             className={classNames(
                               item.current

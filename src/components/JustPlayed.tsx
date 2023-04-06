@@ -1,6 +1,6 @@
 import React from "react";
 import { api } from "npm/utils/api";
-import { LoadingPage } from "npm/components/loading";
+import { LoadingSpinner } from "npm/components/loading";
 import Image from "next/image";
 import dayjs from "dayjs";
 
@@ -14,8 +14,11 @@ const RecentlyActivities = (props: {
     return classes.filter(Boolean).join(" ");
   }
 
-
-  if (isLoading) return <LoadingPage />;
+  if (isLoading) return (
+    <div className="flex justify-center items-center">
+      <LoadingSpinner size={60} />
+    </div>
+  );
   if (isError) return <p>{error?.message}</p>;
 
   return (
@@ -34,7 +37,8 @@ const RecentlyActivities = (props: {
                       "h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white"
                     )}
                   >
-                    <Image className="mx-auto sm:h-auto sm:w-52 flex-shrink-0 rounded-full" src={game.image_url} alt="" width={200}
+                    <Image className="mx-auto sm:h-auto sm:w-52 flex-shrink-0 rounded-full" src={game.image_url} alt=""
+                           width={200}
                            height={200} priority={true} />
                   </span>
                 </div>
