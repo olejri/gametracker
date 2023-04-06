@@ -25,7 +25,7 @@ const GameCollections = () => {
             className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"
           >
             <div className="flex flex-1 flex-col p-8">
-              <Image className="mx-auto sm:h-52 sm:w-52 flex-shrink-0" src={game.image_url} alt="" width={200} height={200}/>
+              <Image className="mx-auto sm:h-auto sm:w-52 flex-shrink-0" src={game.image_url} alt="" width={200} height={200} priority={true}/>
               <h3 className="mt-6 text-sm font-medium text-gray-900">{game.name}</h3>
               <dl className="mt-1 flex flex-grow flex-col justify-between">
                 <dd className="text-sm text-gray-500">Players: {game.players}</dd>
