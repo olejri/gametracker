@@ -15,11 +15,12 @@ const GameCollections = () => {
   if (isError) {
     return <p>{error?.message}</p>;
   }
+  const sortedOwnedGames = games.sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div>
       <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {games.map((game, index) => (
+        {sortedOwnedGames.map((game, index) => (
           <li
             key={game.name + index.toString()}
             className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"
