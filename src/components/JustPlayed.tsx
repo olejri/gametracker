@@ -3,6 +3,8 @@ import { api } from "npm/utils/api";
 import { LoadingSpinner } from "npm/components/loading";
 import Image from "next/image";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
 const RecentlyActivities = (props: {
   groupName: string;
@@ -49,7 +51,7 @@ const RecentlyActivities = (props: {
                     </p>
                   </div>
                   <div className="whitespace-nowrap text-right text-sm text-gray-500">
-                    {dayjs(game.createdAt).format("DD.MM.YYYY")}
+                    {dayjs(game.createdAt).fromNow()}
                   </div>
                 </div>
               </div>
