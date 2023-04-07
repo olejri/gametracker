@@ -25,6 +25,7 @@ model Game {
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
   GameSessionGameJunction GameSessionGameJunction[]
+  PlayerGameJunction      PlayerGameJunction[]
 }
 
 model Player {
@@ -37,6 +38,7 @@ model Player {
   PlayerGameSessionJunction PlayerGameSessionJunction[]
   GameGroup                 GameGroup?                  @relation(fields: [groupId], references: [id])
   groupId                   String?
+  PlayerGameJunction        PlayerGameJunction[]
 
   @@unique(clerkId)
 }
@@ -81,4 +83,16 @@ model GameSession {
   updatedAt                 DateTime                    @updatedAt
   PlayerGameSessionJunction PlayerGameSessionJunction[]
   GameSessionGameJunction   GameSessionGameJunction[]
+}
+
+model PlayerGameJunction {
+  id        String   @id @default(uuid())
+  gameId    String
+  playerId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Game      Game     @relation(fields: [gameId], references: [id])
+  Player    Player   @relation(fields: [playerId], references: [id])
+
+  @@unique([gameId, playerId])
 }
