@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "npm/server/api/trpc";
+import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import fetch from "node-fetch-native";
 import type { AtlasResponse, CategoriesResponse, MechanicsResponse } from "npm/components/Types";
@@ -118,5 +118,32 @@ export const gameRouter = createTRPCRouter({
         return json.games;
       }
       return [] as AtlasResponse["games"];
-    })
+    }),
+
+  getGameOwnedBy: privateProcedure
+    .query(async ({ ctx }) => {
+      const player = await ctx.prisma.player.findUnique({
+        where: {
+          clerkId: ctx.userId
+        },
+        include: {
+          PlayerGameJunction: true
+        }
+      });
+      if (!player) {
+        throw new TRPCError(
+          {
+            code: "NOT_FOUND",
+            message: "Player not found"
+          }
+        )
+      }
+      return await ctx.prisma.game.findMany({
+        where: {
+          id: {
+            in: player.PlayerGameJunction.map(junction => junction.gameId)
+          }
+        }
+      });
+    }),
 });

@@ -193,9 +193,9 @@ const PlayerBoard = (props: {
             <div className="px-4 sm:px-6">
               <div className="mx-auto max-w-7xl sm:px-6">
                 <div className="overflow-hidden bg-white shadow-none sm:rounded-lg">
-                  <div className="px-4 py-5 sm:p-6 border-2 border-gray-200">
+                  <div className="px-4 py-5 sm:p-6">
                     {currentTab === "me" && (<MyProfile playerId={playerId}/>)}
-                    {currentTab === "collection" &&(<MyCollection playerId={playerId}/>)}
+                    {currentTab === "collection" &&(<MyCollection />)}
                     {currentTab === "stats" && (<MyStats playerId={playerId}/>)}
                   </div>
                 </div>

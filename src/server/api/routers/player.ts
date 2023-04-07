@@ -80,5 +80,42 @@ export const playerRouter = createTRPCRouter({
           };
         })
       };
+    }),
+
+  markGameAsOwned: privateProcedure
+    .input(
+      z.object({
+        gameId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      const player = await ctx.prisma.player.findUnique({
+        where: {
+          clerkId: ctx.userId
+        }
+      });
+      if (!player) {
+        throw new TRPCError(
+          {
+            code: "NOT_FOUND",
+            message: "Player not found"
+          }
+        )
+      }
+      const playerGameJunction = await ctx.prisma.playerGameJunction.create({
+        data: {
+          gameId: input.gameId,
+          playerId: player.id
+        }
+      });
+
+      if(!playerGameJunction) {
+        throw new TRPCError(
+          {
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to mark game as owned"
+          }
+        )
+      }
+      return playerGameJunction;
     })
 });
