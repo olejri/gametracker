@@ -14,7 +14,7 @@ const actions = (groupName: string) => {
   return [
     {
       title: "Start a new game",
-      message: "Choose a game start a session with your friends",
+      message: "Start a session with your friends",
       href: "/" + groupName + "/session/create",
       icon: PlayIcon,
       iconForeground: "text-sky-700",
@@ -38,7 +38,7 @@ const actions = (groupName: string) => {
     },
     {
       title: "Game collection",
-      message: "Can't decide? Get a random game based on some parameters",
+      message: "Everyone's game collection",
       href: "/" + groupName + "/games/collection",
       icon: Square3Stack3DIcon,
       iconForeground: "text-red-700",
