@@ -30,12 +30,17 @@ const MyCollection = () => {
       setMutateError("Already marked as owned");
     }
   })
+  const mutateDelete = api.player.removeGameAsOwned.useMutation({
+    onSuccess: () => {
+      void ctx.game.getGameOwnedBy.invalidate();
+    }
+  })
+
   const [modalOpen, setModalOpen] = useState<OpenWithGameId>({ open: false, name: "" });
   const [selectedGame, setSelectedGame] = useState<string>("");
   const [mutateError, setMutateError] = useState<string>("");
 
-
-  if (allIsLoading || ownedIsloading) return <LoadingPage />;
+  if (allIsLoading || ownedIsloading || mutateDelete.isLoading) return <LoadingPage />;
   if (allIsError || ownIsError) return <div>{allError?.message} {ownError?.message}</div>;
 
   const gamesThatCanBeMarkedAsOwned = allGames.filter(game => !ownedGames.some(ownedGame => ownedGame.name === game.name));
@@ -84,6 +89,12 @@ const MyCollection = () => {
                 <dl className="mt-1 flex flex-grow flex-col justify-between">
                   <dd className="text-sm text-gray-500">Players: {game.players}</dd>
                   <dd className="text-sm text-gray-500">Time: {game.playtime}</dd>
+                  <dd
+                    className="text-sm text-red-500 hover:text-red-700 cursor-pointer"
+                    onClick={() => {
+                      mutateDelete.mutate({ gameId: game.id })
+                    }}
+                  >Remove</dd>
                 </dl>
               </div>
               <div>

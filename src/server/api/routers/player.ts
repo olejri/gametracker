@@ -119,6 +119,33 @@ export const playerRouter = createTRPCRouter({
       return playerGameJunction;
     }),
 
+  removeGameAsOwned: privateProcedure
+    .input(
+      z.object({
+        gameId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      const player = await ctx.prisma.player.findUnique({
+        where: {
+          clerkId: ctx.userId
+        }
+      });
+      if (!player) {
+        throw new TRPCError(
+          {
+            code: "NOT_FOUND",
+            message: "Player not found"
+          }
+        )
+      }
+      await ctx.prisma.playerGameJunction.deleteMany({
+        where: {
+          gameId: input.gameId,
+          playerId: player.id
+        }
+      });
+    }),
+
   getLogInPlayer: privateProcedure
     .query(async ({ ctx }) => {
       const player = await ctx.prisma.player.findUnique({
