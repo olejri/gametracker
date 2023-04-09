@@ -1,5 +1,5 @@
 import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
-import { clerkClient } from "@clerk/nextjs/server"
+import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { filterUserForClient } from "npm/server/api/helpers/filterUserForClient";
 import { TRPCError } from "@trpc/server";
@@ -117,5 +117,65 @@ export const playerRouter = createTRPCRouter({
         )
       }
       return playerGameJunction;
+    }),
+
+  getLogInPlayer: privateProcedure
+    .query(async ({ ctx }) => {
+      const player = await ctx.prisma.player.findUnique({
+        where: {
+          clerkId: ctx.userId
+        }
+      });
+      if (!player) {
+        throw new TRPCError(
+          {
+            code: "NOT_FOUND",
+            message: "Player not found"
+          }
+        )
+      }
+      return player;
+    }),
+
+  updatePlayer: privateProcedure
+    .input(
+      z.object({
+        nickname: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const player = await ctx.prisma.player.findUnique({
+        where: {
+          clerkId: ctx.userId
+        }
+      });
+      if (!player) {
+        throw new TRPCError(
+          {
+            code: "NOT_FOUND",
+            message: "Player not found"
+          }
+        )
+      }
+
+      //check if nickname is already taken
+      const allPlayers = await ctx.prisma.player.findMany({
+      });
+
+      const nicknameAlreadyTaken = allPlayers.some((player) => player.nickname === input.nickname);
+      if(nicknameAlreadyTaken) throw new TRPCError(
+        {
+          code: "BAD_REQUEST",
+          message: "Nickname already taken"
+        });
+
+      return await ctx.prisma.player.update({
+        where: {
+          id: player.id
+        },
+        data: {
+          nickname: input.nickname
+        }
+      });
     })
 });
