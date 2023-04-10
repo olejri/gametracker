@@ -48,9 +48,9 @@ const withMainLayout = () => (
                         </div>
                       </div>
                       <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-                        {navigation.map((item, index) => (
+                        {navigation.map((item) => (
                           <a
-                            key={index}
+                            key={item.name}
                             href={item.href}
                             className={classNames(
                               item.current

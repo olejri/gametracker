@@ -80,8 +80,8 @@ const StartNewGame = (props: DashboardProps) => {
           {chosenExpansions.length > 0 ? <fieldset>
             <legend className="text-base font-semibold leading-6 text-gray-900">Pick expansions</legend>
             <div className="mt-4 divide-y divide-gray-200 border-t border-b border-gray-200">
-              {chosenExpansions.map((game, personIdx) => (
-                <div key={personIdx} className="relative flex items-start py-4">
+              {chosenExpansions.map((game) => (
+                <div key={game.id} className="relative flex items-start py-4">
                   <div className="min-w-0 flex-1 text-sm leading-6">
                     <label htmlFor={`person-${game.id}`} className="select-none font-medium text-gray-900">
                       {game.name}
@@ -107,8 +107,8 @@ const StartNewGame = (props: DashboardProps) => {
           <fieldset>
             <legend className="text-base font-semibold leading-6 text-gray-900">Pick players</legend>
             <div className="mt-4 divide-y divide-gray-200 border-t border-b border-gray-200">
-              {players.data.map((person, personIdx) => (
-                <div key={personIdx} className="relative flex items-start py-4">
+              {players.data.map((person) => (
+                <div key={person.id} className="relative flex items-start py-4">
                   <div className="min-w-0 flex-1 text-sm leading-6">
                     <label htmlFor={`person-${person.id}`} className="select-none font-medium text-gray-900">
                       {person.nickname ?? person.name}
