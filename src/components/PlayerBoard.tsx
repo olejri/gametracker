@@ -2,7 +2,9 @@ import React, { Fragment, useState } from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import {
-  Bars3Icon, ChartPieIcon,
+  Bars3Icon,
+  ChartPieIcon,
+  SparklesIcon,
   Square3Stack3DIcon,
   UserIcon,
   XMarkIcon
@@ -12,15 +14,16 @@ import { Dialog, Transition } from "@headlessui/react";
 import MyProfile from "npm/components/MyProfile";
 import MyCollection from "npm/components/MyCollection";
 import MyStats from "npm/components/MyStats";
+import MyAchievements from "npm/components/MyAchievements";
 
 const PlayerBoard = (props: {
   groupName: string
   playerId: string
 }) => {
-  const { data: player, isLoading, isError, error } = api.player.getPlayer.useQuery({ clerkId: props.playerId });
+  const { isLoading, isError, error } = api.player.getPlayer.useQuery({ clerkId: props.playerId });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState("me");
-  const playerId = props.playerId;
+  const groupName = props.groupName;
 
   const navigation = [
     { name: "Me",
@@ -36,6 +39,13 @@ const PlayerBoard = (props: {
       current: currentTab === "collection",
       iconForeground: "text-red-700",
       iconBackground: "bg-red-50"
+    },
+    { name: "Achievements",
+      onClick: () => {setCurrentTab("achievements")},
+      icon: SparklesIcon,
+      current: currentTab === "achievements",
+      iconForeground: "text-purple-700",
+      iconBackground: "bg-purple-50"
     },
     { name: "Stats",
       onClick: () => {setCurrentTab("stats")},
@@ -146,7 +156,7 @@ const PlayerBoard = (props: {
             </div>
           </Dialog>
         </Transition.Root>
-        <div className="hidden sm:relative sm:inset-y-0 sm:z-50 sm:flex sm:w-40 sm:flex-col sm:flex-none">
+        <div className="hidden sm:relative sm:inset-y-0 sm:z-50 sm:flex sm:w-45 sm:flex-col sm:flex-none">
           <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r-2 border-gray-200 bg-white px-6 pb-4">
             <nav className="flex flex-1 flex-col">
               <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -196,7 +206,8 @@ const PlayerBoard = (props: {
                   <div className="px-4 py-5 sm:p-6">
                     {currentTab === "me" && (<MyProfile />)}
                     {currentTab === "collection" &&(<MyCollection />)}
-                    {currentTab === "stats" && (<MyStats playerId={playerId}/>)}
+                    {currentTab === "stats" && (<MyStats />)}
+                    {currentTab === "achievements" && (<MyAchievements groupName={groupName} />)}
                   </div>
                 </div>
               </div>

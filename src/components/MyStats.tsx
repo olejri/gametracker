@@ -1,11 +1,7 @@
 import React from "react";
 
 
-const MyStats = (props: {
-  playerId: string;
-}) => {
-
-
+const MyStats = () => {
 
   return (
     <div className="">

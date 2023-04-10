@@ -142,3 +142,13 @@ export type OpenWithGameId = {
     name: string
     open: boolean
 }
+
+export type AchievementTypeCounter = {
+    name: string,
+    achievementNumber: number,
+    goal: number,
+    score: number,
+    fulfilled: boolean,
+    description: string,
+    gameName?: string,
+}
