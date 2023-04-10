@@ -37,7 +37,7 @@ const MyAchievements = (props: {
           <div className="w-full border-t border-gray-300" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900">Completed achievement</span>
+          <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900">Completed achievements</span>
         </div>
       </div>
       <div>
@@ -65,7 +65,7 @@ const MyAchievements = (props: {
           <div className="w-full border-t border-gray-300" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900">Uncompleted achievement</span>
+          <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900">Uncompleted achievements</span>
         </div>
       </div>
       <div>
