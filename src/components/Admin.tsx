@@ -27,7 +27,7 @@ const AdminView = () => {
   }
 
   const userIsAdmin = user.organizationMemberships.map((membership) => membership.role).includes("admin");
-  if (userIsAdmin) {
+  if (!userIsAdmin) {
     return <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
       <div className= "absolute top-0 right-0 flex h-screen w-screen items-center justify-center">
         <h1 className= "text-6xl text-red-500">Not Authorized</h1>
