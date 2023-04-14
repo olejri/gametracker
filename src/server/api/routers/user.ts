@@ -3,7 +3,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { filterUserForClientWithOrg } from "npm/server/api/helpers/filterUserForClient";
 import { TRPCError } from "@trpc/server";
-import { clerkApi } from "@clerk/nextjs/edge-middleware";
+import { OrganizationMembershipRole } from "@clerk/backend/dist/types/api/resources/Enums";
 
 export const userRouter = createTRPCRouter({
   getClerkUser: privateProcedure.query(async ({ ctx }) => {
@@ -87,25 +87,56 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string(),
+        slug: z.string()
       })
-    ).mutation(async ({ input }) => {
-      await clerkApi.invitations.createInvitation({
-        emailAddress: input.email,
-      });
-    }),
-
-  getPendingPlayers: privateProcedure
-    .query(async ({ ctx }) => {
-      const user = await clerkClient.users.getUser(ctx.userId);
-      if (!user) {
+    ).mutation(async ({ input, ctx }) => {
+      const organization = await clerkClient.organizations.getOrganization(
+        {
+          slug: input.slug
+        }
+      )
+      if (!organization) {
         throw new TRPCError(
           {
             code: "INTERNAL_SERVER_ERROR",
-            message: `Failed to get user: user ${ctx.userId} does not exist`
+            message: `Failed to get organization: organization ${input.slug} does not exist`
+          }
+        );
+      }
+      const invitation = await clerkClient.organizations.createOrganizationInvitation({
+        organizationId: organization.id,
+        inviterUserId: ctx.userId,
+        emailAddress: input.email,
+        role: "basic_member" as OrganizationMembershipRole
+      });
+      return invitation;
+    }),
+
+  getPendingPlayers: privateProcedure
+    .input(
+      z.object({
+        slug: z.string()
+      })
+    )
+    .query(async ({ input }) => {
+      const organization = await clerkClient.organizations.getOrganization(
+        {
+          slug: input.slug
+        }
+      )
+      if (!organization) {
+        throw new TRPCError(
+          {
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Failed to get organization: organization ${input.slug} does not exist`
           }
         );
       }
 
-      return await clerkApi.invitations.getInvitationList();
+      return await clerkClient.organizations.getPendingOrganizationInvitationList(
+        {
+          organizationId: organization.id
+        }
+      );
     })
 });
