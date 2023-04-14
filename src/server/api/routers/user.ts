@@ -3,6 +3,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { filterUserForClientWithOrg } from "npm/server/api/helpers/filterUserForClient";
 import { TRPCError } from "@trpc/server";
+import { clerkApi } from "@clerk/nextjs/edge-middleware";
 
 export const userRouter = createTRPCRouter({
   getClerkUser: privateProcedure.query(async ({ ctx }) => {
@@ -80,5 +81,31 @@ export const userRouter = createTRPCRouter({
       return {
         data: player
       };
+    }),
+
+  invitePlayer: privateProcedure
+    .input(
+      z.object({
+        email: z.string(),
+      })
+    ).mutation(async ({ input }) => {
+      await clerkApi.invitations.createInvitation({
+        emailAddress: input.email,
+      });
+    }),
+
+  getPendingPlayers: privateProcedure
+    .query(async ({ ctx }) => {
+      const user = await clerkClient.users.getUser(ctx.userId);
+      if (!user) {
+        throw new TRPCError(
+          {
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Failed to get user: user ${ctx.userId} does not exist`
+          }
+        );
+      }
+
+      return await clerkApi.invitations.getInvitationList();
     })
 });

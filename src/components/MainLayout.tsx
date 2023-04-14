@@ -25,11 +25,17 @@ const withMainLayout = () => (
     if (!isLoaded || !isSignedIn || !user) {
       return <LoadingPage />;
     }
+
+    const userIsAdmin = user.organizationMemberships.map((membership) => membership.role).includes("admin");
     const pathname = router.pathname;
     const navigation = [
       { name: "Dashboard", href: "/" + props.slug + "/dashboard", current: pathname === "/[dashboardId]/dashboard" },
-      { name: "Profile", href: "/" + props.slug + "/player/"+user.id, current: pathname === "/[dashboardId]/player/[playerId]" }
+      { name: "Profile", href: "/" + props.slug + "/player/"+user.id, current: pathname === "/[dashboardId]/player/[playerId]" },
     ];
+
+    if(userIsAdmin) {
+      navigation.push({ name: "Admin", href: "/" + props.slug + "/admin", current: pathname === "/[dashboardId]/admin" });
+    }
 
     return (
       <>
