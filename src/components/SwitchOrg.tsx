@@ -6,6 +6,8 @@ const SwitchOrg = () => {
     <OrganizationSwitcher
       hidePersonal={true}
       afterSwitchOrganizationUrl="/"
+      createOrganizationMode={"navigation"}
+      createOrganizationUrl={"/"}
     />
   );
 };
