@@ -31,6 +31,7 @@ const withMainLayout = () => (
     const navigation = [
       { name: "Dashboard", href: "/" + props.slug + "/dashboard", current: pathname === "/[dashboardId]/dashboard" },
       { name: "Profile", href: "/" + props.slug + "/player/"+user.id, current: pathname === "/[dashboardId]/player/[playerId]" },
+      { name: "Switch", href: "/" + props.slug + "/switch", current: pathname === "/[dashboardId]/switch" },
     ];
 
     if(userIsAdmin) {
