@@ -33,7 +33,7 @@ const withDashboardChecker = () => (
     }
 
     const slugs = clerk.user?.organizationMemberships?.map((org) => org.organization.slug ?? "") ?? [];
-    if (!slugs.includes(props.slug) && path.pathname !== "/") {
+    if (props.slug === undefined || !slugs.includes(props.slug) && path.pathname !== "/") {
       return <p>Ask admin for an invite! :D</p>;
     }
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
