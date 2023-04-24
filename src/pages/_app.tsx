@@ -3,36 +3,40 @@ import {
   ClerkProvider,
   SignedIn,
   SignedOut,
-  SignInButton,
+  SignInButton
 } from "@clerk/nextjs";
 
 import { api } from "npm/utils/api";
 import "npm/styles/globals.css";
-import withDashboardChecker from "npm/components/Checker";
-import { useRouter } from "next/router";
 import Head from "next/head";
 import "react-datepicker/dist/react-datepicker.css";
-import withMainLayout from "npm/components/MainLayout";
 import React from "react";
+import JoinGameGroupView from "npm/components/JoinGameGroup";
+import { GameGroupContextProvider } from "npm/context/GameGroupContext";
+import HasChosenGameGroup from "npm/components/HasChosenGameGroup";
+import NotChosenGameGroup from "npm/components/NotChosenGameGroup";
+import MainComponent from "npm/components/MainLayout";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
-  const ProtectedComponent = withDashboardChecker()(Component);
-  const MainComponent = withMainLayout()(Component);
-  const dashboardId = useRouter().query.dashboardId as string;
 
   return (
     <ClerkProvider {...pageProps} >
       <SignedIn>
-          <MainComponent slug={dashboardId}>
-          <ProtectedComponent slug={dashboardId}>
-            <Head>
-              <title>Game Tracker</title>
-              <meta name="description" content="Game Tracker" />
-              <link rel="icon" href="/favicon.ico" />
-            </Head>
-            <Component {...pageProps} />
-          </ProtectedComponent>
-        </MainComponent>
+        <GameGroupContextProvider>
+          <HasChosenGameGroup>
+            <MainComponent >
+              <Head>
+                <title>Game Tracker</title>
+                <meta name="description" content="Game Tracker" />
+                <link rel="icon" href="/favicon.ico" />
+              </Head>
+              <Component {...pageProps} />
+            </MainComponent>
+          </HasChosenGameGroup>
+          <NotChosenGameGroup>
+            <JoinGameGroupView />
+          </NotChosenGameGroup>
+        </GameGroupContextProvider>
       </SignedIn>
       <SignedOut>
         <SignInButton mode="modal">

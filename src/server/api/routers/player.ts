@@ -1,17 +1,16 @@
 import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { filterUserForClient } from "npm/server/api/helpers/filterUserForClient";
+import { filterUserForClient } from "npm/server/helpers/filterUserForClient";
 import { TRPCError } from "@trpc/server";
 import type { Game } from "npm/components/Types";
-import { getAchievements } from "npm/server/api/helpers/achievementHelper";
+import { getAchievements } from "npm/server/helpers/achievementHelper";
 
 export const playerRouter = createTRPCRouter({
   addPlayer: privateProcedure
     .input(
       z.object({
         name: z.string(),
-        groupId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
       const player = await ctx.prisma.player.upsert({
@@ -21,11 +20,9 @@ export const playerRouter = createTRPCRouter({
         create: {
           name: input.name,
           clerkId: ctx.userId,
-          groupId: input.groupId
         },
         update: {
           name: input.name,
-          groupId: input.groupId
         }
       });
       return {
@@ -61,9 +58,28 @@ export const playerRouter = createTRPCRouter({
         groupId: z.string()
       })
     ).query(async ({ ctx, input }) => {
+      const group = await ctx.prisma.gameGroup.findUnique({
+        where: {
+          id: input.groupId
+        },
+        include: {
+          PlayerGameGroupJunction: true
+        }
+      });
+
+      //check if game group exists
+      if (!group) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to get group: group ${input.groupId} does not exist`
+        });
+      }
+
       const players = await ctx.prisma.player.findMany({
         where: {
-          groupId: input.groupId
+          id : {
+            in: group?.PlayerGameGroupJunction.map((junction) => junction.playerId) ?? []
+          }
         }
       });
       const users = (
@@ -214,6 +230,18 @@ export const playerRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      //check if game group exists
+      if (!await ctx.prisma.gameGroup.findUnique({
+        where: {
+          id: input.gameGroup
+        }
+      })) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to get group: group ${input.gameGroup} does not exist`
+        });
+      }
+
       const player = await ctx.prisma.player.findUnique({
         where: {
           clerkId: ctx.userId

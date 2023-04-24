@@ -36,18 +36,18 @@ model Player {
   createdAt                 DateTime                    @default(now())
   updatedAt                 DateTime                    @updatedAt
   PlayerGameSessionJunction PlayerGameSessionJunction[]
-  GameGroup                 GameGroup?                  @relation(fields: [groupId], references: [id])
-  groupId                   String?
   PlayerGameJunction        PlayerGameJunction[]
+  PlayerGameGroupJunction   PlayerGameGroupJunction[]
 
   @@unique(clerkId)
 }
 
 model GameGroup {
-  id        String   @id
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Player    Player[]
+  id                      String                    @id
+  name                    String                    @default("Game Night")
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  PlayerGameGroupJunction PlayerGameGroupJunction[]
 }
 
 model PlayerGameSessionJunction {
@@ -95,4 +95,19 @@ model PlayerGameJunction {
   Player    Player   @relation(fields: [playerId], references: [id])
 
   @@unique([gameId, playerId])
+}
+
+model PlayerGameGroupJunction {
+  id                String    @id @default(uuid())
+  groupId           String
+  playerId          String
+  role              String
+  inviteStatus      String
+  gameGroupIsActive Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  GameGroup         GameGroup @relation(fields: [groupId], references: [id])
+  Player            Player    @relation(fields: [playerId], references: [id])
+
+  @@unique([groupId, playerId])
 }

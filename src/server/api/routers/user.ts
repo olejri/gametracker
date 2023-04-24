@@ -1,72 +1,8 @@
 import { createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
-import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { filterUserForClientWithOrg } from "npm/server/api/helpers/filterUserForClient";
 import { TRPCError } from "@trpc/server";
-import { OrganizationMembershipRole } from "@clerk/backend/dist/types/api/resources/Enums";
 
 export const userRouter = createTRPCRouter({
-  getClerkUser: privateProcedure.query(async ({ ctx }) => {
-
-    //dev mode
-    if (process.env.NODE_ENV === "development") {
-      return {
-        id: "user.id",
-        username: "user.username",
-        profileImageUrl: "user.profileImageUrl",
-        organizationSlug: "game-night",
-      }
-    }
-
-    const user = await clerkClient.users.getUser(ctx.userId);
-    if (!user) {
-      throw new TRPCError(
-        {
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to get user: user ${ctx.userId} does not exist`
-        }
-      );
-    }
-    const organizationMemberships = await clerkClient.users.getOrganizationMembershipList({
-      userId: ctx.userId
-    });
-
-    const organizationMembership = organizationMemberships[0];
-    if (!organizationMembership) {
-      throw new TRPCError(
-        {
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to get user: user ${ctx.userId} is not a member of an organization`
-        }
-      );
-    }
-    const userWithOrg = filterUserForClientWithOrg({user, organizationMembership});
-    // adding a new game group if it doesn't exist
-    await ctx.prisma.gameGroup.upsert({
-      where: {
-        id: userWithOrg.organizationSlug
-      },
-      create : {
-        id: userWithOrg.organizationSlug,
-      }, update : {
-      }
-    });
-    // adding a new player if it doesn't exist
-    await ctx.prisma.player.upsert({
-      where: {
-        clerkId: ctx.userId
-      },
-      create: {
-        name: userWithOrg.username ?? "unknown",
-        clerkId: ctx.userId,
-        groupId: userWithOrg.organizationSlug
-      },
-      update: {
-      }
-    });
-    return userWithOrg;
-  }),
-
   getPlayer: privateProcedure
     .input(
       z.object({
@@ -83,60 +19,130 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  invitePlayer: privateProcedure
+  acceptInvite: privateProcedure
     .input(
       z.object({
-        email: z.string(),
-        slug: z.string()
+        groupId: z.string(),
+        playerId: z.string()
       })
-    ).mutation(async ({ input, ctx }) => {
-      const organization = await clerkClient.organizations.getOrganization(
-        {
-          slug: input.slug
+    ).mutation(async ({ ctx, input }) => {
+      //check if game group exists
+      if (!await ctx.prisma.gameGroup.findUnique({
+        where: {
+          id: input.groupId
         }
-      )
-      if (!organization) {
+      })) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to get group: group ${input.groupId} does not exist`
+        });
+      }
+
+      const player = await ctx.prisma.player.findUnique({
+        where: {
+          id: input.playerId
+        }
+      });
+      if (!player) {
         throw new TRPCError(
           {
             code: "INTERNAL_SERVER_ERROR",
-            message: `Failed to get organization: organization ${input.slug} does not exist`
+            message: `Failed to get player: player ${input.playerId} does not exist`
           }
         );
       }
-      const invitation = await clerkClient.organizations.createOrganizationInvitation({
-        organizationId: organization.id,
-        inviterUserId: ctx.userId,
-        emailAddress: input.email,
-        role: "basic_member" as OrganizationMembershipRole
+
+      await ctx.prisma.playerGameGroupJunction.updateMany({
+        where: {
+          playerId: input.playerId
+        }, data: {
+          gameGroupIsActive: false
+        }
       });
-      return invitation;
+
+      return await ctx.prisma.playerGameGroupJunction.update({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: input.playerId
+          }
+        }, data: {
+          inviteStatus: "ACCEPTED",
+          role: "MEMBER",
+          gameGroupIsActive: true
+        }
+      });
+    }),
+
+  askForInvite: privateProcedure
+    .input(
+      z.object({
+        groupId: z.string()
+      })
+    ).mutation(async ({ input, ctx }) => {
+      //check if game group exists
+      if (!await ctx.prisma.gameGroup.findUnique({
+        where: {
+          id: input.groupId
+        }
+      })) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to get group: group ${input.groupId} does not exist`
+        });
+      }
+
+      const player = await ctx.prisma.player.findUnique({
+        where: {
+          clerkId: ctx.userId
+        }
+      });
+
+      if (!player) {
+        throw new TRPCError(
+          {
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Failed to get player: player ${ctx.userId} does not exist`
+          }
+        );
+      }
+
+      return await ctx.prisma.playerGameGroupJunction.create({
+        data: {
+          groupId: input.groupId,
+          playerId: player.id,
+          inviteStatus: "PENDING",
+          role: "MEMBER"
+        }
+      });
     }),
 
   getPendingPlayers: privateProcedure
     .input(
       z.object({
-        slug: z.string()
+        gameGroup: z.string()
       })
     )
-    .query(async ({ input }) => {
-      const organization = await clerkClient.organizations.getOrganization(
-        {
-          slug: input.slug
+    .query(async ({ input, ctx }) => {
+      //check if game group exists
+      if (!await ctx.prisma.gameGroup.findUnique({
+        where: {
+          id: input.gameGroup
         }
-      )
-      if (!organization) {
-        throw new TRPCError(
-          {
-            code: "INTERNAL_SERVER_ERROR",
-            message: `Failed to get organization: organization ${input.slug} does not exist`
-          }
-        );
+      })) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to get group: group ${input.gameGroup} does not exist`
+        });
       }
 
-      return await clerkClient.organizations.getPendingOrganizationInvitationList(
-        {
-          organizationId: organization.id
+      return await ctx.prisma.playerGameGroupJunction.findMany({
+        where: {
+          groupId: input.gameGroup,
+          inviteStatus: "PENDING"
+        }, include: {
+          Player: true
         }
-      );
+      });
     })
 });
