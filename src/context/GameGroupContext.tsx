@@ -1,10 +1,15 @@
 
 import React, { createContext, useContext } from "react";
 
-export const GameGroupContext = createContext({
+
+interface GameGroupContextType {
+  gameGroup: string;
+  setGameGroup: (gameGroup: string) => void;
+}
+
+export const GameGroupContext = createContext<GameGroupContextType>({
   gameGroup: "",
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  setGameGroup: (gameGroup: string) => { }
+  setGameGroup: () => {/**/}
 });
 
 type ContainerProps = {
@@ -23,7 +28,7 @@ export const GameGroupContextProvider = (props: ContainerProps) => {
     gameGroup: "",
     setGameGroup: setGameGroup
   }
-  const [state, setState] = React.useState(initialState);
+  const [state, setState] = React.useState<GameGroupContextType>(initialState);
 
   return (
     <GameGroupContext.Provider value={state}>
