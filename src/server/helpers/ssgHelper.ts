@@ -8,5 +8,5 @@ export const generateSSGHelper = () =>
   createProxySSGHelpers({
     router: appRouter,
     ctx: { prisma, userId: null },
-    transformer: superjson, // optional - adds superjson serialization
+    transformer: superjson,
   });
