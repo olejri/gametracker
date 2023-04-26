@@ -1,4 +1,4 @@
-import { createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
+import { adminProcedure, createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
@@ -19,7 +19,7 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  acceptInvite: privateProcedure
+  acceptInvite: adminProcedure
     .input(
       z.object({
         groupId: z.string(),

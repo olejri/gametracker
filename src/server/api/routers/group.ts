@@ -2,7 +2,7 @@ import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { filterUserForClient } from "npm/server/helpers/filterUserForClient";
+import { filterUserForClient, getLoggedInPlayer } from "npm/server/helpers/filterUserForClient";
 
 export const groupRouter = createTRPCRouter({
   addOrGetGroup: publicProcedure
@@ -122,6 +122,51 @@ export const groupRouter = createTRPCRouter({
       });
     }),
 
+  getGameGroupsWithStatus: privateProcedure
+    .query(async ({ ctx: { prisma, userId } }) => {
+      const player = await getLoggedInPlayer(prisma, userId);
+      return await prisma.playerGameGroupJunction.findMany({
+        where: {
+          playerId: player.id
+        },
+        include: {
+          GameGroup: true,
+        },
+        orderBy : {
+          gameGroupIsActive: "desc"
+        }
+      });
+    }),
+  
+  switchActiveGameGroup: privateProcedure
+    .input(
+      z.object({
+        groupId: z.string()
+      })
+    ).mutation(async ({ ctx: { prisma, userId }, input }) => {
+      const player = await getLoggedInPlayer(prisma, userId);
+      //set all groups to inactive
+      await prisma.playerGameGroupJunction.updateMany({
+        where: {
+          playerId: player.id
+        },
+        data: {
+          gameGroupIsActive: false
+        }
+      });
+      //set the group to active
+     return await prisma.playerGameGroupJunction.update({
+        where: {
+          groupId_playerId: {
+            playerId: player.id,
+            groupId: input.groupId
+          }
+        },
+        data: {
+          gameGroupIsActive: true
+        }
+      });
+    }),
 
   getAllPendingGameGroups: privateProcedure
     .query(async ({ ctx }) => {
@@ -148,7 +193,7 @@ export const groupRouter = createTRPCRouter({
           }
         });
 
-    }),
+    })
 
 
 });

@@ -1,5 +1,6 @@
 import { useGameGroupContext } from "npm/context/GameGroupContext";
 import React from "react";
+import { useRouter } from "next/router";
 
 
 type ContainerProps = {
@@ -8,6 +9,8 @@ type ContainerProps = {
 
 const NotChosenGameGroup = (props: ContainerProps) => {
   const { gameGroup } = useGameGroupContext();
+  const router = useRouter();
+  const groupName = router.query.dashboardId as string;
 
   if (gameGroup === "") {
     return (
@@ -15,6 +18,9 @@ const NotChosenGameGroup = (props: ContainerProps) => {
         {props.children}
       </>
     );
+  }
+  if(groupName !== undefined && groupName !== gameGroup) {
+    void router.push("/");
   }
   return null;
 };

@@ -95,4 +95,49 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
     },
   });
 });
+
+const enforceUserIsAuthedAndAdmin = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.userId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+    });
+  }
+  const player = await ctx.prisma.player.findUnique({
+    where: {
+      clerkId: ctx.userId
+    }
+  });
+
+  if (!player) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+    });
+  }
+
+  const admin = await ctx.prisma.playerGameGroupJunction.findFirst(
+    {
+      where: {
+        playerId: player.id,
+        gameGroupIsActive: true,
+        role: "ADMIN"
+      }
+    }
+  );
+
+  if (!admin) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+    });
+  }
+
+  return next({
+    ctx: {
+      userId: ctx.userId,
+    },
+  });
+});
+
+
 export const privateProcedure = t.procedure.use(enforceUserIsAuthed);
+
+export const adminProcedure = t.procedure.use(enforceUserIsAuthedAndAdmin);

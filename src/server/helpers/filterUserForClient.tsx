@@ -1,4 +1,6 @@
-import type { User, OrganizationMembership } from "@clerk/nextjs/dist/api";
+import type { User } from "@clerk/nextjs/dist/api";
+import { type Prisma, type PrismaClient } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 
 export const filterUserForClient = (user: User) => {
   return {
@@ -8,17 +10,20 @@ export const filterUserForClient = (user: User) => {
   };
 };
 
-export const filterUserForClientWithOrg = (props: { organizationMembership: OrganizationMembership; user: User }) => {
-  const { user, organizationMembership } = props;
+export async function getLoggedInPlayer(prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined>, userId: string) {
+  const player = await prisma.player.findUnique({
+    where: {
+      clerkId: userId
+    }
+  });
 
-  if (organizationMembership.organization.slug === undefined || organizationMembership.organization.slug === null) {
-    throw new Error("Organization slug is undefined");
+  if (!player) {
+    throw new TRPCError(
+      {
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Failed to get player: player ${userId} does not exist`
+      }
+    );
   }
-
-  return {
-    id: user.id,
-    username: user.username,
-    profileImageUrl: user.profileImageUrl,
-    organizationSlug: organizationMembership.organization.slug
-  };
-};
+  return player;
+}
