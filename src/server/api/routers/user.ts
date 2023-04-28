@@ -1,6 +1,7 @@
 import { adminProcedure, createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import {clerkClient} from "@clerk/nextjs/server";
 
 export const userRouter = createTRPCRouter({
   getPlayer: privateProcedure
@@ -60,7 +61,7 @@ export const userRouter = createTRPCRouter({
         }
       });
 
-      return await ctx.prisma.playerGameGroupJunction.update({
+      return ctx.prisma.playerGameGroupJunction.update({
         where: {
           groupId_playerId: {
             groupId: input.groupId,
@@ -107,7 +108,7 @@ export const userRouter = createTRPCRouter({
         );
       }
 
-      return await ctx.prisma.playerGameGroupJunction.create({
+      return ctx.prisma.playerGameGroupJunction.create({
         data: {
           groupId: input.groupId,
           playerId: player.id,
@@ -136,7 +137,7 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      return await ctx.prisma.playerGameGroupJunction.findMany({
+      return ctx.prisma.playerGameGroupJunction.findMany({
         where: {
           groupId: input.gameGroup,
           inviteStatus: "PENDING"
@@ -144,5 +145,21 @@ export const userRouter = createTRPCRouter({
           Player: true
         }
       });
-    })
+    }),
+
+  sendInvite: adminProcedure
+    .input(
+        z.object({
+          emailAddress: z.string(),
+        })
+    ).mutation(async ({ input, ctx }) => {
+      const token = await ctx.getToken()
+
+      console.log("token", token)
+
+      const invitation = await clerkClient.invitations.createInvitation({
+        emailAddress: input.emailAddress,
+      })
+        return invitation;
+      })
 });
