@@ -1,7 +1,8 @@
 import { adminProcedure, createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import {clerkClient} from "@clerk/nextjs/server";
+import * as process from "process";
+import { type ClerkInvite } from "npm/components/Types";
 
 export const userRouter = createTRPCRouter({
   getPlayer: privateProcedure
@@ -152,14 +153,64 @@ export const userRouter = createTRPCRouter({
         z.object({
           emailAddress: z.string(),
         })
-    ).mutation(async ({ input, ctx }) => {
-      const token = await ctx.getToken()
+    ).mutation(async ({ input }) => {
+      const apiKey = process.env.CLERK_SECRET_KEY;
+      const apiUrl = 'https://api.clerk.dev/v1/invitations';
 
-      console.log("token", token)
+      const requestData = {
+        email_address: input.emailAddress,
+      };
 
-      const invitation = await clerkClient.invitations.createInvitation({
-        emailAddress: input.emailAddress,
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey ?? ""}`,
+        },
+        body: JSON.stringify(requestData),
       })
-        return invitation;
+
+      //check if status code is 422, if so, throw error
+      if (res.status === 422) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `This email address has already been invited.`
+        });
+      }
+      //if response is not ok, throw error
+      if (!res.ok) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to send invite: ${res.statusText}`
+        });
+      }
+      //return tRPC success
+      return {
+        data: true
+      }
+    }),
+
+  getPendingEmailInvites: adminProcedure
+    .query(async () => {
+      const apiKey = process.env.CLERK_SECRET_KEY;
+      const apiUrl = 'https://api.clerk.dev/v1/invitations';
+
+      const res = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey ?? ""}`,
+        },
       })
+
+      if (!res.ok) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to get pending invites: ${res.statusText}`
+        });
+      }
+      return {
+        data: await res.json() as ClerkInvite[]
+      };
+    })
 });

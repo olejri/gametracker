@@ -4,7 +4,6 @@ import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import { UserPlusIcon } from "@heroicons/react/24/solid";
 
-
 const JoinGameGroupView = () => {
   const { data, isLoading } = api.group.getActiveGameGroup.useQuery();
   const { data: allGameGroups, isLoading: allGameGroupsIsLoading } = api.group.getAllGameGroups.useQuery();
@@ -42,7 +41,7 @@ const JoinGameGroupView = () => {
       <div className="overflow-hidden bg-white shadow-none sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6">
           <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {allGameGroups?.map((group) => (
+            {allGameGroups?.filter((g) => !g.hidden).map((group) => (
               <li
                 key={group.id}
                 className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"

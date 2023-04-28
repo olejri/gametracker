@@ -113,8 +113,9 @@ export const groupRouter = createTRPCRouter({
 
       return res.map((group) => {
         return {
-          "name": group.name,
-          "id": group.id,
+          hidden: group.hidden,
+          name: group.name,
+          id: group.id,
           players: group.PlayerGameGroupJunction.map((player) => {
             return player.playerId;
           })

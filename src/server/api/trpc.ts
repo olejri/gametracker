@@ -27,12 +27,11 @@ import { prisma } from "npm/server/db";
  */
 export const createTRPCContext = (opts: CreateNextContextOptions) => {
   const { req } = opts;
-  const {userId, getToken} = getAuth(req);
+  const {userId} = getAuth(req);
 
   return {
     prisma,
     userId,
-    getToken
   };
 };
 

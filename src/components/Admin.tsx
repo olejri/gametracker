@@ -1,19 +1,23 @@
 import React from "react";
 import { api } from "npm/utils/api";
-import {LoadingPage} from "npm/components/loading";
+import { LoadingPage, LoadingSpinner } from "npm/components/loading";
 import { UserPlusIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/router";
-import {set} from "zod";
+import dayjs from "dayjs";
 
 const AdminView = (props: {
   gameGroup: string
 }) => {
   const { gameGroup } = props;
   const { data, isLoading, isError, error } = api.user.getPendingPlayers.useQuery({ gameGroup });
+  const { data: emailInvites,isLoading: emailIsLoading, isError:  emailIsError, error: emailError } = api.user.getPendingEmailInvites.useQuery();
   const mutation = api.user.sendInvite.useMutation(
     {
         onSuccess: () => {
           setEmail("")
+        },
+        onError: (error) => {
+          console.log(error)
         }
     }
   );
@@ -26,12 +30,12 @@ const AdminView = (props: {
 
   const [email, setEmail] = React.useState("");
 
-  if (isLoading) {
+  if (isLoading || emailIsLoading) {
     return <LoadingPage />;
   }
 
-  if (isError) {
-    return <p>{error?.message}</p>;
+  if (isError || emailIsError) {
+    return <p>{error?.message}{emailError?.message}</p>;
   }
 
   return (
@@ -40,7 +44,9 @@ const AdminView = (props: {
         <div
         className="px-4 py-5 sm:p-6"
         >
-        <label>Invite users</label>
+        <label
+          className={"text-sm font-medium text-gray-700"}
+        >Invite users</label>
           <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="px-4 py-5 sm:p-6">
               <div className="isolate -space-y-px rounded-md shadow-sm">
@@ -63,20 +69,71 @@ const AdminView = (props: {
               </div>
             </div>
             <div className="bg-gray-50 px-4 py-4 sm:px-6">
-             <button
-                  disabled={mutation.isLoading}
-                  className={"bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"}
+              {mutation.isLoading ? <LoadingSpinner size={30} /> :
+              <button
+                  disabled={mutation.isLoading || email.length === 0}
+                  className={"bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"}
                   onClick={() => {
                     mutation.mutate({
                     emailAddress: email,
                     });
                   }}
               >Invite User
-              </button>
+              </button>}
+              {mutation.isError && <span className="text-red-500 p-2">{mutation.error?.message}</span>}
             </div>
           </div>
         </div>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-white px-2 text-sm text-gray-500">Pending new users invitations</span>
+          </div>
+        </div>
+        <div className="px-4 py-5 sm:p-6">
+          <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {emailInvites?.data.map((invitation) => (
+              <li
+                key={invitation.id}
+                className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"
+              >
+                <div className="flex flex-1 flex-col p-8">
+                  <h3 className="mt-6 text-sm font-medium text-gray-900">{dayjs(invitation.created_at).format("DD.MM.YYYY")}</h3>
+                  <dl className="mt-1 flex flex-grow flex-col justify-between">
+                    <dd className="text-sm text-gray-500">{invitation.email_address}</dd>
+                  </dl>
+                </div>
+                <div>
+                  <div className="-mt-px flex divide-x divide-gray-200">
+                    <div className="-ml-px flex w-0 flex-1">
+                      <span
+                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg py-4 text-sm font-semibold text-gray-900`}
+                      >
+                        Status
+                      </span>
+                      <span
+                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg py-4 text-sm font-semibold bg-yellow-50 text-yellow-700`}
+                      >
+                        {invitation.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
 
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-white px-2 text-sm text-gray-500">Players that wants to join {gameGroup}</span>
+          </div>
+        </div>
         <div className="px-4 py-5 sm:p-6">
           <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {data?.map((player) => (

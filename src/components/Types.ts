@@ -152,3 +152,14 @@ export type AchievementTypeCounter = {
     description: string,
     gameName?: string,
 }
+
+export type ClerkInvite = {
+    object: string;
+    id: string;
+    email_address: string;
+    public_metadata: { [key: string]: never };
+    revoked: boolean;
+    status: string;
+    created_at: number;
+    updated_at: number;
+};
