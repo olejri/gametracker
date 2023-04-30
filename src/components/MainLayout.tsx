@@ -37,7 +37,8 @@ const MainComponent = (props: ContainerProps) => {
       href: "/" + gameGroup + "/player/" + user.id,
       current: pathname === "/[dashboardId]/player/[playerId]"
     },
-    { name: "Switch", href: "/" + gameGroup + "/switch", current: pathname === "/[dashboardId]/switch" }
+    { name: "Switch", href: "/" + gameGroup + "/switch", current: pathname === "/[dashboardId]/switch" },
+    { name: "Export", href: "/" + gameGroup + "/export", current: pathname === "/[dashboardId]/export" },
   ];
 
   if (data?.role === "ADMIN") {
