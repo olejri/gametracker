@@ -34,17 +34,11 @@ export const groupRouter = createTRPCRouter({
 
       //add player
       if (!player) {
-        const user = (
-          await clerkClient.users.getUserList({
-            userId: [ctx.userId],
-            limit: 100
-          })
-        ).map((user) => filterUserForClient(user));
-
+        const user = filterUserForClient(await clerkClient.users.getUser(ctx.userId));
         player = await ctx.prisma.player.create({
           data: {
             clerkId: ctx.userId,
-            name: user[0]?.username ?? "Unknown"
+            name: user.username ?? "New Player"
           }
         });
       }
