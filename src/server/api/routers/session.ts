@@ -633,7 +633,9 @@ export const sessionRouter = createTRPCRouter({
         await ctx.prisma.playerGameSessionJunction.create({
           data: {
             playerId: foundPlayer.id,
-            gameSessionId: session.id
+            gameSessionId: session.id,
+            position: 1,
+            score: ""
           }
         });
       }
