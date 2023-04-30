@@ -21,8 +21,11 @@ export const exportRouter = createTRPCRouter({
       });
 
       const gameInfo = await ctx.prisma.game.findMany();
-      const playerInfo = await ctx.prisma.player.findMany();
-
+      const playerInfo = await ctx.prisma.player.findMany({
+        include: {
+          PlayerGameGroupJunction: true
+        }
+      });
 
       //make a gameInfo map for easy lookup
       const gameInfoMap = new Map<string, Game>();
@@ -34,12 +37,18 @@ export const exportRouter = createTRPCRouter({
       //make a playerInfo map for easy lookup
       const playerInfoMap = new Map<string, Player>();
       for (const player of playerInfo) {
-        playerInfoMap.set(player.id, player);
-        players = {
-          ...players,
-          [`${player.nickname ?? ""}_score`]: "",
-          [`${player.nickname ?? ""}_position`]: 0
-        };
+        //check if player is in group
+        const playerInGroup = player.PlayerGameGroupJunction.find((playerGroup) => {
+          return playerGroup.groupId === input.groupId;
+        });
+        if (playerInGroup !== undefined) {
+          playerInfoMap.set(player.id, player);
+          players = {
+            ...players,
+            [`${player.nickname ?? ""}_score`]: "",
+            [`${player.nickname ?? ""}_position`]: 0
+          };
+        }
       }
       //write to csv
       const csvData: Input = [];
@@ -48,7 +57,7 @@ export const exportRouter = createTRPCRouter({
           "Game_name": gameInfoMap.get(session.gameId)?.name,
           "Game_date": session.createdAt.toISOString(),
           "Game_description": session.description,
-          ...players,
+          ...players
         };
 
         session.PlayerGameSessionJunction.map((player) => {
