@@ -19,96 +19,47 @@ export const exportRouter = createTRPCRouter({
           groupId: input.groupId
         }
       });
-      
+
       const gameInfo = await ctx.prisma.game.findMany();
       const playerInfo = await ctx.prisma.player.findMany();
 
-      
+
       //make a gameInfo map for easy lookup
       const gameInfoMap = new Map<string, Game>();
       for (const game of gameInfo) {
         gameInfoMap.set(game.id, game);
       }
 
+      let players = {};
       //make a playerInfo map for easy lookup
       const playerInfoMap = new Map<string, Player>();
       for (const player of playerInfo) {
         playerInfoMap.set(player.id, player);
+        players = {
+          ...players,
+          [`${player.nickname ?? ""}_score`]: "",
+          [`${player.nickname ?? ""}_position`]: 0
+        };
       }
-
       //write to csv
       const csvData: Input = [];
-
-      if (input.groupId === "game-night") {
       for (const session of allGames) {
-        const row = {
-          "Game Name": gameInfoMap.get(session.gameId)?.name,
-          "Game Date": session.createdAt.toISOString(),
-          "Game Description": session.description,
-          "Nelich Score": "",
-          "Nelich Position": 0,
-          "Andriod Score": "",
-          "Andriod Position": 0,
-          "Oivind Score": "",
-          "Oivind Position": 0,
-          "dTd Score": "",
-          "dTd Position": 0,
-          "Jinxen Score": "",
-          "Jinxen Position": 0,
+        const row: Record<string, any> = {
+          "Game_name": gameInfoMap.get(session.gameId)?.name,
+          "Game_date": session.createdAt.toISOString(),
+          "Game_description": session.description,
+          ...players,
         };
 
         session.PlayerGameSessionJunction.map((player) => {
           const nickname = playerInfoMap.get(player.playerId)?.nickname;
-          if (nickname === 'Nelich') {
-            row["Nelich Score"] = player.score ?? "";
-            row["Nelich Position"] = player.position ?? 0;
-          }
-          if (nickname === 'Andriod') {
-            row["Andriod Score"] = player.score ?? "";
-            row["Andriod Position"] = player.position ?? 0;
-          }
-          if (nickname === 'Oivind') {
-            row["Oivind Score"] = player.score ?? "";
-            row["Oivind Position"] = player.position ?? 0;
-          }
-          if (nickname === 'dTd') {
-            row["dTd Score"] = player.score ?? "";
-            row["dTd Position"] = player.position ?? 0;
-          }
-          if (nickname === 'Jinxen') {
-            row["Jinxen Score"] = player.score ?? "";
-            row["Jinxen Position"] = player.position ?? 0;
-          }
+          row[`${nickname ?? ""}_score`] = player.score ?? "";
+          row[`${nickname ?? ""}_position`] = player.position ?? 0;
         });
         csvData.push(row);
       }
-    } else if (input.groupId === "avsn") {
-        for (const session of allGames) {
-          const row = {
-            "Game Name": gameInfoMap.get(session.gameId)?.name,
-            "Game Date": session.createdAt.toISOString(),
-            "Game Description": session.description,
-            "Nelich Score": "",
-            "Nelich Position": 0,
-            "Andriod Score": "",
-            "Andriod Position": 0,
-          };
-          session.PlayerGameSessionJunction.map((player) => {
-            const nickname = playerInfoMap.get(player.playerId)?.nickname;
-            if (nickname === 'Nelich') {
-              row["Nelich Score"] = player.score ?? "";
-              row["Nelich Position"] = player.position ?? 0;
-            }
-            if (nickname === 'Andriod') {
-              row["Andriod Score"] = player.score ?? "";
-              row["Andriod Position"] = player.position ?? 0;
-            }
-          });
-          csvData.push(row);
-        }
-      }
       const csvString = await new Promise<string>((resolve, reject) => {
-        stringify(csvData,{header:true} , (err, output) => {
+        stringify(csvData, { header: true }, (err, output) => {
           if (err) {
             reject(err);
           } else {
@@ -117,7 +68,7 @@ export const exportRouter = createTRPCRouter({
         });
       });
       return {
-       data: csvString
-     }
-    }),
+        data: csvString
+      };
+    })
 });
