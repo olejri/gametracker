@@ -16,7 +16,6 @@ import { GameGroupContextProvider } from "npm/context/GameGroupContext";
 import HasChosenGameGroup from "npm/components/HasChosenGameGroup";
 import NotChosenGameGroup from "npm/components/NotChosenGameGroup";
 import MainComponent from "npm/components/MainLayout";
-import { Analytics } from '@vercel/analytics/react';
 
 const MyApp: AppType = ({ Component, pageProps }) => {
 
@@ -50,7 +49,6 @@ const MyApp: AppType = ({ Component, pageProps }) => {
           </div>
         </SignInButton>
       </SignedOut>
-      <Analytics/>
     </ClerkProvider>
   );
 };
