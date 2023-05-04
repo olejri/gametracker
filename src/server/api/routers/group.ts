@@ -26,15 +26,34 @@ export const groupRouter = createTRPCRouter({
 
   getActiveGameGroup: privateProcedure
     .query(async ({ ctx }) => {
+      const clerkUser = await clerkClient.users.getUser(ctx.userId);
       let player = await ctx.prisma.player.findUnique({
         where: {
           clerkId: ctx.userId
         }
       });
 
+      if(!player) {
+        player = await ctx.prisma.player.findUnique({
+          where: {
+            email: clerkUser.primaryEmailAddressId ?? ""
+          }
+        })
+        if(player) {
+          await ctx.prisma.player.update({
+            where: {
+              id: player.id
+            },
+            data: {
+              clerkId: ctx.userId
+            }
+          })
+        }
+      }
+
       //add player
       if (!player) {
-        const user = filterUserForClient(await clerkClient.users.getUser(ctx.userId));
+        const user = filterUserForClient(clerkUser);
         player = await ctx.prisma.player.create({
           data: {
             clerkId: ctx.userId,

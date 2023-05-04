@@ -11,18 +11,40 @@ export const playerRouter = createTRPCRouter({
     .input(
       z.object({
         name: z.string(),
+        nickname: z.string(),
+        email: z.string(),
+        groupId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
-      const player = await ctx.prisma.player.upsert({
+      const player = await ctx.prisma.player.create({
+        data: {
+          name: input.name,
+          nickname: input.nickname,
+          email: input.email,
+        }
+      });
+      //check if group exists
+      const group = await ctx.prisma.gameGroup.findUnique({
         where: {
-          clerkId: ctx.userId
-        },
-        create: {
-          name: input.name,
-          clerkId: ctx.userId,
-        },
-        update: {
-          name: input.name,
+          id: input.groupId
+        }
+      });
+      if (!group) {
+        throw new TRPCError(
+          {
+            code: "NOT_FOUND",
+            message: "Group not found"
+          }
+        );
+      }
+      //add to group
+      await ctx.prisma.playerGameGroupJunction.create({
+        data: {
+          playerId: player.id,
+          groupId: input.groupId,
+          role: "MEMBER",
+          gameGroupIsActive: true,
+          inviteStatus: "ACCEPTED"
         }
       });
       return {
@@ -84,7 +106,7 @@ export const playerRouter = createTRPCRouter({
       });
       const users = (
         await clerkClient.users.getUserList({
-          userId: players.map((player) => player.clerkId),
+          userId: players.map((player) => player.clerkId ?? ""),
           limit: 100
         })
       ).map((user) => filterUserForClient(user));

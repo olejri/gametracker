@@ -61,7 +61,7 @@ export type Player = {
     id: string;
     name: string;
     nickname?: string | null;
-    clerkId: string;
+    clerkId?: string | null;
     groupId?: string | null;
 };
 

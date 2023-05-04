@@ -32,7 +32,8 @@ model Player {
   id                        String                      @id @default(uuid())
   name                      String
   nickname                  String?
-  clerkId                   String
+  email                     String?
+  clerkId                   String?
   createdAt                 DateTime                    @default(now())
   updatedAt                 DateTime                    @updatedAt
   PlayerGameSessionJunction PlayerGameSessionJunction[]
@@ -40,6 +41,7 @@ model Player {
   PlayerGameGroupJunction   PlayerGameGroupJunction[]
 
   @@unique(clerkId)
+  @@unique(email)
 }
 
 model GameGroup {

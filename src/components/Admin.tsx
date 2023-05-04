@@ -21,6 +21,17 @@ const AdminView = (props: {
         }
     }
   );
+  const addPlayer = api.player.addPlayer.useMutation({
+    onSuccess: () => {
+      setName("")
+      setNickname("")
+      setEmail("")
+    },
+    onError: (error) => {
+      console.log(error)
+    }
+  });
+
   const router = useRouter();
   const acceptPlayer = api.user.acceptInvite.useMutation({
     onSuccess: () => {
@@ -29,6 +40,8 @@ const AdminView = (props: {
   });
 
   const [email, setEmail] = React.useState("");
+  const [name, setName] = React.useState("");
+  const [nickname, setNickname] = React.useState("");
 
   if (isLoading || emailIsLoading) {
     return <LoadingPage />;
@@ -51,6 +64,38 @@ const AdminView = (props: {
             <div className="px-4 py-5 sm:p-6">
               <div className="isolate -space-y-px rounded-md shadow-sm">
                 <div
+                  className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
+                  <label htmlFor="name" className="block text-xs font-medium text-gray-900">
+                    Name
+                  </label>
+                  <input
+                    onBlur={(e) => {
+                      setName(e.target.value)
+                    }}
+                    type="text"
+                    name="name"
+                    id="name"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    placeholder="Full name"
+                  />
+                </div>
+                <div
+                  className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
+                  <label htmlFor="name" className="block text-xs font-medium text-gray-900">
+                    Nickname
+                  </label>
+                  <input
+                    onBlur={(e) => {
+                      setNickname(e.target.value)
+                    }}
+                    type="text"
+                    name="name"
+                    id="name"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    placeholder="Nickname"
+                  />
+                </div>
+                <div
                     className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
                   <label htmlFor="name" className="block text-xs font-medium text-gray-900">
                     Email
@@ -71,16 +116,22 @@ const AdminView = (props: {
             <div className="bg-gray-50 px-4 py-4 sm:px-6">
               {mutation.isLoading ? <LoadingSpinner size={30} /> :
               <button
-                  disabled={mutation.isLoading || email.length === 0}
+                  disabled={mutation.isLoading || email.length === 0 || name.length === 0 || nickname.length === 0}
                   className={"bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"}
                   onClick={() => {
                     mutation.mutate({
                     emailAddress: email,
                     });
+                    addPlayer.mutate({
+                      name: name,
+                      nickname: nickname,
+                      email: email,
+                      groupId: gameGroup
+                    });
                   }}
               >Invite User
               </button>}
-              {mutation.isError && <span className="text-red-500 p-2">{mutation.error?.message}</span>}
+              {(mutation.isError || addPlayer.isError) && <span className="text-red-500 p-2">{mutation.error?.message}</span>}
             </div>
           </div>
         </div>

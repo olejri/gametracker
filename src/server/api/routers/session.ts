@@ -74,7 +74,7 @@ export const sessionRouter = createTRPCRouter({
 
         const usersWithImages = (
           await clerkClient.users.getUserList({
-            userId: players.map((player) => player.clerkId),
+            userId: players.map((player) => player.clerkId ?? ""),
             limit: 110
           })
         ).map(filterUserForClient);
@@ -181,7 +181,7 @@ export const sessionRouter = createTRPCRouter({
 
         const usersWithImages = (
           await clerkClient.users.getUserList({
-            userId: players.map((player) => player.clerkId),
+            userId: players.map((player) => player.clerkId ?? ""),
             limit: 110
           })
         ).map(filterUserForClient);
@@ -287,7 +287,7 @@ export const sessionRouter = createTRPCRouter({
 
         const usersWithImages = (
           await clerkClient.users.getUserList({
-            userId: players.map((player) => player.clerkId),
+            userId: players.map((player) => player.clerkId ?? ""),
             limit: 110
           })
         ).map(filterUserForClient);
@@ -508,7 +508,7 @@ export const sessionRouter = createTRPCRouter({
 
       const users = (
         await clerkClient.users.getUserList({
-          userId: playersFromDb.map((player) => player.clerkId),
+          userId: playersFromDb.map((player) => player.clerkId ?? ""),
           limit: 100
         })
       ).map((user) => filterUserForClient(user));
