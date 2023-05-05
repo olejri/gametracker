@@ -4,6 +4,8 @@ import { LoadingSpinner } from "npm/components/loading";
 import Image from "next/image";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import Link from "next/link";
+
 dayjs.extend(relativeTime);
 
 const RecentlyActivities = (props: {
@@ -28,12 +30,13 @@ const RecentlyActivities = (props: {
       <ul role="list" className="-mb-8">
         {lastFive.map((game, eventIdx) => (
           <li key={game.sessionId}>
-            <div className="relative pb-8">
-              {eventIdx !== lastFive.length - 1 ? (
-                <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" />
-              ) : null}
-              <div className="relative flex space-x-3">
-                <div>
+            <Link href={`/`+groupId+`/session/${game.sessionId}`}>
+              <div className="relative pb-8">
+                {eventIdx !== lastFive.length - 1 ? (
+                  <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" />
+                ) : null}
+                <div className="relative flex space-x-3">
+                  <div>
                   <span
                     className={classNames(
                       "h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white"
@@ -43,19 +46,20 @@ const RecentlyActivities = (props: {
                            width={200}
                            height={200} priority={true} />
                   </span>
-                </div>
-                <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                  <div>
-                    <p className="text-sm text-gray-500">
-                      {game.gameName}{" "}
-                    </p>
                   </div>
-                  <div className="whitespace-nowrap text-right text-sm text-gray-500">
-                    {dayjs(game.createdAt).fromNow()}
+                  <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        {game.gameName}{" "}
+                      </p>
+                    </div>
+                    <div className="whitespace-nowrap text-right text-sm text-gray-500">
+                      {dayjs(game.createdAt).fromNow()}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           </li>
         ))}
       </ul>
