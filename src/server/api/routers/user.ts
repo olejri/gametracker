@@ -3,6 +3,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as process from "process";
 import { type ClerkInvite } from "npm/components/Types";
+import { checkIfGameGroupExists, getPlayerById, getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
 
 export const userRouter = createTRPCRouter({
   getPlayer: privateProcedure
@@ -28,35 +29,12 @@ export const userRouter = createTRPCRouter({
         playerId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
-      //check if game group exists
-      if (!await ctx.prisma.gameGroup.findUnique({
-        where: {
-          id: input.groupId
-        }
-      })) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to get group: group ${input.groupId} does not exist`
-        });
-      }
-
-      const player = await ctx.prisma.player.findUnique({
-        where: {
-          id: input.playerId
-        }
-      });
-      if (!player) {
-        throw new TRPCError(
-          {
-            code: "INTERNAL_SERVER_ERROR",
-            message: `Failed to get player: player ${input.playerId} does not exist`
-          }
-        );
-      }
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      const player = await getPlayerById(ctx.prisma, input.playerId);
 
       await ctx.prisma.playerGameGroupJunction.updateMany({
         where: {
-          playerId: input.playerId
+          playerId: player.id
         }, data: {
           gameGroupIsActive: false
         }
@@ -82,32 +60,8 @@ export const userRouter = createTRPCRouter({
         groupId: z.string()
       })
     ).mutation(async ({ input, ctx }) => {
-      //check if game group exists
-      if (!await ctx.prisma.gameGroup.findUnique({
-        where: {
-          id: input.groupId
-        }
-      })) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to get group: group ${input.groupId} does not exist`
-        });
-      }
-
-      const player = await ctx.prisma.player.findUnique({
-        where: {
-          clerkId: ctx.userId
-        }
-      });
-
-      if (!player) {
-        throw new TRPCError(
-          {
-            code: "INTERNAL_SERVER_ERROR",
-            message: `Failed to get player: player ${ctx.userId} does not exist`
-          }
-        );
-      }
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId)
 
       return ctx.prisma.playerGameGroupJunction.create({
         data: {
@@ -126,18 +80,7 @@ export const userRouter = createTRPCRouter({
       })
     )
     .query(async ({ input, ctx }) => {
-      //check if game group exists
-      if (!await ctx.prisma.gameGroup.findUnique({
-        where: {
-          id: input.gameGroup
-        }
-      })) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to get group: group ${input.gameGroup} does not exist`
-        });
-      }
-
+      await checkIfGameGroupExists(ctx.prisma, input.gameGroup);
       return ctx.prisma.playerGameGroupJunction.findMany({
         where: {
           groupId: input.gameGroup,

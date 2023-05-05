@@ -1,8 +1,7 @@
 import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { filterUserForClient, getLoggedInPlayer } from "npm/server/helpers/filterUserForClient";
+import { filterUserForClient, getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
 
 export const groupRouter = createTRPCRouter({
   addOrGetGroup: publicProcedure
@@ -84,20 +83,7 @@ export const groupRouter = createTRPCRouter({
         groupId: z.string()
       })
     ).query(async ({ ctx, input }) => {
-      const player = await ctx.prisma.player.findUnique({
-        where: {
-          clerkId: ctx.userId
-        }
-      });
-
-      if (!player) {
-        throw new TRPCError(
-          {
-            code: "INTERNAL_SERVER_ERROR",
-            message: `Failed to get player: player ${ctx.userId} does not exist`
-          }
-        );
-      }
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId)
       const group = await ctx.prisma.playerGameGroupJunction.findFirst({
         where: {
           playerId: player.id,
@@ -138,7 +124,7 @@ export const groupRouter = createTRPCRouter({
 
   getGameGroupsWithStatus: privateProcedure
     .query(async ({ ctx: { prisma, userId } }) => {
-      const player = await getLoggedInPlayer(prisma, userId);
+      const player = await getPlayerByClerkId(prisma, userId);
       return await prisma.playerGameGroupJunction.findMany({
         where: {
           playerId: player.id
@@ -158,7 +144,7 @@ export const groupRouter = createTRPCRouter({
         groupId: z.string()
       })
     ).mutation(async ({ ctx: { prisma, userId }, input }) => {
-      const player = await getLoggedInPlayer(prisma, userId);
+      const player = await getPlayerByClerkId(prisma, userId);
       //set all groups to inactive
       await prisma.playerGameGroupJunction.updateMany({
         where: {
@@ -184,21 +170,7 @@ export const groupRouter = createTRPCRouter({
 
   getAllPendingGameGroups: privateProcedure
     .query(async ({ ctx }) => {
-      const player = await ctx.prisma.player.findUnique({
-        where: {
-          clerkId: ctx.userId
-        }
-      });
-
-      if (!player) {
-        throw new TRPCError(
-          {
-            code: "INTERNAL_SERVER_ERROR",
-            message: `Failed to get player: player ${ctx.userId} does not exist`
-          }
-        );
-      }
-
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId)
       return await ctx.prisma.playerGameGroupJunction.findMany(
         {
           where: {
@@ -206,8 +178,5 @@ export const groupRouter = createTRPCRouter({
             inviteStatus: "PENDING"
           }
         });
-
     })
-
-
 });

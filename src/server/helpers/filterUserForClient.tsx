@@ -10,7 +10,7 @@ export const filterUserForClient = (user: User) => {
   };
 };
 
-export async function getLoggedInPlayer(prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined>, userId: string) {
+export async function getPlayerByClerkId(prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined>, userId: string) {
   const player = await prisma.player.findUnique({
     where: {
       clerkId: userId
@@ -27,3 +27,40 @@ export async function getLoggedInPlayer(prisma: PrismaClient<Prisma.PrismaClient
   }
   return player;
 }
+
+export async function checkIfGameGroupExists(prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined>, groupId: string) {
+  const gameGroup = await prisma.gameGroup.findUnique({
+    where: {
+      id: groupId
+    }
+  });
+
+  if (!gameGroup) {
+    throw new TRPCError(
+      {
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Failed to get gameGroup: gameGroup ${groupId} does not exist`
+      }
+    );
+  }
+  return gameGroup;
+}
+
+export async function getPlayerById(prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined>, playerId: string) {
+  const player = await prisma.player.findUnique({
+    where: {
+      id: playerId
+    }
+  });
+
+  if (!player) {
+    throw new TRPCError(
+      {
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Failed to get player: player ${playerId} does not exist`
+      }
+    );
+  }
+  return player;
+}
+

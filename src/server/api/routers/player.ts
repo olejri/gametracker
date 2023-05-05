@@ -1,7 +1,11 @@
 import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { filterUserForClient } from "npm/server/helpers/filterUserForClient";
+import {
+  checkIfGameGroupExists,
+  filterUserForClient,
+  getPlayerByClerkId,
+} from "npm/server/helpers/filterUserForClient";
 import { TRPCError } from "@trpc/server";
 import type { Game } from "npm/components/Types";
 import { getAchievements } from "npm/server/helpers/achievementHelper";
@@ -24,24 +28,12 @@ export const playerRouter = createTRPCRouter({
         }
       });
       //check if group exists
-      const group = await ctx.prisma.gameGroup.findUnique({
-        where: {
-          id: input.groupId
-        }
-      });
-      if (!group) {
-        throw new TRPCError(
-          {
-            code: "NOT_FOUND",
-            message: "Group not found"
-          }
-        );
-      }
+      const group = await checkIfGameGroupExists(ctx.prisma, input.groupId);
       //add to group
       await ctx.prisma.playerGameGroupJunction.create({
         data: {
           playerId: player.id,
-          groupId: input.groupId,
+          groupId: group.id,
           role: "MEMBER",
           gameGroupIsActive: true,
           inviteStatus: "ACCEPTED"
@@ -58,20 +50,7 @@ export const playerRouter = createTRPCRouter({
         clerkId: z.string()
       })
     ).query(async ({ ctx, input }) => {
-      const player = await ctx.prisma.player.findUnique({
-        where: {
-          clerkId: input.clerkId
-        }
-      });
-      if (!player) {
-        throw new TRPCError(
-          {
-            code: "NOT_FOUND",
-            message: "Player not found"
-          }
-        );
-      }
-      return player;
+      return getPlayerByClerkId(ctx.prisma, input.clerkId);
     }),
 
   getPlayers: publicProcedure
@@ -128,19 +107,7 @@ export const playerRouter = createTRPCRouter({
         gameId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
-      const player = await ctx.prisma.player.findUnique({
-        where: {
-          clerkId: ctx.userId
-        }
-      });
-      if (!player) {
-        throw new TRPCError(
-          {
-            code: "NOT_FOUND",
-            message: "Player not found"
-          }
-        );
-      }
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId)
       const playerGameJunction = await ctx.prisma.playerGameJunction.create({
         data: {
           gameId: input.gameId,
@@ -165,19 +132,7 @@ export const playerRouter = createTRPCRouter({
         gameId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
-      const player = await ctx.prisma.player.findUnique({
-        where: {
-          clerkId: ctx.userId
-        }
-      });
-      if (!player) {
-        throw new TRPCError(
-          {
-            code: "NOT_FOUND",
-            message: "Player not found"
-          }
-        );
-      }
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId)
       await ctx.prisma.playerGameJunction.deleteMany({
         where: {
           gameId: input.gameId,
@@ -188,20 +143,7 @@ export const playerRouter = createTRPCRouter({
 
   getLogInPlayer: privateProcedure
     .query(async ({ ctx }) => {
-      const player = await ctx.prisma.player.findUnique({
-        where: {
-          clerkId: ctx.userId
-        }
-      });
-      if (!player) {
-        throw new TRPCError(
-          {
-            code: "NOT_FOUND",
-            message: "Player not found"
-          }
-        );
-      }
-      return player;
+      return getPlayerByClerkId(ctx.prisma, ctx.userId)
     }),
 
   updatePlayer: privateProcedure
@@ -211,19 +153,7 @@ export const playerRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const player = await ctx.prisma.player.findUnique({
-        where: {
-          clerkId: ctx.userId
-        }
-      });
-      if (!player) {
-        throw new TRPCError(
-          {
-            code: "NOT_FOUND",
-            message: "Player not found"
-          }
-        );
-      }
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId)
 
       //check if nickname is already taken
       const allPlayers = await ctx.prisma.player.findMany({});
@@ -253,30 +183,8 @@ export const playerRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       //check if game group exists
-      if (!await ctx.prisma.gameGroup.findUnique({
-        where: {
-          id: input.gameGroup
-        }
-      })) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to get group: group ${input.gameGroup} does not exist`
-        });
-      }
-
-      const player = await ctx.prisma.player.findUnique({
-        where: {
-          clerkId: ctx.userId
-        }
-      });
-      if (!player) {
-        throw new TRPCError(
-          {
-            code: "NOT_FOUND",
-            message: "Player not found"
-          }
-        );
-      }
+      await checkIfGameGroupExists(ctx.prisma, input.gameGroup);
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId)
       const gameMap = new Map<string, Game>();
       const gameInfo = await ctx.prisma.game.findMany();
       gameInfo.forEach((game) => {
