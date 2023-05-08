@@ -66,7 +66,7 @@ const MyStats = (props: {
                 </th>
                 <th
                   scope="col"
-                  className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
+                  className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
                 >
                   1st
                 </th>
@@ -78,13 +78,13 @@ const MyStats = (props: {
                 </th>
                 <th
                   scope="col"
-                  className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
+                  className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
                 >
                   3rd
                 </th>
                 <th
                   scope="col"
-                  className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
+                  className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
                 >
                   Win percentage
                 </th>
@@ -104,7 +104,7 @@ const MyStats = (props: {
                   <td
                     className={classNames(
                       gameIdx !== myStats.length - 1 ? "border-b border-gray-300" : "",
-                      "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8"
+                      "w-6 py-4 pl-4 pr-3 text-sm font-smale text-gray-900 sm:pl-6 lg:pl-8"
                     )}
                   >
                     <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
@@ -116,7 +116,7 @@ const MyStats = (props: {
                   <td
                     className={classNames(
                       gameIdx !== myStats.length - 1 ? "border-b border-gray-300" : "",
-                      "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
+                      "w-6 py-4 pl-4 pr-3 text-sm font-smale text-gray-900 sm:pl-6 lg:pl-8"
                     )}
                   >
                     <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
@@ -140,7 +140,7 @@ const MyStats = (props: {
                   <td
                     className={classNames(
                       gameIdx !== myStats.length - 1 ? "border-b border-gray-300" : "",
-                      "w-6 px-3 py-4 text-sm text-gray-500"
+                      "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
                     )}
                   >
                     <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
@@ -152,7 +152,7 @@ const MyStats = (props: {
                   <td
                     className={classNames(
                       gameIdx !== myStats.length - 1 ? "border-b border-gray-300" : "",
-                      "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
+                      "w-6 py-4 pl-4 pr-3 text-sm font-smale text-gray-900 sm:pl-6 lg:pl-8"
                     )}
                   >
                     <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
