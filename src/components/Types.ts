@@ -163,3 +163,12 @@ export type ClerkInvite = {
     created_at: number;
     updated_at: number;
 };
+
+export type GameStatsResult = {
+    gameName: string,
+    numberOfGamesPlayed: number,
+    numberOfFirstPlaceWins: number,
+    numberOfSecondPlaceWins: number,
+    numberOfThirdPlaceWins: number,
+    winPrecentage: number,
+}
