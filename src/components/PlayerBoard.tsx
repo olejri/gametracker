@@ -206,7 +206,7 @@ const PlayerBoard = (props: {
                   <div className="px-4 py-5 sm:p-6">
                     {currentTab === "me" && (<MyProfile />)}
                     {currentTab === "collection" &&(<MyCollection />)}
-                    {currentTab === "stats" && (<MyStats />)}
+                    {currentTab === "stats" && (<MyStats groupName={groupName}/>)}
                     {currentTab === "achievements" && (<MyAchievements groupName={groupName} />)}
                   </div>
                 </div>

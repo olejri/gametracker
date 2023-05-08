@@ -2,8 +2,11 @@ import React from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 
-const MyStats = () => {
-  const { data: myStats, isLoading, isError, error } = api.stats.getGameStatsForPlayer.useQuery();
+const MyStats = (props: {
+  groupName: string;
+}) => {
+  const groupName = props.groupName;
+  const { data: myStats, isLoading, isError, error } = api.stats.getGameStatsForPlayer.useQuery({groupName});
 
   if (isLoading) return <LoadingPage />;
   if (isError) return <p>{error?.message}</p>;

@@ -1,15 +1,24 @@
 import { createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
 import { getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
 import { type Game, type GameStatsResult } from "npm/components/Types";
+import { z } from "zod";
 
 export const statsRouter = createTRPCRouter({
   getGameStatsForPlayer: privateProcedure
-    .query(async ({ ctx }) => {
+    .input(
+      z.object({
+        groupName: z.string()
+      })
+    )
+    .query(async ({ ctx, input }) => {
       const player = await getPlayerByClerkId(ctx.prisma, ctx.userId);
 
       const allGameSession = await ctx.prisma.gameSession.findMany({
         include: {
           PlayerGameSessionJunction: true
+        },
+        where: {
+          groupId: input.groupName
         }
       });
 
