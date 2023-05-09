@@ -2,6 +2,7 @@ import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/
 import { z } from "zod";
 import { clerkClient } from "@clerk/nextjs/server";
 import { filterUserForClient, getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
+import { GameOwedByPlayers, Player } from "npm/components/Types";
 
 export const groupRouter = createTRPCRouter({
   addOrGetGroup: publicProcedure
@@ -178,5 +179,72 @@ export const groupRouter = createTRPCRouter({
             inviteStatus: "PENDING"
           }
         });
+    }),
+
+  getAllGamesOwnedByTheGroup: privateProcedure
+    .input(
+      z.object({
+        groupId: z.string()
+      })
+    ).query(async ({ ctx, input }) => {
+      //find all players belong the group
+      const playersFromDb = await ctx.prisma.playerGameGroupJunction.findMany({
+        where: {
+          groupId: input.groupId
+        }, include: {
+          Player: true
+        }
+      });
+
+      const players2 = playersFromDb.map((p) => p.Player);
+
+      //find all games belong to the players
+      const games = await ctx.prisma.game.findMany({
+        where: {
+          PlayerGameJunction: {
+            some: {
+              playerId: {
+                in: playersFromDb.map((player) => player.playerId)
+              }
+            }
+          }
+        }, include: {
+          PlayerGameJunction: true
+        }
+      });
+      const users = (
+        await clerkClient.users.getUserList({
+          userId: playersFromDb.map((player) => player.Player.clerkId ?? ""),
+          limit: 100
+        })
+      ).map((user) => filterUserForClient(user));
+
+      const playerMap = new Map<string, Player>();
+
+      playersFromDb.forEach((player) => {
+          playerMap.set(player.id, player.Player);
+        });
+
+      const result: GameOwedByPlayers[] = [];
+      //for each game, find all players that own that game
+      games.forEach((game) => {
+        const players = game.PlayerGameJunction.map((player) => player.playerId);
+        const filteredPlayers = players2.filter((p) => players.some((id) => id === p.id));
+        const players3 = filteredPlayers.map((p) => ({
+          nickname: playerMap.get(p.id)?.nickname ?? "",
+          clerkId: playerMap.get(p.id)?.clerkId ?? "",
+          score: "",
+          position: 0,
+          junctionId: "",
+          playerId: p.id,
+          profileImageUrl: users.find((user) => user.id === playerMap.get(p.id)?.clerkId)?.profileImageUrl ?? ""
+        }));
+
+        result.push({
+          gameName: game.name,
+          owedByPlayers: [...players3]
+        });
+      });
+      return result;
     })
 });

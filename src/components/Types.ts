@@ -172,3 +172,8 @@ export type GameStatsResult = {
     numberOfThirdPlaceWins: number,
     winPrecentage: number,
 }
+
+export type GameOwedByPlayers = {
+    gameName: string,
+    owedByPlayers: PlayerNicknameAndScore[]
+}
