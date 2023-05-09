@@ -2,7 +2,7 @@ import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/
 import { z } from "zod";
 import { clerkClient } from "@clerk/nextjs/server";
 import { filterUserForClient, getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
-import { GameOwedByPlayers, Player } from "npm/components/Types";
+import { type GameOwedByPlayers, type Player } from "npm/components/Types";
 
 export const groupRouter = createTRPCRouter({
   addOrGetGroup: publicProcedure
@@ -212,12 +212,6 @@ export const groupRouter = createTRPCRouter({
           PlayerGameJunction: true
         }
       });
-      const users = (
-        await clerkClient.users.getUserList({
-          userId: playersFromDb.map((player) => player.Player.clerkId ?? ""),
-          limit: 100
-        })
-      ).map((user) => filterUserForClient(user));
 
       const playerMap = new Map<string, Player>();
 
@@ -230,20 +224,22 @@ export const groupRouter = createTRPCRouter({
       games.forEach((game) => {
         const players = game.PlayerGameJunction.map((player) => player.playerId);
         const filteredPlayers = players2.filter((p) => players.some((id) => id === p.id));
-        const players3 = filteredPlayers.map((p) => ({
-          nickname: playerMap.get(p.id)?.nickname ?? "",
-          clerkId: playerMap.get(p.id)?.clerkId ?? "",
-          score: "",
-          position: 0,
-          junctionId: "",
-          playerId: p.id,
-          profileImageUrl: users.find((user) => user.id === playerMap.get(p.id)?.clerkId)?.profileImageUrl ?? ""
-        }));
 
         result.push({
           gameName: game.name,
-          owedByPlayers: [...players3]
+          owedByPlayers: [...filteredPlayers.map((p) => {return p.nickname ?? p.name ?? "Unknown"})]
         });
+      });
+
+      //sort result by game name
+      result.sort((a, b) => {
+        if(a.gameName < b.gameName) {
+          return -1;
+        } else if(a.gameName > b.gameName) {
+          return 1;
+        } else {
+          return 0;
+        }
       });
       return result;
     })

@@ -5,9 +5,6 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 import type { Game } from "npm/components/Types";
 import SelectWithSearch from "npm/components/SelectWithSearch";
-import Link from "next/link";
-import { sortPlayers } from "npm/components/HelperFunctions";
-import Image from "next/image";
 
 const StartNewGame = (props: DashboardProps) => {
   const { data: games } = api.game.getAllGames.useQuery({ withExpansions: false });
@@ -173,7 +170,14 @@ const StartNewGame = (props: DashboardProps) => {
           </div>
         </div>
       </form>
-
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+          <div className="w-full border-t border-gray-300" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900">Games owned by {props.groupName}</span>
+        </div>
+      </div>
       <div className="px-4 sm:px-6 lg:px-14">
         <div className="mt-8 flow-root">
           <div className="-my-2 -mx-4 sm:-mx-6 lg:-mx-8">
@@ -185,13 +189,13 @@ const StartNewGame = (props: DashboardProps) => {
                     scope="col"
                     className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
                   >
-                    Game name
+                    Game
                   </th>
                   <th
                     scope="col"
                     className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
                   >
-                    Number of games
+                    Owned by
                   </th>
                 </tr>
                 </thead>
@@ -212,20 +216,10 @@ const StartNewGame = (props: DashboardProps) => {
                         "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8"
                       )}
                     >
-                      <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                        <div className="flex -space-x-1 overflow-hidden">
-                          {sortPlayers(game.owedByPlayers).map((player) => (
-                            <Image
-                              width={300}
-                              height={300}
-                              key={player.playerId}
-                              className={"inline-block h-6 w-6 rounded-full border-2 border-white"}
-                              src={player.profileImageUrl}
-                              alt={player.nickname ?? player.playerId}
-                            />
-                          ))}
-                        </div>
-                      </div>
+                      <span
+                        className="inline-flex items-center rounded-md bg-green-100 px-2.5 py-0.5 text-sm font-medium text-green-800">
+                      {game.owedByPlayers.join(", ")}
+                      </span>
                     </td>
                   </tr>
                 ))}

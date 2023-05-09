@@ -173,7 +173,8 @@ export type GameStatsResult = {
     winPrecentage: number,
 }
 
+
 export type GameOwedByPlayers = {
     gameName: string,
-    owedByPlayers: PlayerNicknameAndScore[]
+    owedByPlayers: string[]
 }
