@@ -10,7 +10,6 @@ const StartNewGame = (props: DashboardProps) => {
   const { data: games } = api.game.getAllGames.useQuery({ withExpansions: false });
   const { data: expansions } = api.game.getAllGames.useQuery({ withExpansions: true });
   const { data: players } = api.player.getPlayers.useQuery({ groupId: props.groupName });
-  const { data: gamesInGroup } = api.group.getAllGamesOwnedByTheGroup.useQuery({ groupId: props.groupName });
   const router = useRouter();
   const [chosenGame, setChosenGame] = useState("");
   const [chosenExpansions, setChosenExpansions] = useState<Game[]>([]);
@@ -44,7 +43,7 @@ const StartNewGame = (props: DashboardProps) => {
     );
   }
 
-  if (!games || !players || !expansions || !gamesInGroup) {
+  if (!games || !players || !expansions) {
     return (
       <div className="flex grow">
         <LoadingPage />
@@ -61,10 +60,6 @@ const StartNewGame = (props: DashboardProps) => {
       gameMap.get(expansion.baseGameId)?.push(expansion);
     }
   });
-
-  function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(" ");
-  }
 
   function setChosenGameAndExpansions(gameObject: string) {
     const game: Game = gameObject as unknown as Game;
@@ -176,57 +171,6 @@ const StartNewGame = (props: DashboardProps) => {
         </div>
         <div className="relative flex justify-center">
           <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900">Games owned by {props.groupName}</span>
-        </div>
-      </div>
-      <div className="px-4 sm:px-6 lg:px-14">
-        <div className="mt-8 flow-root">
-          <div className="-my-2 -mx-4 sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle">
-              <table className="min-w-full border-separate border-spacing-0">
-                <thead>
-                <tr>
-                  <th
-                    scope="col"
-                    className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
-                  >
-                    Game
-                  </th>
-                  <th
-                    scope="col"
-                    className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
-                  >
-                    Owned by
-                  </th>
-                </tr>
-                </thead>
-                <tbody>
-                {gamesInGroup.map((game, gameIdx) => (
-                  <tr key={game.gameName}>
-                    <td
-                      className={classNames(
-                        gameIdx !== gamesInGroup.length - 1 ? "border-b border-gray-300" : "",
-                        "w-6 py-4 pl-4 pr-3 text-sm font-smale text-gray-900 sm:pl-6 lg:pl-8"
-                      )}
-                    >
-                      {game.gameName}
-                    </td>
-                    <td
-                      className={classNames(
-                        gameIdx !== gamesInGroup.length - 1 ? "border-b border-gray-300" : "",
-                        "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8"
-                      )}
-                    >
-                      <span
-                        className="inline-flex items-center rounded-md bg-green-100 px-2.5 py-0.5 text-sm font-medium text-green-800">
-                      {game.owedByPlayers.join(", ")}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       </div>
     </>
