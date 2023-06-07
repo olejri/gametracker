@@ -227,7 +227,7 @@ export const groupRouter = createTRPCRouter({
 
         result.push({
           gameName: game.name,
-          owedByPlayers: [...filteredPlayers.map((p) => {return p.nickname ?? p.name ?? "Unknown"})]
+          ownedByPlayers: [...filteredPlayers.map((p) => {return p.nickname ?? p.name ?? "Unknown"})]
         });
       });
 

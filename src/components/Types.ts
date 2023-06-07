@@ -176,5 +176,19 @@ export type GameStatsResult = {
 
 export type GameOwedByPlayers = {
     gameName: string,
-    owedByPlayers: string[]
+    ownedByPlayers: string[]
+}
+
+export type GameWithOwners = {
+    id: string
+    name: string
+    players: string
+    playtime: string
+    mechanics: string
+    categories: string
+    description: string
+    image_url: string
+    isExpansion: boolean
+    baseGameId: string | null
+    ownedByPlayers: string[]
 }
