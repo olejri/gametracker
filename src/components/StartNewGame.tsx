@@ -13,7 +13,7 @@ const StartNewGame = (props: DashboardProps) => {
   const router = useRouter();
   const [chosenGame, setChosenGame] = useState("");
   const [chosenExpansions, setChosenExpansions] = useState<Game[]>([]);
-  const [disabled, setDisabled] = useState(false);
+  const [disabled, setDisabled] = useState(true);
   const [generateYourGameSession, setGenerateYourGameSession] = useState(false);
   const [error, setError] = useState<string>("");
 
@@ -23,7 +23,7 @@ const StartNewGame = (props: DashboardProps) => {
     },
     onError: (error) => {
       setError(error.message);
-      setDisabled(false);
+      setDisabled(true);
     },
     onMutate: () => {
       setDisabled(true);
@@ -150,6 +150,11 @@ const StartNewGame = (props: DashboardProps) => {
                     if (name.startsWith("exp-") && value === "on") {
                       expansionIds.push(name.substr(4));
                     }
+                  }
+                  // Validate that at least one player and one game are selected
+                  if (!chosenGame || playerIds.length === 0) {
+                    setError("Please select at least one game and one player.");
+                    return;
                   }
                   const game = chosenGame as unknown as Game;
                   mutate.mutate({
