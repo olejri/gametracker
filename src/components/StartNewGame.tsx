@@ -13,7 +13,7 @@ const StartNewGame = (props: DashboardProps) => {
   const router = useRouter();
   const [chosenGame, setChosenGame] = useState("");
   const [chosenExpansions, setChosenExpansions] = useState<Game[]>([]);
-  const [disabled, setDisabled] = useState(true);
+  const [disabled, setDisabled] = useState(false);
   const [generateYourGameSession, setGenerateYourGameSession] = useState(false);
   const [error, setError] = useState<string>("");
 
@@ -23,7 +23,7 @@ const StartNewGame = (props: DashboardProps) => {
     },
     onError: (error) => {
       setError(error.message);
-      setDisabled(true);
+      setDisabled(false);
     },
     onMutate: () => {
       setDisabled(true);
