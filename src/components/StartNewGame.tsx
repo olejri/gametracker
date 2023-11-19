@@ -167,7 +167,7 @@ const StartNewGame = (props: DashboardProps) => {
                 }}
               >Create session
               </button>
-              validationError && <div className="text-center mt-4 text-red-500">{validationError}</div>
+              {validationError && <div className="text-center mt-4 text-red-500">{validationError}</div>}
             </div>
           </div>
         </div>
