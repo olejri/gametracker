@@ -16,6 +16,7 @@ const StartNewGame = (props: DashboardProps) => {
   const [disabled, setDisabled] = useState(false);
   const [generateYourGameSession, setGenerateYourGameSession] = useState(false);
   const [error, setError] = useState<string>("");
+  const [validationError, setValidationError] = useState<string>("");
 
   const mutate = api.session.startANewGameSession.useMutation({
     onSuccess: (session) => {
@@ -153,7 +154,7 @@ const StartNewGame = (props: DashboardProps) => {
                   }
                   // Validate that at least one player and one game are selected
                   if (!chosenGame || playerIds.length === 0) {
-                    setError("Please select at least one game and one player.");
+                    setValidationError("Please select at least one game and one player.");
                     return;
                   }
                   const game = chosenGame as unknown as Game;
@@ -166,6 +167,7 @@ const StartNewGame = (props: DashboardProps) => {
                 }}
               >Create session
               </button>
+              validationError && <div className="text-center mt-4 text-red-500">{validationError}</div>
             </div>
           </div>
         </div>
