@@ -112,7 +112,7 @@ export const gameRouter = createTRPCRouter({
       ))
     .mutation(async ({ input }) => {
       const client = new OpenAI(({
-        apiKey: process.env.NODE_ENV,
+        apiKey: process.env.OPENAI_API_KEY,
       }));
       const run = await client.beta.threads.createAndRun({
         assistant_id: "asst_RAONg4ejzqYIUTTvWr8kt0RA",
