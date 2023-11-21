@@ -123,6 +123,7 @@ export const gameRouter = createTRPCRouter({
         },
       });
 
+
       while (run.status !== "completed") {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
