@@ -123,9 +123,10 @@ export const gameRouter = createTRPCRouter({
         },
       });
 
-
-      while (run.status !== "completed") {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      let statusCheck = run.status;
+      while (statusCheck !== "completed") {
+        const run1 = await client.beta.threads.runs.retrieve(run.thread_id, run.id);
+        statusCheck = run1.status;
       }
 
       const messages = await client.beta.threads.messages.list(
