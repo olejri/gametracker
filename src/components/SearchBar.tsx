@@ -4,7 +4,7 @@ import { LoadingPage } from "npm/components/loading";
 
 
 const SearchBar = (props: {
-  setAtlasGamesResult: (atlasGamesResult: {text : {value: string}}) => void;
+  setAtlasGamesResult: (atlasGamesResult: {text : {value: string}} | undefined) => void;
 }) => {
   const setAtlasGamesResult = props.setAtlasGamesResult;
   const [searchName, setSearchName] = useState("");

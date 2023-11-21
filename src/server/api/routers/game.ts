@@ -12,40 +12,40 @@ export const gameRouter = createTRPCRouter({
   addGame: publicProcedure
     .input(
       z.object({
-          name: z.string().min(1),
-          description: z.string().min(1),
-          image_url: z.string().min(1),
-          players: z.string().min(1),
-          playtime: z.string().min(1),
-          mechanics: z.string(),
-          categories: z.string(),
-          isExpansion: z.boolean(),
-          baseGameId: z.string().optional()
+        name: z.string().min(1),
+        description: z.string().min(1),
+        image_url: z.string().min(1),
+        players: z.string().min(1),
+        playtime: z.string().min(1),
+        mechanics: z.string(),
+        categories: z.string(),
+        isExpansion: z.boolean(),
+        baseGameId: z.string().optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
       let baseGame = null;
-      if(input.baseGameId) {
+      if (input.baseGameId) {
         baseGame = await ctx.prisma.game.findUnique(
           {
             where: {
               id: input.baseGameId
             }
           }
-        )
+        );
       }
 
-      if(input.isExpansion && baseGame === null) {
+      if (input.isExpansion && baseGame === null) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
+          code: "BAD_REQUEST",
           message: `Failed to create game: baseGameId is required for expansions`
         });
       }
 
-      if(input.baseGameId && baseGame === null) {
+      if (input.baseGameId && baseGame === null) {
         throw new TRPCError(
           {
-            code: 'BAD_REQUEST',
+            code: "BAD_REQUEST",
             message: `Failed to create game: baseGameId ${input.baseGameId} does not exist`
           }
         );
@@ -68,7 +68,7 @@ export const gameRouter = createTRPCRouter({
       }).optional()
     )
     .query(async ({ ctx, input }) => {
-      if(input?.withExpansions === undefined)  {
+      if (input?.withExpansions === undefined) {
         return await ctx.prisma.game.findMany();
       } else {
         return await ctx.prisma.game.findMany({
@@ -80,11 +80,11 @@ export const gameRouter = createTRPCRouter({
     }),
 
   getAllMechanics: publicProcedure
-    .query(async ({  }) => {
+    .query(async ({}) => {
       const mechanismUrl = "https://api.boardgameatlas.com/api/game/mechanics?client_id=1rbEg28jEc";
       const response = await fetch(mechanismUrl);
 
-      if(response.ok) {
+      if (response.ok) {
         const json = await response.json() as unknown as MechanicsResponse;
         return json.mechanics;
       }
@@ -92,11 +92,11 @@ export const gameRouter = createTRPCRouter({
     }),
 
   getAllCategories: publicProcedure
-    .query(async ({  }) => {
+    .query(async ({}) => {
       const categoryUrl = "https://api.boardgameatlas.com/api/game/categories?client_id=1rbEg28jEc";
       const response = await fetch(categoryUrl);
 
-      if(response.ok) {
+      if (response.ok) {
         const json = await response.json() as unknown as CategoriesResponse;
         return json.categories;
       }
@@ -112,15 +112,15 @@ export const gameRouter = createTRPCRouter({
       ))
     .mutation(async ({ input }) => {
       const client = new OpenAI(({
-        apiKey: process.env.OPENAI_API_KEY,
+        apiKey: process.env.OPENAI_API_KEY
       }));
       const run = await client.beta.threads.createAndRun({
         assistant_id: "asst_RAONg4ejzqYIUTTvWr8kt0RA",
         thread: {
           messages: [
-            { role: "user", content: input.searchQuery },
-          ],
-        },
+            { role: "user", content: input.searchQuery }
+          ]
+        }
       });
 
       let statusCheck = run.status;
@@ -153,43 +153,41 @@ export const gameRouter = createTRPCRouter({
             code: "BAD_REQUEST",
             message: "Failed to create game: OpenAI assistant failed to run"
           }
-        )
+        );
       }
 
       //handle completion
-      if(statusCheck === "completed") {
+      if (statusCheck === "completed") {
 
-      const messages = await client.beta.threads.messages.list(
-        run.thread_id
-      );
+        const messages = await client.beta.threads.messages.list(
+          run.thread_id
+        );
 
-      await client.beta.threads.del(run.thread_id);
+        await client.beta.threads.del(run.thread_id);
 
-      const find = messages.data.find((message) => message.role === "assistant") ?? { content: [] }
-      const value = find.content.find((content) => {
-        if (content.type === "text") {
-          return content.text.value;
-        }
-      })
-      return value as { text: { value: string } };
+        const find = messages.data.find((message) => message.role === "assistant") ?? { content: [] };
+        const value = find.content.find((content) => {
+          if (content.type === "text") {
+            return content.text.value;
+          }
+        });
+        return value as { text: { value: string } };
       }
-
-
     }),
 
   searchForGame: publicProcedure
     .input(
       z.object({
-        searchName: z.string().optional(),
-        mechanic: z.string().optional(),
-        category: z.string().optional(),
-      }
-    ))
+          searchName: z.string().optional(),
+          mechanic: z.string().optional(),
+          category: z.string().optional()
+        }
+      ))
     .mutation(async ({ input }) => {
       const url = makeBoardGameAtlasSearchUrl(input?.searchName ?? "", input?.mechanic ?? "", input?.category ?? "");
       const response = await fetch(url);
 
-      if(response.ok) {
+      if (response.ok) {
         const json = await response.json() as unknown as AtlasResponse;
         return json.games;
       }
@@ -212,7 +210,7 @@ export const gameRouter = createTRPCRouter({
             code: "NOT_FOUND",
             message: "Player not found"
           }
-        )
+        );
       }
       return await ctx.prisma.game.findMany({
         where: {
@@ -221,5 +219,5 @@ export const gameRouter = createTRPCRouter({
           }
         }
       });
-    }),
+    })
 });
