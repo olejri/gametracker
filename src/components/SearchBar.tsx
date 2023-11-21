@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import type { AtlasGame, Category, Mechanic } from "npm/components/Types";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import SelectWithSearch from "npm/components/SelectWithSearch";
 
 
 const SearchBar = (props: {
-  setAtlasGamesResult: (atlasGamesResult: AtlasGame[]) => void;
+  setAtlasGamesResult: (atlasGamesResult: {text : {value: string}}) => void;
 }) => {
   const setAtlasGamesResult = props.setAtlasGamesResult;
   const [searchName, setSearchName] = useState("");
@@ -22,7 +21,7 @@ const SearchBar = (props: {
     isLoading: categoriesIsLoading,
     error: categoriesError
   } = api.game.getAllCategories.useQuery();
-  const mutationSearch = api.game.searchForGame.useMutation(
+  const mutationSearch = api.game.searchForGameWithOpenai.useMutation(
     {
       onSuccess: (data) => {
         setAtlasGamesResult(data);
@@ -54,9 +53,7 @@ const SearchBar = (props: {
               onClick={() => {
                 mutationSearch.mutate(
                   {
-                    searchName: searchName,
-                    mechanic: (mechanic as unknown as Mechanic).id,
-                    category: (category as unknown as Category).id
+                    searchQuery: searchName,
                   });
               }}
       >Search

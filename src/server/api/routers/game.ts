@@ -5,6 +5,8 @@ import { TRPCError } from "@trpc/server";
 import fetch from "node-fetch-native";
 import type { AtlasResponse, CategoriesResponse, MechanicsResponse } from "npm/components/Types";
 import { makeBoardGameAtlasSearchUrl } from "npm/components/HelperFunctions";
+import OpenAI from "openai";
+import * as process from "process";
 
 export const gameRouter = createTRPCRouter({
   addGame: publicProcedure
@@ -99,6 +101,45 @@ export const gameRouter = createTRPCRouter({
         return json.categories;
       }
       return [];
+    }),
+
+  //searchForGame using openai
+  searchForGameWithOpenai: publicProcedure
+    .input(
+      z.object({
+          searchQuery: z.string()
+        }
+      ))
+    .mutation(async ({ input }) => {
+      const client = new OpenAI(({
+        apiKey: process.env.NODE_ENV,
+      }));
+      const run = await client.beta.threads.createAndRun({
+        assistant_id: "asst_RAONg4ejzqYIUTTvWr8kt0RA",
+        thread: {
+          messages: [
+            { role: "user", content: input.searchQuery },
+          ],
+        },
+      });
+
+      while (run.status !== "completed") {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      const messages = await client.beta.threads.messages.list(
+        run.thread_id
+      );
+
+      await client.beta.threads.del(run.thread_id);
+
+      const find = messages.data.find((message) => message.role === "assistant") ?? { content: [] }
+      const value = find.content.find((content) => {
+        if (content.type === "text") {
+          return content.text.value;
+        }
+      })
+      return value as { text: { value: string } };
     }),
 
   searchForGame: publicProcedure
