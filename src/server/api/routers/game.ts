@@ -111,6 +111,9 @@ export const gameRouter = createTRPCRouter({
         }
       ))
     .mutation(async ({ input }) => {
+      //logging
+      console.log("searchForGameWithOpenai");
+
       const client = new OpenAI(({
         apiKey: process.env.OPENAI_API_KEY
       }));
