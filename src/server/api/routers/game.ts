@@ -111,16 +111,20 @@ export const gameRouter = createTRPCRouter({
         }
       ))
     .mutation(async ({ input }) => {
-      //logging
-      console.log("searchForGameWithOpenai");
-
       const client = new OpenAI(({
         apiKey: process.env.OPENAI_API_KEY,
         timeout: 15 * 1000, // 15 seconds (default is 10 minutes)
       }));
 
+      const query = "I want information about a board game called " + input.searchQuery + ". " +
+        "Give me the name, description, image, number of players, and playtime. In a JSON object.";
+
       const response = await client.chat.completions
-        .create({ messages: [{ role: 'user', content: 'Say this is a test' }], model: 'gpt-3.5-turbo' })
+        .create({
+          messages: [{ role: 'user', content: query }],
+          model: 'gpt-4-1106-preview',
+          response_format: { "type":"json_object" }
+        })
         .asResponse();
 
        return {text : {value: await response.text()}}
