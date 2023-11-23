@@ -117,65 +117,12 @@ export const gameRouter = createTRPCRouter({
       const client = new OpenAI(({
         apiKey: process.env.OPENAI_API_KEY
       }));
-      const run = await client.beta.threads.createAndRun({
-        assistant_id: "asst_RAONg4ejzqYIUTTvWr8kt0RA",
-        thread: {
-          messages: [
-            { role: "user", content: input.searchQuery }
-          ]
-        }
-      });
 
-      let statusCheck = run.status;
-      //status:
-      //     | 'queued'
-      //     | 'in_progress'
-      //     | 'requires_action'
-      //     | 'cancelling'
-      //     | 'cancelled'
-      //     | 'failed'
-      //     | 'completed'
-      //     | 'expired';
+      const { data: chatCompletion, response: raw } = await client.chat.completions
+        .create({ messages: [{ role: 'user', content: 'Say this is a test' }], model: 'gpt-3.5-turbo' })
+        .withResponse();
 
-      //wait for completion of assistant
-
-      while (statusCheck !== "completed" && statusCheck !== "failed" && statusCheck !== "cancelled" && statusCheck !== "expired" && statusCheck !== "requires_action" && statusCheck !== "cancelling") {
-        //logging timed
-        console.log("Waiting for assistant to complete");
-        const run1 = await client.beta.threads.runs.retrieve(run.thread_id, run.id);
-
-        //logg status
-        console.log(run1);
-        statusCheck = run1.status;
-      }
-
-      //handle errors
-      if (statusCheck === "failed" || statusCheck === "cancelled" || statusCheck === "expired") {
-        throw new TRPCError(
-          {
-            code: "BAD_REQUEST",
-            message: "Failed to create game: OpenAI assistant failed to run"
-          }
-        );
-      }
-
-      //handle completion
-      if (statusCheck === "completed") {
-
-        const messages = await client.beta.threads.messages.list(
-          run.thread_id
-        );
-
-        await client.beta.threads.del(run.thread_id);
-
-        const find = messages.data.find((message) => message.role === "assistant") ?? { content: [] };
-        const value = find.content.find((content) => {
-          if (content.type === "text") {
-            return content.text.value;
-          }
-        });
-        return value as { text: { value: string } };
-      }
+       return {text : {value: chatCompletion.choices[1]?.message.content ?? ""}}
     }),
 
   searchForGame: publicProcedure
