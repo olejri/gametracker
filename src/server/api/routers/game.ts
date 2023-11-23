@@ -117,7 +117,17 @@ export const gameRouter = createTRPCRouter({
       }));
 
       const query = "I want information about a board game called " + input.searchQuery + ". " +
-        "Give me the name, description, image, number of players, and playtime. In a JSON object.";
+        "export interface AtlasGame {\n" +
+        "    name: string\n" +
+        "    min_players: number\n" +
+        "    max_players: number\n" +
+        "    min_playtime: number\n" +
+        "    max_playtime: number\n" +
+        "    mechanics: Mechanic[]\n" +
+        "    categories: Category[]\n" +
+        "    description: string\n" +
+        "    image_url: string\n" +
+        "} answer with a json object of type AtlasGame";
 
       const response = await client.chat.completions
         .create({
