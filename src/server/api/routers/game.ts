@@ -115,14 +115,15 @@ export const gameRouter = createTRPCRouter({
       console.log("searchForGameWithOpenai");
 
       const client = new OpenAI(({
-        apiKey: process.env.OPENAI_API_KEY
+        apiKey: process.env.OPENAI_API_KEY,
+        timeout: 15 * 1000, // 15 seconds (default is 10 minutes)
       }));
 
-      const { data: chatCompletion, response: raw } = await client.chat.completions
+      const response = await client.chat.completions
         .create({ messages: [{ role: 'user', content: 'Say this is a test' }], model: 'gpt-3.5-turbo' })
-        .withResponse();
+        .asResponse();
 
-       return {text : {value: chatCompletion.choices[1]?.message.content ?? ""}}
+       return {text : {value: await response.text()}}
     }),
 
   searchForGame: publicProcedure
