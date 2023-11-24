@@ -15,6 +15,11 @@ const ctx = api.useContext()
         }
     });
 
+// Validate this value with a custom type guard (extend to your needs)
+    function isAtlasGame(o: any): o is AtlasGame {
+        return 'name' in o && 'min_players' in o && 'max_players' in o && 'min_playtime' in o && 'max_playtime' in o && 'mechanics' in o && 'categories' in o;
+    }
+
   if (atlasGamesResult === undefined) return (
     <div className="sm:w-3/12">
       <SearchBar setAtlasGamesResult={setAtlasGamesResult} />
@@ -22,7 +27,12 @@ const ctx = api.useContext()
   );
 
   console.log(atlasGamesResult);
-  const game = atlasGamesResult as unknown as AtlasGame;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const game = JSON.parse(atlasGamesResult);
+
+    if (!isAtlasGame(game)) {
+        return <p>Something went wrong</p>
+    }
 
   return (
     <>
