@@ -38,9 +38,6 @@ const ctx = api.useContext()
     <>
       <div className="sm:w-3/12">
         <SearchBar setAtlasGamesResult={setAtlasGamesResult} />
-          <dl className="mt-1 flex flex-grow flex-col justify-between">
-                <dd className="text-sm text-gray-500">Using gpt-4-1106-preview to find information about a game before April 2023</dd>
-            </dl>
       </div>
         <div className="flex flex-1 flex-col p-8">
             <h3 className="mt-6 text-sm font-medium text-gray-900">{game.name}</h3>

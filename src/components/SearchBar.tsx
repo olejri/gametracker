@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
-import {type AtlasGame} from "npm/components/Types";
 
 
 const SearchBar = (props: {
