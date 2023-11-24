@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
-import {AtlasGame} from "npm/components/Types";
+import {type AtlasGame} from "npm/components/Types";
 
 
 const SearchBar = (props: {
-  setAtlasGamesResult: (atlasGamesResult: AtlasGame | undefined) => void;
+  setAtlasGamesResult: (atlasGamesResult: string | undefined) => void;
 }) => {
   const setAtlasGamesResult = props.setAtlasGamesResult;
   const [searchName, setSearchName] = useState("");

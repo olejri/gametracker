@@ -1,13 +1,13 @@
-import { z } from "zod";
+import {z} from "zod";
 
-import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
-import { TRPCError } from "@trpc/server";
+import {createTRPCRouter, privateProcedure, publicProcedure} from "npm/server/api/trpc";
+import {TRPCError} from "@trpc/server";
 import fetch from "node-fetch-native";
-import type {AtlasGame, AtlasResponse, CategoriesResponse, MechanicsResponse} from "npm/components/Types";
-import { makeBoardGameAtlasSearchUrl } from "npm/components/HelperFunctions";
+import type {AtlasResponse, CategoriesResponse, MechanicsResponse} from "npm/components/Types";
+import {OpenaiResponse} from "npm/components/Types";
+import {makeBoardGameAtlasSearchUrl} from "npm/components/HelperFunctions";
 import OpenAI from "openai";
 import * as process from "process";
-import {OpenaiResponse} from "npm/components/Types";
 
 export const gameRouter = createTRPCRouter({
   addGame: publicProcedure
@@ -139,18 +139,7 @@ export const gameRouter = createTRPCRouter({
         .asResponse();
 
         const openai = await response.json() as OpenaiResponse
-        const message = openai?.choices[0]?.message?.content as unknown as AtlasGame ?? {
-            name: "No game found",
-            min_players: 0,
-            max_players: 0,
-            min_playtime: 0,
-            max_playtime: 0,
-            mechanics: [],
-            categories: [],
-            description: ""
-        };
-
-        return message;
+        return openai?.choices[0]?.message?.content ?? "no response";
     }),
 
   searchForGame: publicProcedure

@@ -6,15 +6,8 @@ import { CloudArrowDownIcon } from "@heroicons/react/24/solid";
 
 
 const GameSearch = () => {
-  const [atlasGamesResult, setAtlasGamesResult] = useState<AtlasGame>();
-
-
-
-
-
-
-
-    const ctx = api.useContext()
+  const [atlasGamesResult, setAtlasGamesResult] = useState<string>();
+const ctx = api.useContext()
 
     const mutation = api.game.addGame.useMutation({
         onSuccess: () => {
@@ -28,7 +21,8 @@ const GameSearch = () => {
     </div>
   );
 
-  const game = atlasGamesResult;
+  console.log(atlasGamesResult);
+  const game = atlasGamesResult as unknown as AtlasGame;
 
   return (
     <>
