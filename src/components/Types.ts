@@ -5,8 +5,8 @@ export interface AtlasGame {
     max_players: number
     min_playtime: number
     max_playtime: number
-    mechanics: Mechanic[]
-    categories: Category[]
+    mechanics: string[]
+    categories: string[]
     description: string
     image_url: string
 }
@@ -22,6 +22,33 @@ export interface Game  {
     image_url: string
     isExpansion: boolean
     baseGameId: string | null
+}
+//{ "id": "chatcmpl-8OOnGDjsKsIXCaXlJ77tX2L3WONIH", "object": "chat.completion", "created": 1700825870, "model": "gpt-4-1106-preview", "choices": [ { "index": 0, "message": { "role": "assistant", "content": "{\n \"name\": \"Settlers of Catan\",\n \"min_players\": 3,\n \"max_players\": 4,\n \"min_playtime\": 60,\n \"max_playtime\": 120,\n \"mechanics\": [\n \"Dice Rolling\",\n \"Modular Board\",\n \"Trading\",\n \"Resource Gathering\",\n \"Development\"\n ],\n \"categories\": [\n \"Strategy\",\n \"Economic\",\n \"Negotiation\",\n \"Exploration\"\n ],\n \"description\": \"In Settlers of Catan, players try to be the dominant force on the island of Catan by building settlements, cities, and roads. On each turn dice are rolled to determine what resources the island produces. Players collect these resources (cards)—wood, grain, brick, sheep, or stone—to build up their civilizations. Trade between players is a key aspect of the gameplay. The first player to reach 10 victory points wins the game.\"\n}" }, "finish_reason": "stop" } ], "usage": { "prompt_tokens": 91, "completion_tokens": 204, "total_tokens": 295 }, "system_fingerprint": "fp_a24b4d720c" }
+export interface OpenaiResponse {
+    id: string
+    object: string
+    created: number
+    model: string
+    choices: Choice[]
+    usage: Usage
+    system_fingerprint: string
+}
+
+export interface Usage {
+    prompt_tokens: number
+    completion_tokens: number
+    total_tokens: number
+}
+
+export interface Choice {
+    index: number
+    message: Message
+    finish_reason: string
+}
+
+interface Message {
+    role: string
+    content: string
 }
 
 export interface DashboardProps {

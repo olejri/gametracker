@@ -7,6 +7,7 @@ import type {AtlasGame, AtlasResponse, CategoriesResponse, MechanicsResponse} fr
 import { makeBoardGameAtlasSearchUrl } from "npm/components/HelperFunctions";
 import OpenAI from "openai";
 import * as process from "process";
+import {OpenaiResponse} from "npm/components/Types";
 
 export const gameRouter = createTRPCRouter({
   addGame: publicProcedure
@@ -137,7 +138,19 @@ export const gameRouter = createTRPCRouter({
         })
         .asResponse();
 
-       return {text : {value: await response.text()}}
+        const openai = await response.json() as OpenaiResponse
+        const message = openai?.choices[0]?.message?.content as unknown as AtlasGame ?? {
+            name: "No game found",
+            min_players: 0,
+            max_players: 0,
+            min_playtime: 0,
+            max_playtime: 0,
+            mechanics: [],
+            categories: [],
+            description: ""
+        };
+
+        return message;
     }),
 
   searchForGame: publicProcedure
