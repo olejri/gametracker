@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import fetch from "node-fetch-native";
-import type { AtlasResponse, CategoriesResponse, MechanicsResponse } from "npm/components/Types";
+import type {AtlasGame, AtlasResponse, CategoriesResponse, MechanicsResponse} from "npm/components/Types";
 import { makeBoardGameAtlasSearchUrl } from "npm/components/HelperFunctions";
 import OpenAI from "openai";
 import * as process from "process";
@@ -117,17 +117,17 @@ export const gameRouter = createTRPCRouter({
       }));
 
       const query = "I want information about a board game called " + input.searchQuery + ". " +
-        "export interface AtlasGame {\n" +
+        "Create a valid JSON object that looks like this: {\n" +
         "    name: string\n" +
         "    min_players: number\n" +
         "    max_players: number\n" +
         "    min_playtime: number\n" +
         "    max_playtime: number\n" +
-        "    mechanics: Mechanic[]\n" +
-        "    categories: Category[]\n" +
+        "    mechanics: string[]\n" +
+        "    categories: string[]\n" +
         "    description: string\n" +
-        "    image_url: string\n" +
-        "} answer with a json object of type AtlasGame";
+        "} \n" +
+          "Do not escape the double quotes in the output:";
 
       const response = await client.chat.completions
         .create({
