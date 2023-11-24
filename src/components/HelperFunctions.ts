@@ -204,19 +204,6 @@ export function makeBoardGameAtlasSearchUrl(searchName: string, mechanic: string
   }
 }
 
-export const addMechanicAndCategoryToGame = (atlasGamesResult: AtlasGame[], mechanics: Mechanic[], categories: Category[]) => {
-  return atlasGamesResult.map((atlasGame) => {
-    const gameMechanics = atlasGame.mechanics.map((mechanic) => {
-      return mechanics.find((mechanicData) => mechanicData.id === mechanic.id)?.name ?? "Unknown";
-    });
-    const gameCategories = atlasGame.categories.map((category) => {
-      return categories.find((categoryData) => categoryData.id === category.id)?.name ?? "Unknown";
-    });
-
-    return { ...atlasGame, mechanics: gameMechanics, categories: gameCategories };
-  });
-};
-
 export const isGameInCollection = (game: AtlasGame, collections: Game[]) => {
   return collections.some((collection) => collection.name === game.name);
 };
