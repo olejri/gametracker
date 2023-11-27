@@ -1,4 +1,4 @@
-import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
+import { adminProcedure, createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { z } from "zod";
 import { clerkClient } from "@clerk/nextjs/server";
 import { filterUserForClient, getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
@@ -242,5 +242,20 @@ export const groupRouter = createTRPCRouter({
         }
       });
       return result;
-    })
+    }),
+
+  getAllPlayersInGroup: adminProcedure
+    .input(
+      z.object({
+        gameGroup: z.string()
+      })
+    ).query(async ({ ctx, input }) => {
+      return await ctx.prisma.playerGameGroupJunction.findMany({
+        where: {
+          groupId: input.gameGroup
+        }, include: {
+          Player: true
+        }
+      });
+    }),
 });

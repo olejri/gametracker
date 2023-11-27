@@ -16,6 +16,10 @@ const AdminView = (props: {
     isError: emailIsError,
     error: emailError
   } = api.user.getPendingEmailInvites.useQuery();
+
+
+  const { data: gamesInGroup, isLoading: allPlayersIsloading, isError: allPlayersIsError, error: allPlayersError } = api.group.getAllPlayersInGroup.useQuery({ gameGroup });
+
   const mutation = api.user.sendInvite.useMutation(
     {
       onSuccess: () => {
@@ -52,12 +56,12 @@ const AdminView = (props: {
   const [showInvitations, setShowInvitations] = React.useState(false);
   const [showPlayers, setShowPlayers] = React.useState(false);
 
-  if (isLoading || emailIsLoading) {
+  if (isLoading || emailIsLoading || allPlayersIsloading) {
     return <LoadingPage />;
   }
 
-  if (isError || emailIsError) {
-    return <p>{error?.message}{emailError?.message}</p>;
+  if (isError || emailIsError || allPlayersIsError) {
+    return <p>{error?.message}{emailError?.message}{allPlayersError?.message}</p>;
   }
 
   function ShowInvitationsButton() {
@@ -80,8 +84,45 @@ const AdminView = (props: {
     </>;
   }
 
+  const players = gamesInGroup?.map((game) =>
+  {
+    return {
+      ...game.Player,
+      "role" : game.role
+    }
+  });
+
   return (
     <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+          <div className="w-full border-t border-gray-300" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-white px-2 text-sm text-gray-500">Active users in {gameGroup}</span>
+        </div>
+      </div>
+      <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {players.map((player) => (
+          <li
+            key={player.id}
+            className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"
+          >
+            <div className="flex flex-1 flex-col p-8">
+              <h3 className="mt-6 text-sm font-medium text-gray-900">{player.nickname}</h3>
+              <dl className="mt-1 flex flex-grow flex-col justify-between">
+                <dd className="text-sm text-gray-500">Name: {player.name}</dd>
+                <dd className="text-sm text-gray-500">Email: {player.email}</dd>
+                {player.role === "ADMIN" ?
+                  (<dd className="text-sm text-red-500">Role: {player.role}</dd>)
+                  : (<dd className="text-sm text-gray-500">Role: {player.role}</dd>)}
+                <dd className="text-sm text-gray-500">ClerkId: {player.clerkId?.substring(0, 10)}</dd>
+                <dd className="text-sm text-gray-500">PlayerId: {player.id.substring(0,8)}</dd>
+              </dl>
+            </div>
+          </li>
+        ))}
+      </ul>
       <div className="overflow-hidden bg-white shadow-none sm:rounded-lg">
         <div
           className="px-4 py-5 sm:p-6"

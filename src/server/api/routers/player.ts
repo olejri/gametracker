@@ -1,4 +1,4 @@
-import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
+import { adminProcedure, createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import {
@@ -173,6 +173,49 @@ export const playerRouter = createTRPCRouter({
           nickname: input.nickname
         }
       });
+    }),
+
+  updatePlayerAdmin: adminProcedure
+    .input(
+      z.object({
+        nickname: z.string(),
+        name: z.string(),
+        email: z.string(),
+        clerkId: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const player = await getPlayerByClerkId(ctx.prisma, input.clerkId)
+      return await ctx.prisma.player.update({
+        where: {
+          id: player.id
+        },
+        data: {
+          nickname: input.nickname,
+          name: input.name,
+          email: input.email
+        }
+      });
+    }),
+
+  addNewPlayer: adminProcedure
+    .input(
+      z.object({
+        name: z.string(),
+        nickname: z.string(),
+        email: z.string()
+      })
+    ).query(async ({ ctx, input }) => {
+      const player = await ctx.prisma.player.create({
+        data: {
+          name: input.name,
+          nickname: input.nickname,
+          email: input.email,
+        }
+      });
+      return {
+        data: player
+      };
     }),
 
   calculateAchievements: privateProcedure
