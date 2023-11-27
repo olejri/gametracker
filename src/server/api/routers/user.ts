@@ -3,7 +3,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as process from "process";
 import { type ClerkInvite } from "npm/components/Types";
-import { checkIfGameGroupExists, getPlayerById, getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
+import { checkIfGameGroupExists, getPlayerByClerkId, getPlayerById } from "npm/server/helpers/filterUserForClient";
 
 export const userRouter = createTRPCRouter({
   getPlayer: privateProcedure
@@ -152,8 +152,10 @@ export const userRouter = createTRPCRouter({
           message: `Failed to get pending invites: ${res.statusText}`
         });
       }
+      const result = await res.json() as ClerkInvite[];
+      //only pending
       return {
-        data: await res.json() as ClerkInvite[]
+        data: result.filter((invite) => invite.status === "pending")
       };
     })
 });
