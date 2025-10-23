@@ -1,7 +1,7 @@
 import React from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage, LoadingSpinner } from "npm/components/loading";
-import { UserPlusIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
+import { UserPlusIcon, ChevronUpIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
 
@@ -45,6 +45,15 @@ const AdminView = (props: {
   const acceptPlayer = api.user.acceptInvite.useMutation({
     onSuccess: () => {
       void router.push(`/${gameGroup}/dashboard`);
+    }
+  });
+
+  const promoteToAdmin = api.user.promoteToAdmin.useMutation({
+    onSuccess: () => {
+      void router.reload();
+    },
+    onError: (error) => {
+      console.log(error);
     }
   });
 
@@ -120,6 +129,27 @@ const AdminView = (props: {
                 <dd className="text-sm text-gray-500">PlayerId: {player.id.substring(0,8)}</dd>
               </dl>
             </div>
+            {player.role !== "ADMIN" && (
+              <div>
+                <div className="-mt-px flex divide-x divide-gray-200">
+                  <div className="-ml-px flex w-0 flex-1">
+                    <button
+                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-b-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-gray-50`}
+                      onClick={() => {
+                        promoteToAdmin.mutate({
+                          playerId: player.id,
+                          groupId: gameGroup
+                        });
+                      }}
+                      disabled={promoteToAdmin.isLoading}
+                    >
+                      <ShieldCheckIcon className="h-5 w-5 text-green-600" aria-hidden="true" />
+                      Promote to Admin
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </li>
         ))}
       </ul>

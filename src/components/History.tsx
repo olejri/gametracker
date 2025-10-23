@@ -1,194 +1,154 @@
 import { type DashboardProps } from "npm/components/Types";
 import { sortPlayers } from "npm/components/HelperFunctions";
 import { api } from "npm/utils/api";
-import React from "react";
+import React, { useMemo } from "react";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { LoadingPage } from "npm/components/loading";
-import Image from 'next/image'
+import Avatar from "npm/components/Avatar";
+import Badge from "npm/components/Badge";
+import { Th } from "npm/components/Th";
 
-const History = (props: DashboardProps) => {
+const tdBorder = "border-b border-gray-300";
+const hiddenLgCell = "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell";
+
+const classNames = (...classes: Array<string | false | null | undefined>) =>
+  classes.filter(Boolean).join(" ");
+
+const History = ({ groupName }: DashboardProps) => {
   const { data, isLoading, isError } = api.session.getAllCompletedSessions.useQuery({
-    data: {
-      groupId: props.groupName
-    }
+    data: { groupId: groupName },
   });
 
-  if (isLoading) {
+  const sessions = data ?? [];
+
+  const content = useMemo(() => {
+    if (isLoading) {
+      return (
+        <div className="flex grow">
+          <LoadingPage />
+        </div>
+      );
+    }
+
+    if (isError) {
+      return <div className="px-4 py-6 text-sm text-red-600">Failed to load history.</div>;
+    }
+
+    if (!sessions.length) {
+      return <div className="px-4 py-6 text-sm text-gray-600">No completed sessions yet.</div>;
+    }
+
     return (
-      <div className="flex grow">
-        <LoadingPage />
+      <div className="-my-2 -mx-4 sm:-mx-6 lg:-mx-8">
+        <div className="inline-block min-w-full py-2 align-middle">
+          <table className="min-w-full border-separate border-spacing-0">
+            <thead>
+              <tr>
+                <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">Game</Th>
+                <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">Players</Th>
+                <Th className="hidden px-3 lg:table-cell">Position</Th>
+                <Th className="hidden px-3 lg:table-cell">Score</Th>
+                <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">Date</Th>
+                <Th className="hidden px-3 lg:table-cell">Location</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {sessions.map((game, gameIdx) => {
+                const href = `/${groupName}/session/${game.sessionId}`;
+                const rowHasBorder = gameIdx !== sessions.length - 1;
+                const playersSorted = sortPlayers(game.players);
+
+                return (
+                  <tr key={game.sessionId}>
+                    <td
+                      className={classNames(
+                        rowHasBorder && tdBorder,
+                        "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                      )}
+                    >
+                      <Link href={href} className="block h-full w-full">
+                        {game.gameName}
+                      </Link>
+                    </td>
+
+                    <td
+                      className={classNames(
+                        rowHasBorder && tdBorder,
+                        "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                      )}
+                    >
+                      <Link href={href} className="block h-full w-full">
+                        <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
+                          <Avatar
+                            avatars={playersSorted.map((p) => ({
+                              id: p.playerId,
+                              src: p.profileImageUrl,
+                              alt: p.nickname ?? p.playerId,
+                            }))}
+                            rankedSizing
+                          />
+                        </div>
+                      </Link>
+                    </td>
+
+                    <td className={classNames(rowHasBorder && tdBorder, hiddenLgCell)}>
+                      <Link href={href} className="block h-full w-full">
+                        <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
+                          <div className="flex flex-wrap gap-2">
+                            {playersSorted.map((player) => (
+                              <Badge key={player.playerId} className="h-6 min-w-[1.5rem]">
+                                {player.position}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </Link>
+                    </td>
+
+                    <td className={classNames(rowHasBorder && tdBorder, hiddenLgCell)}>
+                      <Link href={href} className="block h-full w-full">
+                        <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
+                          <div className="flex flex-wrap gap-2">
+                            {playersSorted.map((player) => (
+                              <Badge key={player.playerId} className="h-6 min-w-[1.5rem]">
+                                {player.score}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </Link>
+                    </td>
+
+                    <td
+                      className={classNames(
+                        rowHasBorder && tdBorder,
+                        "w-6 px-3 py-4 text-sm text-gray-500",
+                      )}
+                    >
+                      <Link href={href} className="block h-full w-full">
+                        {dayjs(game.createdAt).format("DD.MM.YYYY")}
+                      </Link>
+                    </td>
+
+                    <td className={classNames(rowHasBorder && tdBorder, hiddenLgCell)}>
+                      <Link href={href} className="block h-full w-full">
+                        {"???"}
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
-  }
-
-  if (isError) {
-    return <div></div>
-  }
-
-  function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(" ");
-  }
-
-  function customRingBasedOnPosition(position: number) {
-    if (position === 1) {
-      return "inline-block h-9 w-9 rounded-full border-2 border-yellow-500";
-    } else if (position === 2) {
-      return "inline-block h-8 w-8 rounded-full border-2 border-neutral-500";
-    } else if (position === 3) {
-      return "inline-block h-7 w-7 rounded-full border-2 border-orange-700";
-    } else {
-      return "inline-block h-6 w-6 rounded-full border-2 border-white";
-    }
-  }
+  }, [groupName, isError, isLoading, sessions]);
 
   return (
     <div className="px-4 sm:px-6 lg:px-14">
-      <div className="mt-8 flow-root">
-        <div className="-my-2 -mx-4 sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle">
-            <table className="min-w-full border-separate border-spacing-0">
-              <thead>
-              <tr>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
-                >
-                  Game
-                </th>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
-                >
-                  Players
-                </th>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
-                >
-                  Position
-                </th>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
-                >
-                  Score
-                </th>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
-                >
-                  Date
-                </th>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
-                >
-                  Location
-                </th>
-              </tr>
-              </thead>
-              <tbody>
-              {data.map((game, gameIdx) => (
-                <tr key={game.sessionId}>
-                  <td
-                    className={classNames(
-                      gameIdx !== data.length - 1 ? "border-b border-gray-300" : "",
-                      "w-6 py-4 pl-4 pr-3 text-sm font-smale text-gray-900 sm:pl-6 lg:pl-8"
-                    )}
-                  >
-                    <Link href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
-                      {game.gameName}
-                    </Link>
-                  </td>
-                  <td
-                    className={classNames(
-                      gameIdx !== data.length - 1 ? "border-b border-gray-300" : "",
-                      "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8"
-                    )}
-                  >
-                    <Link href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
-                      <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                        <div className="flex -space-x-1 overflow-hidden">
-                          {sortPlayers(game.players).map((player, index) => (
-                            <Image
-                              width={300}
-                              height={300}
-                              key={player.playerId}
-                              className={customRingBasedOnPosition(index+1)}
-                              src={player.profileImageUrl}
-                              alt={player.nickname ?? player.playerId}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </Link>
-                  </td>
-                  <td
-                    className={classNames(
-                      gameIdx !== data.length - 1 ? "border-b border-gray-300" : "",
-                      "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
-                    )}
-                  >
-                    <Link href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
-                      <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                        <div className="flex -space-x-1 overflow-hidden">
-                          {sortPlayers(game.players).map((player) => (
-                            <p
-                              key={player.playerId}
-                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                            >{player.position}</p>
-                          ))}
-                        </div>
-                      </div>
-                    </Link>
-                  </td>
-                  <td
-                    className={classNames(
-                      gameIdx !== data.length - 1 ? "border-b border-gray-300" : "",
-                      "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
-                    )}
-                  >
-                    <Link href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
-                      <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                        <div className="flex -space-x-1 overflow-visible">
-                          {sortPlayers(game.players).map((player) => (
-                            <p
-                              key={player.playerId}
-                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                            >{player.score}</p>
-                          ))}
-                        </div>
-                      </div>
-                    </Link>
-                  </td>
-                  <td
-                    className={classNames(
-                      gameIdx !== data.length - 1 ? "border-b border-gray-300" : "",
-                      "w-6 px-3 py-4 text-sm text-gray-500"
-                    )}
-                  >
-                    <Link href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
-                      {dayjs(game.createdAt).format("DD.MM.YYYY")}
-                    </Link>
-                  </td>
-                  <td
-                    className={classNames(
-                      gameIdx !== data.length - 1 ? "border-b border-gray-300" : "",
-                      "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
-                    )}
-                  >
-                    <Link href={"/" + props.groupName + "/session/" + game.sessionId} className="block w-full h-full">
-                      {"???"}
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <div className="mt-8 flow-root">{content}</div>
     </div>
   );
 };

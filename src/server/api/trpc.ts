@@ -102,6 +102,104 @@ const enforceUserIsAuthedAndAdmin = t.middleware(async ({ ctx, next }) => {
       code: "UNAUTHORIZED",
     });
   }
+
+  // Optimize: Single query with include instead of two separate queries
+  const player = await ctx.prisma.player.findUnique({
+    where: {
+      clerkId: ctx.userId
+    },
+    include: {
+      PlayerGameGroupJunction: {
+        where: {
+          gameGroupIsActive: true,
+          role: "ADMIN"
+        }
+      }
+    }
+  });
+
+  if (!player) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+    });
+  }
+
+  if (player.PlayerGameGroupJunction.length === 0) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+    });
+  }
+
+  return next({
+    ctx: {
+      userId: ctx.userId,
+      player: player,
+      adminGroupIds: player.PlayerGameGroupJunction.map(j => j.groupId),
+    },
+  });
+});
+
+const enforceUserIsAuthedAndGroupAdmin = t.middleware(async ({ ctx, rawInput, next }) => {
+  if (!ctx.userId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+    });
+  }
+
+  const groupId = (rawInput as { groupId?: string })?.groupId;
+
+  if (!groupId) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "groupId is required for this operation",
+    });
+  }
+
+  // Optimize: Single query with include to check both player existence and admin role
+  const player = await ctx.prisma.player.findUnique({
+    where: {
+      clerkId: ctx.userId
+    },
+    include: {
+      PlayerGameGroupJunction: {
+        where: {
+          groupId: groupId,
+          gameGroupIsActive: true,
+          role: "ADMIN"
+        }
+      }
+    }
+  });
+
+  if (!player) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+    });
+  }
+
+  if (player.PlayerGameGroupJunction.length === 0) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be an admin of this group to perform this action",
+    });
+  }
+
+  return next({
+    ctx: {
+      userId: ctx.userId,
+      player: player,
+      groupId: groupId,
+    },
+  });
+});
+
+const enforceUserIsSuperAdmin = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.userId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+    });
+  }
+
   const player = await ctx.prisma.player.findUnique({
     where: {
       clerkId: ctx.userId
@@ -114,25 +212,17 @@ const enforceUserIsAuthedAndAdmin = t.middleware(async ({ ctx, next }) => {
     });
   }
 
-  const admin = await ctx.prisma.playerGameGroupJunction.findFirst(
-    {
-      where: {
-        playerId: player.id,
-        gameGroupIsActive: true,
-        role: "ADMIN"
-      }
-    }
-  );
-
-  if (!admin) {
+  if (!player.isSuperAdmin) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
+      message: "You must be a super admin to perform this action",
     });
   }
 
   return next({
     ctx: {
       userId: ctx.userId,
+      player: player,
     },
   });
 });
@@ -141,3 +231,7 @@ const enforceUserIsAuthedAndAdmin = t.middleware(async ({ ctx, next }) => {
 export const privateProcedure = t.procedure.use(enforceUserIsAuthed);
 
 export const adminProcedure = t.procedure.use(enforceUserIsAuthedAndAdmin);
+
+export const groupAdminProcedure = t.procedure.use(enforceUserIsAuthedAndGroupAdmin);
+
+export const superAdminProcedure = t.procedure.use(enforceUserIsSuperAdmin);

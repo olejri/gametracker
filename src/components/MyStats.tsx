@@ -1,49 +1,38 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
+import Badge from "npm/components/Badge";
+import { Th } from "npm/components/Th";
 
-const MyStats = (props: {
-  groupName: string;
-}) => {
-  const groupName = props.groupName;
-  const { data: myStats, isLoading, isError, error } = api.stats.getGameStatsForPlayer.useQuery({groupName});
+type WinBadgeVariant = "green" | "yellow" | "red";
+
+const tdBorder = "border-b border-gray-300";
+const hiddenLgCell = "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell";
+
+const classNames = (...classes: Array<string | false | null | undefined>) =>
+  classes.filter(Boolean).join(" ");
+
+const percentStr = (n: number) => (Math.round(n * 100) / 100).toFixed(2);
+
+const winVariant = (winPercentage: number): WinBadgeVariant => {
+  if (winPercentage > 55) return "green";
+  if (winPercentage > 35) return "yellow";
+  return "red";
+};
+
+const winBadgeClass: Record<WinBadgeVariant, string> = {
+  green: "bg-green-100 text-green-800",
+  yellow: "bg-yellow-100 text-yellow-600",
+  red: "bg-red-100 text-red-800",
+};
+
+const MyStats = ({ groupName }: { groupName: string }) => {
+  const { data: myStats, isLoading, isError, error } = api.stats.getGameStatsForPlayer.useQuery({ groupName });
+  const rows = useMemo(() => myStats ?? [], [myStats]);
 
   if (isLoading) return <LoadingPage />;
-  if (isError) return <p>{error?.message}</p>;
+  if (isError) return <p className="px-4 py-2 text-sm text-red-600">{error?.message}</p>;
 
-  function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(" ");
-  }
-
-  function getColorBasedOnWinPercentage(winPercentage: number): JSX.Element {
-    console.log(winPercentage)
-    if (winPercentage > 55) {
-      return (
-        <span
-          className={"inline-flex items-center rounded-md px-2.5 py-0.5 text-sm font-medium bg-green-100 text-green-800"}>
-      {(Math.round(winPercentage * 100) / 100).toFixed(2)}
-      </span>);
-    }
-    else if (winPercentage > 50) {
-      return (
-        <span
-          className={"inline-flex items-center rounded-md px-2.5 py-0.5 text-sm font-medium bg-yellow-100 text-yellow-500"}>
-      {(Math.round(winPercentage * 100) / 100).toFixed(2)}
-      </span>);
-    }
-    else if (winPercentage > 35) {
-      return (
-        <span
-          className={"inline-flex items-center rounded-md px-2.5 py-0.5 text-sm font-medium bg-yellow-100 text-yellow-500"}>
-      {(Math.round(winPercentage * 100) / 100).toFixed(2)}
-      </span>);
-    }
-    return (
-      <span
-        className={"inline-flex items-center rounded-md px-2.5 py-0.5 text-sm font-medium bg-red-100 text-red-800"}>
-      {(Math.round(winPercentage * 100) / 100).toFixed(2)}
-      </span>);
-  }
   return (
     <div className="px-4 sm:px-6 lg:px-14">
       <div className="mt-8 flow-root">
@@ -51,118 +40,70 @@ const MyStats = (props: {
           <div className="inline-block min-w-full py-2 align-middle">
             <table className="min-w-full border-separate border-spacing-0">
               <thead>
-              <tr>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
-                >
-                  Game
-                </th>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
-                >
-                  Number of games
-                </th>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
-                >
-                  1st
-                </th>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
-                >
-                  2nd
-                </th>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell"
-                >
-                  3rd
-                </th>
-                <th
-                  scope="col"
-                  className="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
-                >
-                  Win percentage
-                </th>
-              </tr>
+                <tr>
+                  <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">Game</Th>
+                  <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">Number of games</Th>
+                  <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">1st</Th>
+                  <Th className="hidden px-3 lg:table-cell">2nd</Th>
+                  <Th className="hidden px-3 lg:table-cell">3rd</Th>
+                  <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">Win percentage</Th>
+                </tr>
               </thead>
               <tbody>
-              {myStats.map((game, gameIdx) => (
-                <tr key={game.gameName}>
-                  <td
-                    className={classNames(
-                      gameIdx !== myStats.length - 1 ? "border-b border-gray-300" : "",
-                      "w-6 py-4 pl-4 pr-3 text-sm font-smale text-gray-900 sm:pl-6 lg:pl-8"
-                    )}
-                  >
-                    {game.gameName}
-                  </td>
-                  <td
-                    className={classNames(
-                      gameIdx !== myStats.length - 1 ? "border-b border-gray-300" : "",
-                      "w-6 py-4 pl-4 pr-3 text-sm font-smale text-gray-900 sm:pl-6 lg:pl-8"
-                    )}
-                  >
-                    <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                      <div className="flex -space-x-1 overflow-hidden">
+                {rows.map((game, gameIdx) => {
+                  const rowHasBorder = gameIdx !== rows.length - 1;
+                  const winClass = winBadgeClass[winVariant(game.winPrecentage)];
+
+                  return (
+                    <tr key={game.gameName}>
+                      <td
+                        className={classNames(
+                          rowHasBorder && tdBorder,
+                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                        )}
+                      >
+                        {game.gameName}
+                      </td>
+
+                      <td
+                        className={classNames(
+                          rowHasBorder && tdBorder,
+                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                        )}
+                      >
                         {game.numberOfGamesPlayed}
-                      </div>
-                    </div>
-                  </td>
-                  <td
-                    className={classNames(
-                      gameIdx !== myStats.length - 1 ? "border-b border-gray-300" : "",
-                      "w-6 py-4 pl-4 pr-3 text-sm font-smale text-gray-900 sm:pl-6 lg:pl-8"
-                    )}
-                  >
-                    <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                      <div className="flex -space-x-1 overflow-hidden">
+                      </td>
+
+                      <td
+                        className={classNames(
+                          rowHasBorder && tdBorder,
+                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                        )}
+                      >
                         {game.numberOfFirstPlaceWins}
-                      </div>
-                    </div>
-                  </td>
-                  <td
-                    className={classNames(
-                      gameIdx !== myStats.length - 1 ? "border-b border-gray-300" : "",
-                      "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
-                    )}
-                  >
-                    <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                      <div className="flex -space-x-1 overflow-visible">
+                      </td>
+
+                      <td className={classNames(rowHasBorder && tdBorder, hiddenLgCell)}>
                         {game.numberOfSecondPlaceWins}
-                      </div>
-                    </div>
-                  </td>
-                  <td
-                    className={classNames(
-                      gameIdx !== myStats.length - 1 ? "border-b border-gray-300" : "",
-                      "whitespace-nowrap hidden px-3 py-4 text-sm text-gray-500 lg:table-cell"
-                    )}
-                  >
-                    <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                      <div className="flex -space-x-1 overflow-visible">
+                      </td>
+
+                      <td className={classNames(rowHasBorder && tdBorder, hiddenLgCell)}>
                         {game.numberOfThirdPlaceWins}
-                      </div>
-                    </div>
-                  </td>
-                  <td
-                    className={classNames(
-                      gameIdx !== myStats.length - 1 ? "border-b border-gray-300" : "",
-                      "w-6 py-4 pl-4 pr-3 text-sm font-smale text-gray-900 sm:pl-6 lg:pl-8"
-                    )}
-                  >
-                    <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                      <div className="flex -space-x-1 overflow-visible">
-                        {getColorBasedOnWinPercentage(game.winPrecentage)}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                      </td>
+
+                      <td
+                        className={classNames(
+                          rowHasBorder && tdBorder,
+                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                        )}
+                      >
+                        <Badge className={classNames("px-2.5 py-0.5", winClass)} title={`${percentStr(game.winPrecentage)}`}>
+                          {percentStr(game.winPrecentage)}
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -171,4 +112,5 @@ const MyStats = (props: {
     </div>
   );
 };
+
 export default MyStats;

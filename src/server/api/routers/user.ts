@@ -1,4 +1,4 @@
-import { adminProcedure, createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
+import { adminProcedure, createTRPCRouter, groupAdminProcedure, privateProcedure } from "npm/server/api/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as process from "process";
@@ -22,7 +22,7 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  acceptInvite: adminProcedure
+  acceptInvite: groupAdminProcedure
     .input(
       z.object({
         groupId: z.string(),
@@ -157,5 +157,52 @@ export const userRouter = createTRPCRouter({
       return {
         data: result.filter((invite) => invite.status === "pending")
       };
+    }),
+
+  promoteToAdmin: groupAdminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        playerId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      const player = await getPlayerById(ctx.prisma, input.playerId);
+
+      // Check if player is already in the group
+      const existingJunction = await ctx.prisma.playerGameGroupJunction.findUnique({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        }
+      });
+
+      if (!existingJunction) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Player is not a member of this group"
+        });
+      }
+
+      if (existingJunction.role === "ADMIN") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Player is already an admin"
+        });
+      }
+
+      return ctx.prisma.playerGameGroupJunction.update({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        },
+        data: {
+          role: "ADMIN"
+        }
+      });
     })
 });

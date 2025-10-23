@@ -20,6 +20,10 @@ const MainComponent = (props: ContainerProps) => {
   const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
   const { data, isLoading, isError, error } = api.group.getActiveGameGroup.useQuery();
+  const { data: playerData } = api.user.getPlayer.useQuery(
+    { clerkId: user?.id || "" },
+    { enabled: !!user?.id }
+  );
 
   if (!isLoaded || !isSignedIn || !user || isLoading) {
     return <LoadingPage />;
@@ -46,6 +50,14 @@ const MainComponent = (props: ContainerProps) => {
       name: "Admin",
       href: "/" + gameGroup + "/admin",
       current: pathname === "/[dashboardId]/admin"
+    });
+  }
+
+  if (playerData?.data?.isSuperAdmin) {
+    navigation.push({
+      name: "SuperAdmin",
+      href: "/dashboards-view",
+      current: pathname === "/dashboards-view"
     });
   }
   return (
