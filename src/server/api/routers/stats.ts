@@ -71,59 +71,48 @@ export const statsRouter = createTRPCRouter({
   // NEW: Player/Game win-rate matrix (for heatmap)
   // ────────────────────────────────────────────────────────────────
   getPlayerGamePerformanceMatrix: privateProcedure
-    .input(
-      z.object({
-        groupId: z.string(),
-      })
-    )
+    .input(z.object({ groupId: z.string() }))
     .query(async ({ ctx, input }) => {
       const { groupId } = input;
 
+      // Fetch all completed sessions (new + legacy structure supported)
       const sessions = await ctx.prisma.gameSession.findMany({
         where: { groupId, status: "COMPLETED" },
         include: {
-          PlayerGameSessionJunction: {
-            include: { player: true },
-          },
-          GameSessionGameJunction: {
-            include: { game: true },
-          },
+          PlayerGameSessionJunction: { include: { player: true } },
+          GameSessionGameJunction: { include: { game: true } },
         },
       });
 
+      // Preload all games so we never query inside loops
+      const allGames = await ctx.prisma.game.findMany();
+      const gameMap = new Map(allGames.map((g) => [g.id, g]));
+
+      // matrix: nickname -> baseGameId -> { wins, total }
       const matrix = new Map<string, Map<string, { wins: number; total: number }>>();
-      const gameCounts = new Map<string, number>();
+      // count how many sessions included each base game (deduped per session)
+      const gameCountsByBaseId = new Map<string, number>();
 
       for (const session of sessions) {
-        // Support both new and legacy data
+        // collect games in this session (junction first, fallback to legacy gameId)
         const gamesInSession =
           session.GameSessionGameJunction.length > 0
             ? session.GameSessionGameJunction.map((g) => g.game)
-            : session.gameId
-              ? [
-                await ctx.prisma.game.findUnique({
-                  where: { id: session.gameId },
-                }),
-              ]
-              : [];
+            : (session.gameId ? [gameMap.get(session.gameId) ?? null] : []);
 
-        for (const game of gamesInSession) {
-          if (!game) continue;
+        // resolve to unique baseGameIds for this session
+        const baseIdsInSession = new Set<string>();
+        for (const g of gamesInSession) {
+          if (!g) continue;
+          const baseId = g.isExpansion && g.baseGameId ? g.baseGameId : g.id;
+          baseIdsInSession.add(baseId);
+        }
 
-          const baseGame =
-            game.isExpansion && game.baseGameId
-              ? await ctx.prisma.game.findUnique({
-                where: { id: game.baseGameId },
-              })
-              : game;
+        // increment gameCount ONCE per base game per session
+        for (const baseId of baseIdsInSession) {
+          gameCountsByBaseId.set(baseId, (gameCountsByBaseId.get(baseId) ?? 0) + 1);
 
-          if (!baseGame) continue;
-
-          const gameName = baseGame.name;
-
-          // Track how many sessions included this game
-          gameCounts.set(gameName, (gameCounts.get(gameName) ?? 0) + 1);
-
+          // update per-player stats ONCE per base game per session
           for (const pgs of session.PlayerGameSessionJunction) {
             const nickname = pgs.player.nickname ?? pgs.player.name;
             if (!nickname) continue;
@@ -134,40 +123,51 @@ export const statsRouter = createTRPCRouter({
               matrix.set(nickname, playerMap);
             }
 
-            let stats = playerMap.get(gameName);
+            let stats = playerMap.get(baseId);
             if (!stats) {
               stats = { wins: 0, total: 0 };
-              playerMap.set(gameName, stats);
+              playerMap.set(baseId, stats);
             }
 
-            stats.total++;
-            if (pgs.position === 1) stats.wins++;
+            stats.total += 1;
+            if (pgs.position === 1) stats.wins += 1;
           }
         }
       }
 
+      // Build players list
       const players = Array.from(matrix.keys());
-      const games = Array.from(
-        new Set([...matrix.values()].flatMap((m) => Array.from(m.keys())))
-      );
 
-      const data: Array<{ game: string; gameCount: number } & Record<string, number>> = games.map(
-        (game) => {
+      // Build games list (names) in a stable order (by name)
+      const allBaseIds = new Set<string>();
+      for (const m of matrix.values()) for (const id of m.keys()) allBaseIds.add(id);
+
+      const gamesMeta = Array.from(allBaseIds).map((id) => {
+        const g = gameMap.get(id);
+        // fallback name just in case, but id should always exist
+        return { id, name: g?.name ?? id };
+      });
+      gamesMeta.sort((a, b) => a.name.localeCompare(b.name));
+
+      // Build data rows with win rates and gameCount
+      const data: Array<{ game: string; gameCount: number } & Record<string, number>> =
+        gamesMeta.map(({ id, name }) => {
           const row: { game: string; gameCount: number } & Record<string, number> = {
-            game,
-            gameCount: gameCounts.get(game) ?? 0,
+            game: name,
+            gameCount: gameCountsByBaseId.get(id) ?? 0,
           } as { game: string; gameCount: number } & Record<string, number>;
 
           for (const player of players) {
-            const stat = matrix.get(player)?.get(game);
+            const stat = matrix.get(player)?.get(id);
             row[player] = stat ? stat.wins / stat.total : 0;
           }
-
           return row;
-        }
-      );
+        });
 
+      // Return names (not ids) for the games array, to match your UI
+      const games = gamesMeta.map((g) => g.name);
 
       return { players, games, data };
     }),
+
 });
