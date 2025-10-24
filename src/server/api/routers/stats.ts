@@ -71,11 +71,15 @@ export const statsRouter = createTRPCRouter({
   // NEW: Player/Game win-rate matrix (for heatmap)
   // ────────────────────────────────────────────────────────────────
   getPlayerGamePerformanceMatrix: privateProcedure
-    .input(z.object({ groupId: z.string() }))
+    .input(
+      z.object({
+        groupId: z.string(),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const { groupId } = input;
 
-      // Fetch all completed sessions for this group
+      // Fetch all completed sessions in this group
       const sessions = await ctx.prisma.gameSession.findMany({
         where: { groupId, status: "COMPLETED" },
         include: {
@@ -83,30 +87,41 @@ export const statsRouter = createTRPCRouter({
             include: { player: true },
           },
           GameSessionGameJunction: {
-            include: { game: true },
+            include: {
+              game: true,
+            },
           },
         },
       });
 
-      // Preload all games to resolve base games locally
-      const allGames = await ctx.prisma.game.findMany();
-      const gameMap = new Map(allGames.map((g) => [g.id, g]));
-
-      // Matrix: player → game → {wins, total}
-      const matrix = new Map<
-        string,
-        Map<string, { wins: number; total: number }>
-      >();
+      // Build a nested structure: player → game → stats
+      const matrix = new Map<string, Map<string, { wins: number; total: number }>>();
 
       for (const session of sessions) {
-        for (const gameLink of session.GameSessionGameJunction) {
-          const game = gameMap.get(gameLink.gameId);
+        // 🧩 Support both new (junction-based) and legacy (direct gameId) data
+        const gamesInSession =
+          session.GameSessionGameJunction.length > 0
+            ? session.GameSessionGameJunction.map((g) => g.game)
+            : session.gameId
+              ? [
+                await ctx.prisma.game.findUnique({
+                  where: { id: session.gameId },
+                }),
+              ]
+              : [];
+
+        for (const game of gamesInSession) {
           if (!game) continue;
 
+          // Keep base game logic if needed
           const baseGame =
             game.isExpansion && game.baseGameId
-              ? gameMap.get(game.baseGameId) ?? game
+              ? await ctx.prisma.game.findUnique({
+                where: { id: game.baseGameId },
+              })
               : game;
+
+          if (!baseGame) continue;
 
           const gameName = baseGame.name;
 
@@ -132,6 +147,7 @@ export const statsRouter = createTRPCRouter({
         }
       }
 
+      // Build lists for output
       const players = Array.from(matrix.keys());
       const games = Array.from(
         new Set([...matrix.values()].flatMap((m) => Array.from(m.keys())))
@@ -139,17 +155,13 @@ export const statsRouter = createTRPCRouter({
 
       const data = games.map((game) => {
         const row: Record<string, number> = {};
-
         for (const player of players) {
           const stat = matrix.get(player)?.get(game);
           row[player] = stat ? stat.wins / stat.total : 0;
         }
-
-        // Return with a single cast — fully type-safe
         return { game, ...row } as { game: string } & Record<string, number>;
       });
 
-// Fully typed response
       return { players, games, data };
     }),
 });
