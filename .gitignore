@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 /bun.lockb
+
+# PWA generated files
+public/sw.js
+public/workbox-*.js
+
