@@ -3,14 +3,169 @@ import { api } from "npm/utils/api";
 import React from "react";
 import { LoadingPage } from "npm/components/loading";
 
-const Stats = (props: DashboardProps) => {
-  const { data, isLoading, isError } = api.session.getAllCompletedSessions.useQuery({
-    data: {
-      groupId: props.groupName
-    }
+//
+// ────────────────────────────────────────────────────────────────
+// Types
+// ────────────────────────────────────────────────────────────────
+//
+
+interface PlayerGameMatrix {
+  data: Array<{ game: string } & Record<string, number>>;
+  players: string[];
+  games: string[];
+}
+
+//
+// ────────────────────────────────────────────────────────────────
+// UI helpers
+// ────────────────────────────────────────────────────────────────
+//
+
+const StatCard = ({
+                    title,
+                    value,
+                    subtitle,
+                  }: {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+}) => (
+  <div className="rounded-xl bg-white p-4 shadow text-center">
+    <h3 className="text-gray-600 text-sm">{title}</h3>
+    <p className="text-2xl font-bold">{value}</p>
+    {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+  </div>
+);
+
+function clamp01(n: number) {
+  if (Number.isNaN(n)) return 0;
+  return Math.max(0, Math.min(1, n));
+}
+
+/**
+ * Pure CSS grid heatmap (no charts)
+ */
+const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
+                                                         data,
+                                                         players,
+                                                         games,
+                                                       }) => {
+  const rows = data.map((row) => {
+    const cells = players.map((p) => clamp01(row[p] ?? 0));
+    return { game: row.game, cells };
   });
 
-  if (isLoading) {
+  return (
+    <div className="mt-10 bg-white rounded-xl shadow p-4">
+      <h2 className="text-xl font-semibold text-center mb-4">
+        Player Performance Heatmap
+      </h2>
+
+      {players.length === 0 || games.length === 0 ? (
+        <p className="text-center text-gray-500">No data available</p>
+      ) : (
+        <div className="overflow-x-auto">
+          {/* Header */}
+          <div
+            className="grid border-b border-gray-200"
+            style={{
+              gridTemplateColumns: `minmax(140px, 1fr) repeat(${players.length}, minmax(90px, 1fr))`,
+            }}
+          >
+            <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500">
+              Game
+            </div>
+            {players.map((p) => (
+              <div
+                key={p}
+                className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center"
+              >
+                {p}
+              </div>
+            ))}
+          </div>
+
+          {/* Body */}
+          <div className="divide-y divide-gray-200">
+            {rows.map(({ game, cells }) => (
+              <div
+                key={game}
+                className="grid"
+                style={{
+                  gridTemplateColumns: `minmax(140px, 1fr) repeat(${players.length}, minmax(90px, 1fr))`,
+                }}
+              >
+                <div className="px-3 py-2 text-sm font-medium text-gray-800">
+                  {game}
+                </div>
+                {cells.map((rate, idx) => {
+                  const playerName = players[idx] ?? "Unknown";
+                  const pct = Math.round(rate * 100);
+                  const hue = 210 - Math.round(rate * 90);
+                  const light = 92 - Math.round(rate * 40);
+                  const bg = `hsl(${hue} 70% ${light}%)`;
+                  const border = "rgba(0,0,0,0.04)";
+
+                  return (
+                    <div
+                      key={`${game}-${playerName}`}
+                      className="px-2 py-3 text-center text-sm font-semibold"
+                      style={{
+                        backgroundColor: bg,
+                        borderLeft: `1px solid ${border}`,
+                      }}
+                      title={`${playerName} • ${game} • ${pct}% win rate`}
+                    >
+                      {pct}%
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-3 mt-4 text-xs text-gray-500">
+            <span>0%</span>
+            <div
+              className="flex-1 h-2 rounded-full"
+              style={{
+                background:
+                  "linear-gradient(90deg, hsl(210 70% 92%) 0%, hsl(180 70% 75%) 50%, hsl(120 70% 52%) 100%)",
+              }}
+            />
+            <span>100%</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+//
+// ────────────────────────────────────────────────────────────────
+// Main Stats component
+// ────────────────────────────────────────────────────────────────
+//
+
+const Stats: React.FC<DashboardProps> = (props) => {
+  const {
+    data: sessions,
+    isLoading,
+    isError,
+  } = api.session.getAllCompletedSessions.useQuery({
+    data: { groupId: props.groupName },
+  });
+
+  const {
+    data: matrixData,
+    isLoading: matrixLoading,
+    isError: matrixError,
+  } = api.stats.getPlayerGamePerformanceMatrix.useQuery({
+    groupId: props.groupName,
+  });
+
+  if (isLoading || matrixLoading) {
     return (
       <div className="flex grow">
         <LoadingPage />
@@ -18,78 +173,117 @@ const Stats = (props: DashboardProps) => {
     );
   }
 
-  if (isError || data === undefined) {
-    return <div></div>;
+  if (isError || matrixError || !sessions || !matrixData) {
+    return <div className="text-center text-gray-500">No stats available.</div>;
   }
 
-  function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(" ");
-  }
-
-  //make a funcation that returns a hashmap with the playerId as key and the value is the number of wins
-  function getWinsPerPlayer() {
-    const winsPerPlayer = new Map<string, number>();
-    data?.forEach((session) => {
-      session.players.forEach((player) => {
-        if (winsPerPlayer.has(player.nickname) && player.position === 1) {
-          winsPerPlayer.set(player.nickname, winsPerPlayer.get(player.nickname)! + 1);
-        } else if (player.position === 1) {
-          winsPerPlayer.set(player.nickname, 1);
+  const getWinsPerPlayer = (): Map<string, number> => {
+    const wins = new Map<string, number>();
+    sessions.forEach((session) => {
+      session.players.forEach((p) => {
+        if (p.position === 1) {
+          wins.set(p.nickname, (wins.get(p.nickname) ?? 0) + 1);
         }
       });
     });
-    return winsPerPlayer;
-  }
+    return wins;
+  };
 
-  //make a function that returns a hashmap with the nickname and number of games played
-  function getGamesPlayedPerPlayer() {
-    const gamesPlayedPerPlayer = new Map<string, number>();
-    data?.forEach((session) => {
-      session.players.forEach((player) => {
-        if (gamesPlayedPerPlayer.has(player.nickname)) {
-          gamesPlayedPerPlayer.set(player.nickname, gamesPlayedPerPlayer.get(player.nickname)! + 1);
-        } else {
-          gamesPlayedPerPlayer.set(player.nickname, 1);
-        }
+  const getGamesPlayedPerPlayer = (): Map<string, number> => {
+    const games = new Map<string, number>();
+    sessions.forEach((s) => {
+      s.players.forEach((p) => {
+        games.set(p.nickname, (games.get(p.nickname) ?? 0) + 1);
       });
     });
-    return gamesPlayedPerPlayer;
-  }
+    return games;
+  };
+
+  const getWinRatePerPlayer = (): Map<string, number> => {
+    const games = getGamesPlayedPerPlayer();
+    const wins = getWinsPerPlayer();
+    const rates = new Map<string, number>();
+    for (const [player, total] of games.entries()) {
+      const w = wins.get(player) ?? 0;
+      rates.set(player, (w / total) * 100);
+    }
+    return rates;
+  };
+
+  const mostActive = Array.from(getGamesPlayedPerPlayer().entries()).sort(
+    (a, b) => b[1] - a[1]
+  )[0];
 
   return (
-    // loop through the hashmap and display the player name and the number of wins
     <div className="px-4 sm:px-6 lg:px-14">
       <h1 className="text-2xl font-bold text-center">Stats</h1>
-      <h1 className="text-l font-bold text-center">Games played</h1>
-      <div className="mt-8 flow-root">
-        {Array.from(getGamesPlayedPerPlayer().entries()).sort(
-          (a, b) => b[1] - a[1]
-        ).map((player) => {
-          return (
-            <div key={player[0]}
-                 className={"grid grid-cols-2"}>
-              <p>{player[0]}</p>
-              <p>Number of games played: {player[1]}</p>
-            </div>
-          );
-        })
-        }
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
+        <StatCard title="Total Sessions" value={sessions.length} />
+        <StatCard
+          title="Unique Players"
+          value={
+            new Set(sessions.flatMap((s) => s.players.map((p) => p.nickname)))
+              .size
+          }
+        />
+        {mostActive && (
+          <StatCard
+            title="Most Active Player"
+            value={mostActive[0]}
+            subtitle={`${mostActive[1]} games`}
+          />
+        )}
       </div>
-      <h1 className="text-l font-bold text-center">Games won</h1>
-      <div className="mt-8 flow-root">
-        {Array.from(getWinsPerPlayer().entries()).sort(
-          (a, b) => b[1] - a[1]
-        ).map((player) => {
-          return (
-            <div key={player[0]}
-                 className={"grid grid-cols-2"}>
-              <p>{player[0]}</p>
-              <p>Number of total wins: {player[1]}</p>
+
+      {/* Games Played */}
+      <h2 className="text-lg font-bold text-center mt-10">Games Played</h2>
+      <div className="mt-4 flow-root">
+        {Array.from(getGamesPlayedPerPlayer().entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([n, c]) => (
+            <div key={n} className="grid grid-cols-2">
+              <p>{n}</p>
+              <p>{c}</p>
             </div>
-          );
-        })
-        }
+          ))}
       </div>
+
+      {/* Games Won */}
+      <h2 className="text-lg font-bold text-center mt-10">Games Won</h2>
+      <div className="mt-4 flow-root">
+        {Array.from(getWinsPerPlayer().entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([n, c]) => (
+            <div key={n} className="grid grid-cols-2">
+              <p>{n}</p>
+              <p>{c}</p>
+            </div>
+          ))}
+      </div>
+
+      {/* Win Rate */}
+      <h2 className="text-lg font-bold text-center mt-10">Win Rate</h2>
+      <div className="mt-4 flow-root">
+        {Array.from(getWinRatePerPlayer().entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([n, r]) => (
+            <div key={n} className="grid grid-cols-2">
+              <p>{n}</p>
+              <p>{r.toFixed(1)}%</p>
+            </div>
+          ))}
+      </div>
+
+      {/* Heatmap */}
+      {matrixData.data.length > 0 && (
+        <PlayerGameHeatmap
+          data={matrixData.data}
+          players={matrixData.players}
+          games={matrixData.games}
+        />
+      )}
     </div>
   );
 };
