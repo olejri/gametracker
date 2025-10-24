@@ -1,0 +1,21 @@
+{
+  "name": "GameTracker",
+  "short_name": "Tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "description": "Track your games, stats, and progress anywhere!",
+  "icons": [
+    {
+      "src": "/icons/board-game-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/board-game-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

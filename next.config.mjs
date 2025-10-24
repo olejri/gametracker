@@ -1,4 +1,6 @@
 // @ts-check
+// @ts-expect-error - next-pwa has no type definitions
+import withPWAInit from 'next-pwa';
 
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
@@ -6,20 +8,23 @@
  */
 !process.env.SKIP_ENV_VALIDATION && (await import("./src/env.mjs"));
 
+// Initialize next-pwa with options
+const withPWA = withPWAInit({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development', // disable in dev mode
+});
+
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
 
-  /**
-   * If you have the "experimental: { appDir: true }" setting enabled, then you
-   * must comment the below `i18n` config out.
-   *
-   * @see https://github.com/vercel/next.js/issues/41980
-   */
   i18n: {
     locales: ["en"],
     defaultLocale: "en",
   },
+
   images: {
     remotePatterns: [
       {
@@ -28,15 +33,16 @@ const config = {
       },
     ],
   },
+
   async redirects() {
     return [
       {
         source: '/old-blog/:slug',
-        destination: '/news/:slug', // Matched parameters can be used in the destination
+        destination: '/news/:slug',
         permanent: true,
       },
-    ]
+    ];
   },
 };
 
-export default config;
+export default withPWA(config);
