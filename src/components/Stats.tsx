@@ -51,8 +51,16 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
                                                          games,
                                                        }) => {
   const rows = data.map((row) => {
-    const cells = players.map((p) => clamp01(row[p] ?? 0));
-    return { game: row.game, cells };
+    const cells = players.map((p) => {
+      const v = row[p];
+      const rate = typeof v === "number" ? clamp01(v) : 0;
+      return rate;
+    });
+    return {
+      game: row.game,
+      gameCount: typeof row.gameCount === "number" ? row.gameCount : 0,
+      cells,
+    };
   });
 
   return (
@@ -69,11 +77,14 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
           <div
             className="grid border-b border-gray-200"
             style={{
-              gridTemplateColumns: `minmax(140px, 1fr) repeat(${players.length}, minmax(90px, 1fr))`,
+              gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${players.length}, minmax(90px, 1fr))`,
             }}
           >
             <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500">
               Game
+            </div>
+            <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center">
+              Games
             </div>
             {players.map((p) => (
               <div
@@ -87,16 +98,19 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
 
           {/* Body */}
           <div className="divide-y divide-gray-200">
-            {rows.map(({ game, cells }) => (
+            {rows.map(({ game, gameCount, cells }) => (
               <div
                 key={game}
                 className="grid"
                 style={{
-                  gridTemplateColumns: `minmax(140px, 1fr) repeat(${players.length}, minmax(90px, 1fr))`,
+                  gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${players.length}, minmax(90px, 1fr))`,
                 }}
               >
                 <div className="px-3 py-2 text-sm font-medium text-gray-800">
                   {game}
+                </div>
+                <div className="px-3 py-2 text-sm text-center text-gray-600">
+                  {gameCount}
                 </div>
                 {cells.map((rate, idx) => {
                   const playerName = players[idx] ?? "Unknown";
@@ -141,6 +155,7 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
     </div>
   );
 };
+
 
 //
 // ────────────────────────────────────────────────────────────────

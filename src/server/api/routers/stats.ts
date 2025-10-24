@@ -79,7 +79,6 @@ export const statsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { groupId } = input;
 
-      // Fetch all completed sessions in this group
       const sessions = await ctx.prisma.gameSession.findMany({
         where: { groupId, status: "COMPLETED" },
         include: {
@@ -87,18 +86,16 @@ export const statsRouter = createTRPCRouter({
             include: { player: true },
           },
           GameSessionGameJunction: {
-            include: {
-              game: true,
-            },
+            include: { game: true },
           },
         },
       });
 
-      // Build a nested structure: player → game → stats
       const matrix = new Map<string, Map<string, { wins: number; total: number }>>();
+      const gameCounts = new Map<string, number>();
 
       for (const session of sessions) {
-        // 🧩 Support both new (junction-based) and legacy (direct gameId) data
+        // Support both new and legacy data
         const gamesInSession =
           session.GameSessionGameJunction.length > 0
             ? session.GameSessionGameJunction.map((g) => g.game)
@@ -113,7 +110,6 @@ export const statsRouter = createTRPCRouter({
         for (const game of gamesInSession) {
           if (!game) continue;
 
-          // Keep base game logic if needed
           const baseGame =
             game.isExpansion && game.baseGameId
               ? await ctx.prisma.game.findUnique({
@@ -124,6 +120,9 @@ export const statsRouter = createTRPCRouter({
           if (!baseGame) continue;
 
           const gameName = baseGame.name;
+
+          // Track how many sessions included this game
+          gameCounts.set(gameName, (gameCounts.get(gameName) ?? 0) + 1);
 
           for (const pgs of session.PlayerGameSessionJunction) {
             const nickname = pgs.player.nickname ?? pgs.player.name;
@@ -147,20 +146,27 @@ export const statsRouter = createTRPCRouter({
         }
       }
 
-      // Build lists for output
       const players = Array.from(matrix.keys());
       const games = Array.from(
         new Set([...matrix.values()].flatMap((m) => Array.from(m.keys())))
       );
 
-      const data = games.map((game) => {
-        const row: Record<string, number> = {};
-        for (const player of players) {
-          const stat = matrix.get(player)?.get(game);
-          row[player] = stat ? stat.wins / stat.total : 0;
+      const data: Array<{ game: string; gameCount: number } & Record<string, number>> = games.map(
+        (game) => {
+          const row: { game: string; gameCount: number } & Record<string, number> = {
+            game,
+            gameCount: gameCounts.get(game) ?? 0,
+          } as { game: string; gameCount: number } & Record<string, number>;
+
+          for (const player of players) {
+            const stat = matrix.get(player)?.get(game);
+            row[player] = stat ? stat.wins / stat.total : 0;
+          }
+
+          return row;
         }
-        return { game, ...row } as { game: string } & Record<string, number>;
-      });
+      );
+
 
       return { players, games, data };
     }),
