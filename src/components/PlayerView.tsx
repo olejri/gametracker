@@ -74,29 +74,43 @@ const PlayerView = (props: {
           </div>
           <div className="grid grid-cols-1">
             <label>Position</label>
-            {!isUpdatingPos ? <select
-              disabled={isInReadOnlyMode}
-              id={player.playerId}
-              name={"position" + player.playerId}
-              className="mt-2 block w-full w-6 rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              defaultValue={player.position}
-              onChange={(e) => {
-                setPlayer({
-                  ...player,
-                  position: +e.target.value,
-                });
-              }}
-              onBlur={() => {
-                if(isInReadOnlyMode) return;
-                mutatePos.mutate(player);}
-              }
-            >
-              {Array.from(Array(numberOfPlayers).keys()).map((i) => {
-                if (i !== 0) {
-                  return <option key={i} value={i}>{i}</option>;
-                }
-              })}
-            </select>: <LoadingSpinner />}
+            {!isUpdatingPos ? (
+              <select
+                disabled={isInReadOnlyMode}
+                id={player.playerId}
+                name={"position" + player.playerId}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent appearance-none"
+                style={{
+                  WebkitAppearance: "none",
+                  MozAppearance: "none",
+                  appearance: "none",
+                  backgroundImage: "none",
+                }}
+                defaultValue={player.position}
+                onChange={(e) => {
+                  setPlayer({
+                    ...player,
+                    position: +e.target.value,
+                  });
+                }}
+                onBlur={() => {
+                  if (isInReadOnlyMode) return;
+                  mutatePos.mutate(player);
+                }}
+              >
+                {Array.from(Array(numberOfPlayers).keys()).map((i) => {
+                  if (i !== 0) {
+                    return (
+                      <option key={i} value={i}>
+                        {i}
+                      </option>
+                    );
+                  }
+                })}
+              </select>
+            ) : (
+              <LoadingSpinner />
+            )}
           </div>
         </div>
       </div>
