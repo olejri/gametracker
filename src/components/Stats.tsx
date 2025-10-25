@@ -3,23 +3,11 @@ import { api } from "npm/utils/api";
 import React from "react";
 import { LoadingPage } from "npm/components/loading";
 
-//
-// ────────────────────────────────────────────────────────────────
-// Types
-// ────────────────────────────────────────────────────────────────
-//
-
 interface PlayerGameMatrix {
-  data: Array<{ game: string } & Record<string, number>>;
+  data: Array<{ game: string; gameCount: number } & Record<string, number>>;
   players: string[];
   games: string[];
 }
-
-//
-// ────────────────────────────────────────────────────────────────
-// UI helpers
-// ────────────────────────────────────────────────────────────────
-//
 
 const StatCard = ({
                     title,
@@ -38,13 +26,9 @@ const StatCard = ({
 );
 
 function clamp01(n: number) {
-  if (Number.isNaN(n)) return 0;
-  return Math.max(0, Math.min(1, n));
+  return Number.isNaN(n) ? 0 : Math.max(0, Math.min(1, n));
 }
 
-/**
- * Pure CSS grid heatmap (no charts)
- */
 const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
                                                          data,
                                                          players,
@@ -68,107 +52,152 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
       <h2 className="text-xl font-semibold text-center mb-4">
         Player Performance Heatmap
       </h2>
-
-      {players.length === 0 || games.length === 0 ? (
-        <p className="text-center text-gray-500">No data available</p>
-      ) : (
-        <div className="overflow-x-auto">
-          {/* Header */}
-          <div
-            className="grid border-b border-gray-200"
-            style={{
-              gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${players.length}, minmax(90px, 1fr))`,
-            }}
-          >
-            <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500">
-              Game
-            </div>
-            <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center">
-              Games
-            </div>
-            {players.map((p) => (
-              <div
-                key={p}
-                className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center"
-              >
-                {p}
-              </div>
-            ))}
+      <div className="overflow-x-auto">
+        <div
+          className="grid border-b border-gray-200"
+          style={{
+            gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${players.length}, minmax(90px, 1fr))`,
+          }}
+        >
+          <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500">
+            Game
           </div>
-
-          {/* Body */}
-          <div className="divide-y divide-gray-200">
-            {rows.map(({ game, gameCount, cells }) => (
-              <div
-                key={game}
-                className="grid"
-                style={{
-                  gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${players.length}, minmax(90px, 1fr))`,
-                }}
-              >
-                <div className="px-3 py-2 text-sm font-medium text-gray-800">
-                  {game}
-                </div>
-                <div className="px-3 py-2 text-sm text-center text-gray-600">
-                  {gameCount}
-                </div>
-                {cells.map((rate, idx) => {
-                  const playerName = players[idx] ?? "Unknown";
-                  const pct = Math.round(rate * 100);
-                  const hue = 210 - Math.round(rate * 90);
-                  const light = 92 - Math.round(rate * 40);
-                  const bg = `hsl(${hue} 70% ${light}%)`;
-                  const border = "rgba(0,0,0,0.04)";
-
-                  return (
-                    <div
-                      key={`${game}-${playerName}`}
-                      className="px-2 py-3 text-center text-sm font-semibold"
-                      style={{
-                        backgroundColor: bg,
-                        borderLeft: `1px solid ${border}`,
-                      }}
-                      title={`${playerName} • ${game} • ${pct}% win rate`}
-                    >
-                      {pct}%
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+          <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center">
+            Games
           </div>
-
-          {/* Legend */}
-          <div className="flex items-center gap-3 mt-4 text-xs text-gray-500">
-            <span>0%</span>
+          {players.map((p) => (
             <div
-              className="flex-1 h-2 rounded-full"
-              style={{
-                background:
-                  "linear-gradient(90deg, hsl(210 70% 92%) 0%, hsl(180 70% 75%) 50%, hsl(120 70% 52%) 100%)",
-              }}
-            />
-            <span>100%</span>
-          </div>
+              key={p}
+              className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center"
+            >
+              {p}
+            </div>
+          ))}
         </div>
-      )}
+
+        <div className="divide-y divide-gray-200">
+          {rows.map(({ game, gameCount, cells }) => (
+            <div
+              key={game}
+              className="grid"
+              style={{
+                gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${players.length}, minmax(90px, 1fr))`,
+              }}
+            >
+              <div className="px-3 py-2 text-sm font-medium text-gray-800">
+                {game}
+              </div>
+              <div className="px-3 py-2 text-sm text-center text-gray-600">
+                {gameCount}
+              </div>
+              {cells.map((rate, idx) => {
+                const playerName = players[idx] ?? "Unknown";
+                const pct = Math.round(rate * 100);
+                const hue = 210 - Math.round(rate * 90);
+                const light = 92 - Math.round(rate * 40);
+                const bg = `hsl(${hue} 70% ${light}%)`;
+
+                return (
+                  <div
+                    key={`${game}-${playerName}`}
+                    className="px-2 py-3 text-center text-sm font-semibold"
+                    style={{ backgroundColor: bg }}
+                    title={`${playerName} • ${game} • ${pct}% win rate`}
+                  >
+                    {pct}%
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
 
+const PlayerPositionHeatmap: React.FC<{
+  data: Array<{ position: number } & Record<string, number>>;
+  players: string[];
+  positions: number[];
+}> = ({ data, players, positions }) => {
+  const totalPerPlayer: Record<string, number> = {};
+  for (const row of data) {
+    for (const player of players) {
+      totalPerPlayer[player] = (totalPerPlayer[player] ?? 0) + (row[player] ?? 0);
+    }
+  }
 
-//
-// ────────────────────────────────────────────────────────────────
-// Main Stats component
-// ────────────────────────────────────────────────────────────────
-//
+  const maxVal = Math.max(...data.flatMap((row) => players.map((p) => row[p] ?? 0)));
+
+  return (
+    <div className="mt-10 bg-white rounded-xl shadow p-4">
+      <h2 className="text-xl font-semibold text-center mb-4">
+        Player Position Distribution
+      </h2>
+      <div className="overflow-x-auto">
+        <div
+          className="grid border-b border-gray-200"
+          style={{
+            gridTemplateColumns: `100px repeat(${players.length}, minmax(90px, 1fr))`,
+          }}
+        >
+          <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500">
+            Position
+          </div>
+          {players.map((p) => (
+            <div
+              key={p}
+              className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center"
+            >
+              {p}
+            </div>
+          ))}
+        </div>
+
+        <div className="divide-y divide-gray-200">
+          {data.map(({ position, ...rest }) => (
+            <div
+              key={position}
+              className="grid"
+              style={{
+                gridTemplateColumns: `100px repeat(${players.length}, minmax(90px, 1fr))`,
+              }}
+            >
+              <div className="px-3 py-2 text-sm font-medium text-gray-800">
+                {position}
+              </div>
+              {players.map((p) => {
+                const count = rest[p] ?? 0;
+                const total = totalPerPlayer[p] ?? 1;
+                const percentage = total > 0 ? (count / total) * 100 : 0;
+                const intensity = maxVal > 0 ? count / maxVal : 0;
+                const hue = 200 - Math.round(intensity * 120);
+                const light = 95 - Math.round(intensity * 45);
+                const bg = `hsl(${hue} 70% ${light}%)`;
+
+                return (
+                  <div
+                    key={`${position}-${p}`}
+                    className="px-2 py-3 text-center text-sm font-semibold flex flex-col items-center justify-center"
+                    style={{ backgroundColor: bg }}
+                    title={`${p} • Position ${position} • ${count} times (${percentage.toFixed(1)}%)`}
+                  >
+                    <span>{count}</span>
+                    <span className="text-[11px] text-gray-600">{percentage.toFixed(0)}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Stats: React.FC<DashboardProps> = (props) => {
-  const {
-    data: sessions,
-    isLoading,
-    isError,
-  } = api.session.getAllCompletedSessions.useQuery({
+  const { data: sessions, isLoading, isError } = api.session.getAllCompletedSessions.useQuery({
     data: { groupId: props.groupName },
   });
 
@@ -180,7 +209,15 @@ const Stats: React.FC<DashboardProps> = (props) => {
     groupId: props.groupName,
   });
 
-  if (isLoading || matrixLoading) {
+  const {
+    data: positionMatrix,
+    isLoading: posLoading,
+    isError: posError,
+  } = api.stats.getPlayerPositionMatrix.useQuery({
+    groupId: props.groupName,
+  });
+
+  if (isLoading || matrixLoading || posLoading) {
     return (
       <div className="flex grow">
         <LoadingPage />
@@ -188,7 +225,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
     );
   }
 
-  if (isError || matrixError || !sessions || !matrixData) {
+  if (isError || matrixError || posError || !sessions || !matrixData || !positionMatrix) {
     return <div className="text-center text-gray-500">No stats available.</div>;
   }
 
@@ -196,9 +233,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
     const wins = new Map<string, number>();
     sessions.forEach((session) => {
       session.players.forEach((p) => {
-        if (p.position === 1) {
-          wins.set(p.nickname, (wins.get(p.nickname) ?? 0) + 1);
-        }
+        if (p.position === 1) wins.set(p.nickname, (wins.get(p.nickname) ?? 0) + 1);
       });
     });
     return wins;
@@ -233,14 +268,12 @@ const Stats: React.FC<DashboardProps> = (props) => {
     <div className="px-4 sm:px-6 lg:px-14">
       <h1 className="text-2xl font-bold text-center">Stats</h1>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
         <StatCard title="Total Sessions" value={sessions.length} />
         <StatCard
           title="Unique Players"
           value={
-            new Set(sessions.flatMap((s) => s.players.map((p) => p.nickname)))
-              .size
+            new Set(sessions.flatMap((s) => s.players.map((p) => p.nickname))).size
           }
         />
         {mostActive && (
@@ -252,51 +285,19 @@ const Stats: React.FC<DashboardProps> = (props) => {
         )}
       </div>
 
-      {/* Games Played */}
-      <h2 className="text-lg font-bold text-center mt-10">Games Played</h2>
-      <div className="mt-4 flow-root">
-        {Array.from(getGamesPlayedPerPlayer().entries())
-          .sort((a, b) => b[1] - a[1])
-          .map(([n, c]) => (
-            <div key={n} className="grid grid-cols-2">
-              <p>{n}</p>
-              <p>{c}</p>
-            </div>
-          ))}
-      </div>
-
-      {/* Games Won */}
-      <h2 className="text-lg font-bold text-center mt-10">Games Won</h2>
-      <div className="mt-4 flow-root">
-        {Array.from(getWinsPerPlayer().entries())
-          .sort((a, b) => b[1] - a[1])
-          .map(([n, c]) => (
-            <div key={n} className="grid grid-cols-2">
-              <p>{n}</p>
-              <p>{c}</p>
-            </div>
-          ))}
-      </div>
-
-      {/* Win Rate */}
-      <h2 className="text-lg font-bold text-center mt-10">Win Rate</h2>
-      <div className="mt-4 flow-root">
-        {Array.from(getWinRatePerPlayer().entries())
-          .sort((a, b) => b[1] - a[1])
-          .map(([n, r]) => (
-            <div key={n} className="grid grid-cols-2">
-              <p>{n}</p>
-              <p>{r.toFixed(1)}%</p>
-            </div>
-          ))}
-      </div>
-
-      {/* Heatmap */}
       {matrixData.data.length > 0 && (
         <PlayerGameHeatmap
           data={matrixData.data}
           players={matrixData.players}
           games={matrixData.games}
+        />
+      )}
+
+      {positionMatrix.data.length > 0 && (
+        <PlayerPositionHeatmap
+          data={positionMatrix.data}
+          players={positionMatrix.players}
+          positions={positionMatrix.positions}
         />
       )}
     </div>
