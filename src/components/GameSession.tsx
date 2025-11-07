@@ -74,22 +74,12 @@ const GameSession = (props: GameSessionProps) => {
     }
   });
 
-  //function that take date and return a string using dayjs format DD.MM.YYYY
-  const formatDateLocal = (date: Date | undefined) => {
-    return formatDate(date);
-  }
-
-  //transform string from format DD-MM-YYYY to YYYY-MM-DD
-  const transformDateLocal = (date: string) => {
-    return transformDate(date);
-  }
-
 
   const [description, setDescription] = useState<string>(game?.description ?? "");
   const [dateText, setDateText] = useState<string>("");
 
   useEffect(() => {
-    setDateText(formatDateLocal(game?.createdAt) ?? "");
+    setDateText(formatDate(game?.createdAt) ?? "");
   }, [game?.createdAt]);
 
   useEffect(() => {
@@ -200,7 +190,7 @@ const GameSession = (props: GameSessionProps) => {
                     <input
                       onBlur={() => {
                         if(isInReadOnlyMode) return;
-                        const newDateText = transformDateLocal(dateText);
+                        const newDateText = transformDate(dateText);
                         const date = dayjs(newDateText).toDate();
                         updateDate.mutate({
                           gameSessionId: game.sessionId,
