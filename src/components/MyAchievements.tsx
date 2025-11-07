@@ -3,9 +3,7 @@ import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import Badge from "npm/components/Badge";
-
-const classNames = (...classes: Array<string | false | null | undefined>) =>
-  classes.filter(Boolean).join(" ");
+import { classNames } from "npm/lib/utils";
 
 const MyAchievements = ({ groupName }: { groupName: string }) => {
   const {

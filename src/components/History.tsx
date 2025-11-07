@@ -8,12 +8,10 @@ import { LoadingPage } from "npm/components/loading";
 import Avatar from "npm/components/Avatar";
 import Badge from "npm/components/Badge";
 import { Th } from "npm/components/Th";
+import { classNames } from "npm/lib/utils";
 
 const tdBorder = "border-b border-gray-300";
 const hiddenLgCell = "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell";
-
-const classNames = (...classes: Array<string | false | null | undefined>) =>
-  classes.filter(Boolean).join(" ");
 
 const History = ({ groupName }: DashboardProps) => {
   const { data, isLoading, isError } = api.session.getAllCompletedSessions.useQuery({

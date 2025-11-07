@@ -9,6 +9,8 @@ import React from "react";
 import Link from "next/link";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import RecentlyActivities from "npm/components/JustPlayed";
+import { classNames } from "npm/lib/utils";
+import { ICON_COLORS } from "npm/lib/constants";
 
 const actions = (groupName: string) => {
   return [
@@ -17,55 +19,51 @@ const actions = (groupName: string) => {
       message: "Start a session with your friends",
       href: "/" + groupName + "/session/create",
       icon: PlayIcon,
-      iconForeground: "text-sky-700",
-      iconBackground: "bg-sky-50"
+      iconForeground: ICON_COLORS.sky.foreground,
+      iconBackground: ICON_COLORS.sky.background
     },
     {
       title: "History",
       message: "Watch all played games",
       href: "/" + groupName + "/history/all",
       icon: CircleStackIcon,
-      iconForeground: "text-purple-700",
-      iconBackground: "bg-purple-50"
+      iconForeground: ICON_COLORS.purple.foreground,
+      iconBackground: ICON_COLORS.purple.background
     },
     {
       title: "Add a game",
       message: "Missing a game? Add it!",
       href: "/" + groupName + "/games/search",
       icon: PuzzlePieceIcon,
-      iconForeground: "text-teal-700",
-      iconBackground: "bg-teal-50"
+      iconForeground: ICON_COLORS.teal.foreground,
+      iconBackground: ICON_COLORS.teal.background
     },
     {
       title: "Game collection",
       message: "Everyone's game collection",
       href: "/" + groupName + "/games/collection",
       icon: Square3Stack3DIcon,
-      iconForeground: "text-red-700",
-      iconBackground: "bg-red-50"
+      iconForeground: ICON_COLORS.red.foreground,
+      iconBackground: ICON_COLORS.red.background
     },
     {
       title: "Make a custom game",
       message: "Can't find the game you are looking for? Add it yourself!",
       href: "/" + groupName + "/games/make-custom",
       icon: PlusIcon,
-      iconForeground: "text-yellow-700",
-      iconBackground: "bg-yellow-50"
+      iconForeground: ICON_COLORS.yellow.foreground,
+      iconBackground: ICON_COLORS.yellow.background
     },
     {
       title: "Statistics",
       message: "Who won the most games? Who is the best player?",
       href: "/" + groupName + "/stats/all",
       icon: ChartPieIcon,
-      iconForeground: "text-indigo-700",
-      iconBackground: "bg-indigo-50"
+      iconForeground: ICON_COLORS.indigo.foreground,
+      iconBackground: ICON_COLORS.indigo.background
     }
   ];
 };
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ");
-}
 
 export default function Dashboard(groupName: string) {
   return (
@@ -125,7 +123,9 @@ export default function Dashboard(groupName: string) {
         </div>
         <div className="container mx-auto sm:px-6 lg:px-8">
           <div className="overflow-hidden bg-white shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:p-6">{<RecentlyActivities groupName={groupName} />}</div>
+            <div className="px-4 py-5 sm:p-6">
+              <RecentlyActivities groupName={groupName} />
+            </div>
           </div>
         </div>
       </div>

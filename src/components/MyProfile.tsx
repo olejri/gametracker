@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { LoadingPage, LoadingSpinner } from "npm/components/loading";
 import { api } from "npm/utils/api";
+import { Button } from "npm/components/ui";
 
 const MyProfile = () => {
   const ctx = api.useContext();
@@ -67,14 +68,19 @@ const MyProfile = () => {
             </div>
           </div>
           <div className="bg-gray-50 px-4 py-4 sm:px-6">
-            {!mutation.isLoading ? <button
-              disabled={mutation.isLoading || !isNicknameDifferent()}
-              className={"bg-blue-500 hover:bg-blue-700 disabled:bg-gray-500 text-white font-bold py-2 px-4 rounded"}
-              onClick={() => {
-                mutation.mutate({ nickname });
-              }}
-            >Update profile
-            </button> : <LoadingSpinner size={30} />}
+            {!mutation.isLoading ? (
+              <Button
+                disabled={mutation.isLoading || !isNicknameDifferent()}
+                variant="primary"
+                onClick={() => {
+                  mutation.mutate({ nickname });
+                }}
+              >
+                Update profile
+              </Button>
+            ) : (
+              <LoadingSpinner size={30} />
+            )}
             {mutation.isError && <div className="text-red-500">{mutation.error?.message}</div>}
           </div>
         </div>

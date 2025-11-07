@@ -3,14 +3,12 @@ import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import Badge from "npm/components/Badge";
 import { Th } from "npm/components/Th";
+import { classNames } from "npm/lib/utils";
 
 type WinBadgeVariant = "green" | "yellow" | "red";
 
 const tdBorder = "border-b border-gray-300";
 const hiddenLgCell = "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell";
-
-const classNames = (...classes: Array<string | false | null | undefined>) =>
-  classes.filter(Boolean).join(" ");
 
 const percentStr = (n: number) => (Math.round(n * 100) / 100).toFixed(2);
 
