@@ -5,6 +5,7 @@ import Image from "next/image";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Link from "next/link";
+import { classNames } from "npm/lib/utils";
 
 dayjs.extend(relativeTime);
 
@@ -13,10 +14,6 @@ const RecentlyActivities = (props: {
 }) => {
   const groupId = props.groupName;
   const { data: lastFive, isLoading, isError, error } = api.session.getLastFiveCompletedSessions.useQuery({ groupId });
-
-  function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(" ");
-  }
 
   if (isLoading) return (
     <div className="flex justify-center items-center">

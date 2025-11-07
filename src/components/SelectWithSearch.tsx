@@ -2,12 +2,7 @@ import {Combobox} from '@headlessui/react'
 import {useState} from "react";
 import {ChevronUpDownIcon} from "@heroicons/react/20/solid";
 import {type SearchItemProps} from "npm/components/Types";
-
-
-
-function classNames(...classes: (string | boolean)[]) {
-    return classes.filter(Boolean).join(' ')
-}
+import { classNames } from "npm/lib/utils";
 
 const SelectWithSearch = (props: SearchItemProps) => {
     const items = props.items;

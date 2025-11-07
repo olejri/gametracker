@@ -2,6 +2,7 @@ import React from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import { type DashboardProps } from "npm/components/Types";
+import { Button } from "npm/components/ui";
 
 const ExportView = (props: DashboardProps) => {
   const { groupName } = props;
@@ -27,14 +28,14 @@ const ExportView = (props: DashboardProps) => {
 
   return (
     <>
-      <button
-        className={"inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"}
+      <Button
+        variant="primary"
         onClick={() => {
           triggerDownload(data.data, "game-night.csv");
         }}
       >
         Download
-      </button>
+      </Button>
       <div className="w-full h-auto">
     <textarea className="w-full" value={data.data} readOnly={true} style={{
       height: "800px"
