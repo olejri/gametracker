@@ -6,10 +6,7 @@ import { LoadingPage } from "npm/components/loading";
 import { useRouter } from "next/router";
 import { api } from "npm/utils/api";
 import { useGameGroupContext } from "npm/context/GameGroupContext";
-
-function classNames(...classes: any[]) {
-  return classes.filter(Boolean).join(" ");
-}
+import { classNames } from "npm/lib/utils";
 
 type ContainerProps = {
   children: React.ReactNode; //👈 children prop typr

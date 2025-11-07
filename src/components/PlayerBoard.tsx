@@ -15,6 +15,8 @@ import MyProfile from "npm/components/MyProfile";
 import MyCollection from "npm/components/MyCollection";
 import MyStats from "npm/components/MyStats";
 import MyAchievements from "npm/components/MyAchievements";
+import { classNames } from "npm/lib/utils";
+import { ICON_COLORS } from "npm/lib/constants";
 
 const PlayerBoard = (props: {
   groupName: string
@@ -30,35 +32,31 @@ const PlayerBoard = (props: {
       onClick: () => {setCurrentTab("me")},
       icon: UserIcon,
       current: currentTab === "me",
-      iconForeground: "text-sky-700",
-      iconBackground: "bg-sky-50"
+      iconForeground: ICON_COLORS.sky.foreground,
+      iconBackground: ICON_COLORS.sky.background
     },
     { name: "Collection",
       onClick: () => {setCurrentTab("collection")},
       icon: Square3Stack3DIcon,
       current: currentTab === "collection",
-      iconForeground: "text-red-700",
-      iconBackground: "bg-red-50"
+      iconForeground: ICON_COLORS.red.foreground,
+      iconBackground: ICON_COLORS.red.background
     },
     { name: "Achievements",
       onClick: () => {setCurrentTab("achievements")},
       icon: SparklesIcon,
       current: currentTab === "achievements",
-      iconForeground: "text-purple-700",
-      iconBackground: "bg-purple-50"
+      iconForeground: ICON_COLORS.purple.foreground,
+      iconBackground: ICON_COLORS.purple.background
     },
     { name: "Stats",
       onClick: () => {setCurrentTab("stats")},
       icon: ChartPieIcon,
       current: currentTab === "stats",
-      iconForeground: "text-yellow-700",
-      iconBackground: "bg-yellow-50"
+      iconForeground: ICON_COLORS.yellow.foreground,
+      iconBackground: ICON_COLORS.yellow.background
     }
   ];
-
-  function classNames(...classes: any[]) {
-    return classes.filter(Boolean).join(" ");
-  }
 
   if (isLoading) return <LoadingPage />;
   if (isError) return <div>{error?.message}</div>;

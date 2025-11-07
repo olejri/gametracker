@@ -7,6 +7,9 @@ import { useEffect, useState } from "react";
 import PlayerView from "npm/components/PlayerView";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
+import { Button } from "npm/components/ui";
+import { StatusBadge } from "npm/components/ui";
+import { formatDate, transformDate } from "npm/lib/utils";
 
 const GameSession = (props: GameSessionProps) => {
   const {
@@ -72,18 +75,13 @@ const GameSession = (props: GameSessionProps) => {
   });
 
   //function that take date and return a string using dayjs format DD.MM.YYYY
-  const formatDate = (date: Date | undefined) => {
-    if (date === undefined) {
-      return "";
-    }
-    return dayjs(date).format("DD.MM.YYYY");
+  const formatDateLocal = (date: Date | undefined) => {
+    return formatDate(date);
   }
 
   //transform string from format DD-MM-YYYY to YYYY-MM-DD
-  const transformDate = (date: string) => {
-    const dateArray = date.split(".");
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    return `${dateArray[2]}-${dateArray[1]}-${dateArray[0]}`;
+  const transformDateLocal = (date: string) => {
+    return transformDate(date);
   }
 
 
@@ -91,7 +89,7 @@ const GameSession = (props: GameSessionProps) => {
   const [dateText, setDateText] = useState<string>("");
 
   useEffect(() => {
-    setDateText(formatDate(game?.createdAt) ?? "");
+    setDateText(formatDateLocal(game?.createdAt) ?? "");
   }, [game?.createdAt]);
 
   useEffect(() => {
@@ -131,10 +129,9 @@ const GameSession = (props: GameSessionProps) => {
         <div className="grid grid-cols-2">
           <div className="px-4 py-5 sm:p-6">
             <Image src={game.image_url} alt="My Image" width={300} height={300} className="rounded-lg mt-4" />
-            <span
-              className="inline-flex items-center rounded-md bg-green-100 px-2.5 py-0.5 text-sm font-medium text-green-800">
-            {game.status}
-          </span>
+            <StatusBadge color="green">
+              {game.status}
+            </StatusBadge>
           </div>
           <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="px-4 py-5 sm:p-6">
@@ -203,7 +200,7 @@ const GameSession = (props: GameSessionProps) => {
                     <input
                       onBlur={() => {
                         if(isInReadOnlyMode) return;
-                        const newDateText = transformDate(dateText);
+                        const newDateText = transformDateLocal(dateText);
                         const date = dayjs(newDateText).toDate();
                         updateDate.mutate({
                           gameSessionId: game.sessionId,
@@ -244,9 +241,8 @@ const GameSession = (props: GameSessionProps) => {
       {game.status === GameSessionStatus.Ongoing ? <div className="overflow-hidden bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6">
           <div className="gap-2">
-            <button
-              type="button"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            <Button
+              variant="primary"
               onClick={() => {
                 setHaveError(false);
                 finishGameSession.mutate({
@@ -261,10 +257,9 @@ const GameSession = (props: GameSessionProps) => {
                 });
               }}>
               Finish session
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            </Button>
+            <Button
+              variant="danger"
               disabled={isInReadOnlyMode}
               onClick={() => {
                 setHaveError(false);
@@ -272,7 +267,7 @@ const GameSession = (props: GameSessionProps) => {
               }}
             >
               Delete session
-            </button>
+            </Button>
           </div>
           {haveError ? <div className="text-center mt-4 text-red-600">Error while finish or deleting the session</div> : <></>}
         </div>
