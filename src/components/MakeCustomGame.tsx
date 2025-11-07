@@ -3,6 +3,7 @@ import React from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage, LoadingSpinner } from "npm/components/loading";
 import { useRouter } from "next/router";
+import { Button } from "npm/components/ui";
 
 const MakeCustomGame = () => {
   const { data: games } = api.game.getAllGames.useQuery({ withExpansions: false });
@@ -223,14 +224,19 @@ const MakeCustomGame = () => {
             </div>
           </div>
           <div className="bg-gray-50 px-4 py-4 sm:px-6">
-            {!mutation.isLoading ? <button
-              disabled={mutation.isLoading}
-              className={"bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"}
-              onClick={() => {
-                mutation.mutate(game);
-              }}
-            >Add custom game
-            </button>: <LoadingSpinner size={30} />}
+            {!mutation.isLoading ? (
+              <Button
+                disabled={mutation.isLoading}
+                variant="primary"
+                onClick={() => {
+                  mutation.mutate(game);
+                }}
+              >
+                Add custom game
+              </Button>
+            ) : (
+              <LoadingSpinner size={30} />
+            )}
               {mutation.isError && <div className="text-red-500">Something went wrong when saving the custom game</div>}
             </div>
         </div>

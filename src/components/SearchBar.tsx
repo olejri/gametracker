@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
+import { Button } from "npm/components/ui";
 
 
 const SearchBar = (props: {
@@ -28,15 +29,17 @@ const SearchBar = (props: {
       <h1 className="text-xl font-bold mb-4">Search after a game</h1>
       <input className="border border-gray-300 rounded py-2 px-4" type="text" placeholder="Name of the game"
              onChange={(e) => setSearchName(e.target.value)} />
-      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              onClick={() => {
-                mutationSearch.mutate(
-                  {
-                    searchQuery: searchName,
-                  });
-              }}
-      >Search
-      </button>
+      <Button
+        variant="primary"
+        onClick={() => {
+          mutationSearch.mutate(
+            {
+              searchQuery: searchName,
+            });
+        }}
+      >
+        Search
+      </Button>
         <dl className="mt-1 flex flex-grow flex-col justify-between">
             <dd className="text-sm text-gray-500">Using gpt-4-1106-preview to find information about a game before April 2023</dd>
         </dl>

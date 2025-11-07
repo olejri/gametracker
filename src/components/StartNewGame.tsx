@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 import type { Game } from "npm/components/Types";
 import SelectWithSearch from "npm/components/SelectWithSearch";
+import { Button } from "npm/components/ui";
 
 const StartNewGame = (props: DashboardProps) => {
   const { data: games } = api.game.getAllGames.useQuery({ withExpansions: false });
@@ -133,9 +134,9 @@ const StartNewGame = (props: DashboardProps) => {
           </div>
           <div className="overflow-hidden shadow-none">
             <div className="px-4 py-5 sm:p-6">
-              <button
+              <Button
                 disabled={disabled}
-                className={"bg-blue-500 hover:bg-blue-700 disabled:bg-gray-600 text-white disabled:text-gray-400 font-bold py-2 px-4 rounded"}
+                variant="primary"
                 onClick={(event) => {
                   event.preventDefault(); // prevent default form submitting behavior
                   const form = document.getElementById("game");
@@ -165,8 +166,9 @@ const StartNewGame = (props: DashboardProps) => {
                     expansions: expansionIds
                   });
                 }}
-              >Create session
-              </button>
+              >
+                Create session
+              </Button>
               {validationError && <div className="text-center mt-4 text-red-500">{validationError}</div>}
             </div>
           </div>

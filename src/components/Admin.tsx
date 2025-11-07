@@ -4,6 +4,7 @@ import { LoadingPage, LoadingSpinner } from "npm/components/loading";
 import { UserPlusIcon, ChevronUpIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
+import { Button } from "npm/components/ui";
 
 const AdminView = (props: {
   gameGroup: string
@@ -214,10 +215,12 @@ const AdminView = (props: {
               </div>
             </div>
             <div className="bg-gray-50 px-4 py-4 sm:px-6">
-              {mutation.isLoading ? <LoadingSpinner size={30} /> :
-                <button
+              {mutation.isLoading ? (
+                <LoadingSpinner size={30} />
+              ) : (
+                <Button
                   disabled={mutation.isLoading || email.length === 0 || name.length === 0 || nickname.length === 0}
-                  className={"bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"}
+                  variant="primary"
                   onClick={() => {
                     mutation.mutate({
                       emailAddress: email
@@ -229,8 +232,10 @@ const AdminView = (props: {
                       groupId: gameGroup
                     });
                   }}
-                >Invite User
-                </button>}
+                >
+                  Invite User
+                </Button>
+              )}
               {(mutation.isError || addPlayer.isError) &&
                 <span className="text-red-500 p-2">{mutation.error?.message}</span>}
             </div>
