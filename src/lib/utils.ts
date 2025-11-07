@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 /**
  * Utility function to merge class names
  * @param classes - Array of class names or conditional class names
@@ -16,7 +18,6 @@ export function formatDate(date: Date | undefined): string {
   if (date === undefined) {
     return "";
   }
-  const dayjs = require("dayjs");
   return dayjs(date).format("DD.MM.YYYY");
 }
 
@@ -27,5 +28,5 @@ export function formatDate(date: Date | undefined): string {
  */
 export function transformDate(date: string): string {
   const dateArray = date.split(".");
-  return `${dateArray[2]}-${dateArray[1]}-${dateArray[0]}`;
+  return `${dateArray[2] ?? ""}-${dateArray[1] ?? ""}-${dateArray[0] ?? ""}`;
 }

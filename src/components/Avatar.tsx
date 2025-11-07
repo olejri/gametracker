@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { classNames } from "npm/lib/utils";
 
 export type Avatar = {
   id: string;
@@ -32,7 +33,7 @@ const AvatarStack: React.FC<AvatarStackProps> = ({
   className = "",
 }) => {
   return (
-    <div className={["flex -space-x-1 overflow-hidden", className].join(" ")}>
+    <div className={classNames("flex -space-x-1 overflow-hidden", className)}>
       {avatars.map((a, index) => {
         const base = "inline-block rounded-full border-2";
         const { cls, px } = rankedSizing
@@ -46,7 +47,7 @@ const AvatarStack: React.FC<AvatarStackProps> = ({
             src={a.src}
             width={px}
             height={px}
-            className={[base, cls].join(" ")}
+            className={classNames(base, cls)}
           />
         );
       })}

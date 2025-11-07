@@ -2,7 +2,7 @@ import React from "react";
 import { classNames } from "npm/lib/utils";
 
 interface IconWrapperProps {
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  icon: React.ComponentType<{ className?: string; "aria-hidden"?: true }>;
   foreground: string;
   background: string;
   className?: string;
@@ -23,7 +23,7 @@ export const IconWrapper: React.FC<IconWrapperProps> = ({
         className
       )}
     >
-      <Icon className="h-6 w-6" aria-hidden="true" />
+      <Icon className="h-6 w-6" aria-hidden />
     </span>
   );
 };
