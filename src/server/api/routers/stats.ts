@@ -90,10 +90,9 @@ export const statsRouter = createTRPCRouter({
       const gameCountsByBaseId = new Map<string, number>();
 
       for (const session of sessions) {
-        const gamesInSession =
-          session.GameSessionGameJunction.length > 0
-            ? session.GameSessionGameJunction.map((g) => g.game)
-            : (session.gameId ? [gameMap.get(session.gameId) ?? null] : []);
+        const baseGame = session.gameId ? [gameMap.get(session.gameId) ?? null] : [];
+        const expansionGames = session.GameSessionGameJunction.map((g) => g.game);
+        const gamesInSession = [...baseGame, ...expansionGames];
 
         const baseIdsInSession = new Set<string>();
         for (const g of gamesInSession) {
@@ -234,10 +233,9 @@ export const statsRouter = createTRPCRouter({
       const gameHighScores = new Map<string, { gameName: string; highScore: number; playerName: string }>();
 
       for (const session of sessions) {
-        const gamesInSession =
-          session.GameSessionGameJunction.length > 0
-            ? session.GameSessionGameJunction.map((g) => g.game)
-            : (session.gameId ? [gameMap.get(session.gameId) ?? null] : []);
+        const baseGame = session.gameId ? [gameMap.get(session.gameId) ?? null] : [];
+        const expansionGames = session.GameSessionGameJunction.map((g) => g.game);
+        const gamesInSession = [...baseGame, ...expansionGames];
 
         const baseIdsInSession = new Set<string>();
         for (const g of gamesInSession) {
@@ -310,10 +308,9 @@ export const statsRouter = createTRPCRouter({
       };
 
       for (const session of sessions) {
-        const gamesInSession =
-          session.GameSessionGameJunction.length > 0
-            ? session.GameSessionGameJunction.map((g) => g.game)
-            : (session.gameId ? [gameMap.get(session.gameId) ?? null] : []);
+        const baseGame = session.gameId ? [gameMap.get(session.gameId) ?? null] : [];
+        const expansionGames = session.GameSessionGameJunction.map((g) => g.game);
+        const gamesInSession = [...baseGame, ...expansionGames];
 
         const baseIdsInSession = new Set<string>();
         for (const g of gamesInSession) {
