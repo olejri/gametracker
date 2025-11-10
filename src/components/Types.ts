@@ -200,6 +200,12 @@ export type GameStatsResult = {
     winPrecentage: number,
 }
 
+export type GameHighScore = {
+    gameName: string,
+    highScore: number,
+    playerName: string,
+}
+
 
 export type GameOwedByPlayers = {
     gameName: string,
