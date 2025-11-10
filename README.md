@@ -10,6 +10,7 @@ Game Tracker is a web application that enables users to keep track of their boar
 - Start game sessions with friends
 - Track session results
 - View game session history
+- Filter game history by game title or player name with searchable dropdowns
 
 ## Getting Started
 
