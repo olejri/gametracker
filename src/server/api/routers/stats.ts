@@ -295,8 +295,12 @@ export const statsRouter = createTRPCRouter({
       const allGames = await ctx.prisma.game.findMany();
       const gameMap = new Map(allGames.map((g) => [g.id, g]));
 
-      // Map: playerNickname -> gameBaseId -> { scores: number[], gamesPlayed: number }
-      const playerGameStats = new Map<string, Map<string, { scores: number[]; gamesPlayed: number }>>();
+      // --- REFACTOR: Added 'positions' array to stats object ---
+      // Map: playerNickname -> gameBaseId -> { scores: number[], gamesPlayed: number, positions: number[] }
+      const playerGameStats = new Map<
+        string,
+        Map<string, { scores: number[]; gamesPlayed: number; positions: number[] }>
+      >();
 
       // Position weights: 1st = 1.0, 2nd = 0.6, 3rd = 0.3, 4th+ = 0.1
       const getPositionWeight = (position: number | null): number => {
@@ -319,6 +323,7 @@ export const statsRouter = createTRPCRouter({
           baseIdsInSession.add(baseId);
         }
 
+        // This logic is correct: it loops through the single baseId for the session
         for (const baseId of baseIdsInSession) {
           for (const pgs of session.PlayerGameSessionJunction) {
             const nickname = pgs.player.nickname ?? pgs.player.name;
@@ -326,18 +331,26 @@ export const statsRouter = createTRPCRouter({
 
             let gameMap = playerGameStats.get(nickname);
             if (!gameMap) {
-              gameMap = new Map<string, { scores: number[]; gamesPlayed: number }>();
+              gameMap = new Map<
+                string,
+                { scores: number[]; gamesPlayed: number; positions: number[] }
+              >();
               playerGameStats.set(nickname, gameMap);
             }
 
             let stats = gameMap.get(baseId);
             if (!stats) {
-              stats = { scores: [], gamesPlayed: 0 };
+              // --- REFACTOR: Initialize 'positions' array ---
+              stats = { scores: [], gamesPlayed: 0, positions: [] };
               gameMap.set(baseId, stats);
             }
 
             const weight = getPositionWeight(pgs.position);
             stats.scores.push(weight);
+
+            // --- REFACTOR: Store the actual position for a true average ---
+            stats.positions.push(pgs.position ?? 0); // Store 0 for null, filter later
+
             stats.gamesPlayed += 1;
           }
         }
@@ -347,42 +360,45 @@ export const statsRouter = createTRPCRouter({
       const result: Array<{
         playerName: string;
         bestGame: string;
-        weightedWinRate: number;
+        weightedWinRate: number; // The raw avg score (0-100)
         gamesPlayed: number;
         avgPosition: number;
-        confidenceScore: number;
+        confidenceScore: number; // The score after the play-count penalty (0-100)
       }> = [];
 
       for (const [playerName, gameStats] of playerGameStats.entries()) {
         let bestGameId: string | null = null;
-        let bestScore = 0;
         let bestGamesPlayed = 0;
         let bestAvgPosition = 0;
-        let bestConfidence = 0;
+
+        // --- REFACTOR: Renamed variables for clarity ---
+        let bestPenalizedScore = -1; // Use -1 to allow 0-score games to be picked
+        let bestRawAvgScore = 0;
 
         for (const [gameId, stats] of gameStats.entries()) {
+          if (stats.gamesPlayed === 0) continue; // Should be impossible, but good check
+
           // Calculate average weighted score
           const avgWeightedScore = stats.scores.reduce((sum, s) => sum + s, 0) / stats.gamesPlayed;
-          
-          // Apply confidence factor based on sample size
-          // Games with fewer than 3 plays get penalized
-          const confidenceFactor = Math.min(1.0, stats.gamesPlayed / 3);
-          const confidenceScore = avgWeightedScore * confidenceFactor;
 
-          // Calculate average position for display
-          const avgPosition = stats.scores.reduce((sum, s) => {
-            if (s >= 1.0) return sum + 1;
-            if (s >= 0.6) return sum + 2;
-            if (s >= 0.3) return sum + 3;
-            return sum + 4;
-          }, 0) / stats.gamesPlayed;
+          // --- REFACTOR #1: Use a softer, square-root penalty ---
+          // This is much less aggressive than a linear / 3 penalty.
+          const confidenceFactor = Math.min(1.0, Math.sqrt(stats.gamesPlayed / 3.0));
+          const penalizedScore = avgWeightedScore * confidenceFactor;
 
-          if (confidenceScore > bestScore) {
-            bestScore = confidenceScore;
+          // --- REFACTOR #2: Calculate true average position ---
+          const validPositions = stats.positions.filter(p => p > 0); // Filter out 0s
+          const trueAvgPosition = validPositions.length > 0
+            ? validPositions.reduce((sum, p) => sum + p, 0) / validPositions.length
+            : 0;
+
+          // --- REFACTOR: Use clearer variable names for comparison ---
+          if (penalizedScore > bestPenalizedScore) {
+            bestPenalizedScore = penalizedScore;
+            bestRawAvgScore = avgWeightedScore;
             bestGameId = gameId;
             bestGamesPlayed = stats.gamesPlayed;
-            bestAvgPosition = avgPosition;
-            bestConfidence = avgWeightedScore;
+            bestAvgPosition = trueAvgPosition;
           }
         }
 
@@ -391,10 +407,12 @@ export const statsRouter = createTRPCRouter({
           result.push({
             playerName,
             bestGame: game?.name ?? "Unknown",
-            weightedWinRate: Math.round(bestConfidence * 100),
+            // 'weightedWinRate' is the raw, un-penalized score
+            weightedWinRate: Math.round(bestRawAvgScore * 100),
             gamesPlayed: bestGamesPlayed,
             avgPosition: Math.round(bestAvgPosition * 10) / 10,
-            confidenceScore: Math.round(bestScore * 100),
+            // 'confidenceScore' is the final score *after* the penalty
+            confidenceScore: Math.round(bestPenalizedScore * 100),
           });
         }
       }
