@@ -206,6 +206,14 @@ export type GameHighScore = {
     playerName: string,
 }
 
+export type BestGamePerPlayer = {
+    playerName: string;
+    bestGame: string;
+    weightedWinRate: number;
+    gamesPlayed: number;
+    avgPosition: number;
+    confidenceScore: number;
+}
 
 export type GameOwedByPlayers = {
     gameName: string,

@@ -247,6 +247,99 @@ const PlayerPositionHeatmap: React.FC<{
   );
 };
 
+const BestGamePerPlayerTable: React.FC<{
+  bestGames: Array<{
+    playerName: string;
+    bestGame: string;
+    weightedWinRate: number;
+    gamesPlayed: number;
+    avgPosition: number;
+    confidenceScore: number;
+  }>;
+}> = ({ bestGames }) => {
+  return (
+    <div className="mt-10 bg-white rounded-xl shadow p-4">
+      <h2 className="text-xl font-semibold text-center mb-4">
+        Best Game Per Player
+      </h2>
+      <p className="text-center text-sm text-gray-600 mb-4">
+        Shows each player&apos;s best performing game based on weighted scores (1st: 100%, 2nd: 60%, 3rd: 30%, 4th+: 10%)
+      </p>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Player
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Best Game
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Weighted Score
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Games Played
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Avg Position
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Confidence
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {bestGames.map((item, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {item.playerName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {item.bestGame}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    {item.weightedWinRate}%
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                  {item.gamesPlayed}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                  {item.avgPosition}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  <span 
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: item.gamesPlayed >= 3 ? '#d1fae5' : '#fef3c7',
+                      color: item.gamesPlayed >= 3 ? '#065f46' : '#92400e'
+                    }}
+                  >
+                    {item.confidenceScore}%
+                  </span>
+                </td>
+              </tr>
+            ))}
+            {bestGames.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                  No data available yet. Play some games to see best game statistics!
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-4 text-xs text-gray-500 text-center">
+        <p>💡 Confidence score adjusts for sample size - games with fewer than 3 plays are penalized.</p>
+        <p>Green badge = reliable data (3+ games), Yellow badge = limited data (&lt;3 games)</p>
+      </div>
+    </div>
+  );
+};
+
 const Stats: React.FC<DashboardProps> = (props) => {
   const { data: sessions, isLoading, isError } = api.session.getAllCompletedSessions.useQuery({
     data: { groupId: props.groupName },
@@ -276,7 +369,15 @@ const Stats: React.FC<DashboardProps> = (props) => {
     groupId: props.groupName,
   });
 
-  if (isLoading || matrixLoading || posLoading || highScoresLoading) {
+  const {
+    data: bestGames,
+    isLoading: bestGamesLoading,
+    isError: bestGamesError,
+  } = api.stats.getBestGamePerPlayer.useQuery({
+    groupId: props.groupName,
+  });
+
+  if (isLoading || matrixLoading || posLoading || highScoresLoading || bestGamesLoading) {
     return (
       <div className="flex grow">
         <LoadingPage />
@@ -284,7 +385,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
     );
   }
 
-  if (isError || matrixError || posError || highScoresError || !sessions || !matrixData || !positionMatrix) {
+  if (isError || matrixError || posError || highScoresError || bestGamesError || !sessions || !matrixData || !positionMatrix) {
     return <div className="text-center text-gray-500">No stats available.</div>;
   }
 
@@ -362,6 +463,10 @@ const Stats: React.FC<DashboardProps> = (props) => {
 
       {highScores && (
         <GameHighScoresTable highScores={highScores} />
+      )}
+
+      {bestGames && bestGames.length > 0 && (
+        <BestGamePerPlayerTable bestGames={bestGames} />
       )}
     </div>
   );
