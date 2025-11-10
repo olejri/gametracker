@@ -83,6 +83,7 @@ const History = ({ groupName }: DashboardProps) => {
                               id: p.playerId,
                               src: p.profileImageUrl,
                               alt: p.nickname ?? p.playerId,
+                              position: p.position,
                             }))}
                             rankedSizing
                           />
