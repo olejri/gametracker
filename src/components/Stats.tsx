@@ -251,10 +251,10 @@ const BestGamePerPlayerTable: React.FC<{
   bestGames: Array<{
     playerName: string;
     bestGame: string;
-    weightedWinRate: number;
+    trueAvgScore: number;
     gamesPlayed: number;
     avgPosition: number;
-    confidenceScore: number;
+    bayesianScore: number;
   }>;
 }> = ({ bestGames }) => {
   return (
@@ -262,79 +262,81 @@ const BestGamePerPlayerTable: React.FC<{
       <h2 className="text-xl font-semibold text-center mb-4">
         Best Game Per Player
       </h2>
-      <p className="text-center text-sm text-gray-600 mb-4">
-        Shows each player&apos;s best performing game based on weighted scores (1st: 100%, 2nd: 60%, 3rd: 30%, 4th+: 10%)
+      <p className="text-center text-sm text-gray-600 mb-4 px-2">
+        Shows each player&apos;s best game using a normalized rank.
+        A 1st place finish is 100% and last place is 0%, fairly weighting games
+        with different player counts.
       </p>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Player
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Best Game
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Weighted Score
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Games Played
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Avg Position
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Confidence
-              </th>
-            </tr>
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Player
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Best Game
+            </th>
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              True Avg. Score
+            </th>
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Games Played
+            </th>
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Avg Position
+            </th>
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Bayesian Score
+            </th>
+          </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {bestGames.map((item, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {item.playerName}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {item.bestGame}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {item.weightedWinRate}%
+          {bestGames.map((item, index) => (
+            <tr key={index} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                {item.playerName}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {item.bestGame}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    {Math.round(item.trueAvgScore * 100)}%
                   </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                  {item.gamesPlayed}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                  {item.avgPosition}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                  <span 
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                {item.gamesPlayed}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                {item.avgPosition.toFixed(1)}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  <span
                     className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                     style={{
                       backgroundColor: item.gamesPlayed >= 3 ? '#d1fae5' : '#fef3c7',
                       color: item.gamesPlayed >= 3 ? '#065f46' : '#92400e'
                     }}
                   >
-                    {item.confidenceScore}%
+                    {Math.round(item.bayesianScore * 100)}%
                   </span>
-                </td>
-              </tr>
-            ))}
-            {bestGames.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                  No data available yet. Play some games to see best game statistics!
-                </td>
-              </tr>
-            )}
+              </td>
+            </tr>
+          ))}
+          {bestGames.length === 0 && (
+            <tr>
+              <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                No data available yet. Play some games to see best game statistics!
+              </td>
+            </tr>
+          )}
           </tbody>
         </table>
       </div>
       <div className="mt-4 text-xs text-gray-500 text-center">
-        <p>💡 Confidence score adjusts for sample size - games with fewer than 3 plays are penalized.</p>
-        <p>Green badge = reliable data (3+ games), Yellow badge = limited data (&lt;3 games)</p>
+        <p>💡 <strong>Bayesian Score</strong> is a confidence-adjusted score. Games with few plays are pulled toward a 50% average.</p>
+        <p>This provides a more realistic ranking than True Average Score alone.</p>
       </div>
     </div>
   );

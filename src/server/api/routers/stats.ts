@@ -269,7 +269,7 @@ export const statsRouter = createTRPCRouter({
         }
       }
 
-      const result = Array.from(gameHighScores.values()).sort((a, b) => 
+      const result = Array.from(gameHighScores.values()).sort((a, b) =>
         a.gameName.localeCompare(b.gameName)
       );
 
@@ -277,7 +277,7 @@ export const statsRouter = createTRPCRouter({
     }),
 
   // ────────────────────────────────────────────────────────────────
-  // NEW: Best Game Per Player (weighted by position and sample size)
+  // REFACTORED: Best Game Per Player (Normalized Rank + Bayesian)
   // ────────────────────────────────────────────────────────────────
   getBestGamePerPlayer: privateProcedure
     .input(z.object({ groupId: z.string() }))
@@ -295,23 +295,21 @@ export const statsRouter = createTRPCRouter({
       const allGames = await ctx.prisma.game.findMany();
       const gameMap = new Map(allGames.map((g) => [g.id, g]));
 
-      // --- REFACTOR: Added 'positions' array to stats object ---
-      // Map: playerNickname -> gameBaseId -> { scores: number[], gamesPlayed: number, positions: number[] }
+      // Map: playerNickname -> gameBaseId -> stats
       const playerGameStats = new Map<
         string,
-        Map<string, { scores: number[]; gamesPlayed: number; positions: number[] }>
+        Map<
+          string,
+          {
+            normalizedScores: number[]; // Scores from 0.0 to 1.0
+            positions: number[]; // Raw positions (1, 2, 3...)
+            gamesPlayed: number; // Count of games with a valid score
+          }
+        >
       >();
 
-      // Position weights: 1st = 1.0, 2nd = 0.6, 3rd = 0.3, 4th+ = 0.1
-      const getPositionWeight = (position: number | null): number => {
-        if (!position) return 0;
-        if (position === 1) return 1.0;
-        if (position === 2) return 0.6;
-        if (position === 3) return 0.3;
-        return 0.1;
-      };
-
       for (const session of sessions) {
+        // --- Find the single Base Game ID for this session ---
         const baseGame = session.gameId ? [gameMap.get(session.gameId) ?? null] : [];
         const expansionGames = session.GameSessionGameJunction.map((g) => g.game);
         const gamesInSession = [...baseGame, ...expansionGames];
@@ -323,82 +321,91 @@ export const statsRouter = createTRPCRouter({
           baseIdsInSession.add(baseId);
         }
 
-        // This logic is correct: it loops through the single baseId for the session
+        // --- Get Player Count & Validate ---
+        const numPlayers = session.PlayerGameSessionJunction.length;
+        if (numPlayers <= 1) {
+          // Can't normalize rank for 1-player games, so we skip them
+          continue;
+        }
+
         for (const baseId of baseIdsInSession) {
           for (const pgs of session.PlayerGameSessionJunction) {
             const nickname = pgs.player.nickname ?? pgs.player.name;
             if (!nickname) continue;
 
+            // Get or create stats object
             let gameMap = playerGameStats.get(nickname);
             if (!gameMap) {
-              gameMap = new Map<
-                string,
-                { scores: number[]; gamesPlayed: number; positions: number[] }
-              >();
+              gameMap = new Map();
               playerGameStats.set(nickname, gameMap);
             }
-
             let stats = gameMap.get(baseId);
             if (!stats) {
-              // --- REFACTOR: Initialize 'positions' array ---
-              stats = { scores: [], gamesPlayed: 0, positions: [] };
+              stats = { normalizedScores: [], positions: [], gamesPlayed: 0 };
               gameMap.set(baseId, stats);
             }
 
-            const weight = getPositionWeight(pgs.position);
-            stats.scores.push(weight);
+            // --- NEW NORMALIZED RANK LOGIC ---
+            const position = pgs.position;
+            if (position && position > 0) {
+              // (NumPlayers - Position) / (NumPlayers - 1)
+              const normalizedScore = (numPlayers - position) / (numPlayers - 1);
 
-            // --- REFACTOR: Store the actual position for a true average ---
-            stats.positions.push(pgs.position ?? 0); // Store 0 for null, filter later
+              // Clamp between 0 and 1
+              const clampedScore = Math.max(0, Math.min(1, normalizedScore));
 
-            stats.gamesPlayed += 1;
+              stats.normalizedScores.push(clampedScore);
+              stats.positions.push(position);
+              stats.gamesPlayed += 1;
+            }
           }
         }
       }
 
-      // Calculate best game for each player
+      // --- Calculate best game for each player using Bayesian Average ---
       const result: Array<{
         playerName: string;
         bestGame: string;
-        weightedWinRate: number; // The raw avg score (0-100)
+        trueAvgScore: number; // The raw avg of normalized scores
         gamesPlayed: number;
         avgPosition: number;
-        confidenceScore: number; // The score after the play-count penalty (0-100)
+        bayesianScore: number; // The new confidence score
       }> = [];
+
+      // Bayesian average parameters:
+      const C = 5; // Our "confidence" parameter (like adding 5 "average" games)
+      const P = 0.5; // Our "prior" score (50th percentile)
 
       for (const [playerName, gameStats] of playerGameStats.entries()) {
         let bestGameId: string | null = null;
+        let bestBayesianScore = -1;
+        let bestTrueAvg = 0;
         let bestGamesPlayed = 0;
         let bestAvgPosition = 0;
 
-        // --- REFACTOR: Renamed variables for clarity ---
-        let bestPenalizedScore = -1; // Use -1 to allow 0-score games to be picked
-        let bestRawAvgScore = 0;
-
         for (const [gameId, stats] of gameStats.entries()) {
-          if (stats.gamesPlayed === 0) continue; // Should be impossible, but good check
+          if (stats.gamesPlayed === 0) continue;
 
-          // Calculate average weighted score
-          const avgWeightedScore = stats.scores.reduce((sum, s) => sum + s, 0) / stats.gamesPlayed;
+          // Calculate the "True Average" (raw normalized score)
+          const avgNormalizedScore =
+            stats.normalizedScores.reduce((sum, s) => sum + s, 0) / stats.gamesPlayed;
 
-          // --- REFACTOR #1: Use a softer, square-root penalty ---
-          // This is much less aggressive than a linear / 3 penalty.
-          const confidenceFactor = Math.min(1.0, Math.sqrt(stats.gamesPlayed / 3.0));
-          const penalizedScore = avgWeightedScore * confidenceFactor;
+          // Calculate the "True Average Position"
+          const avgPosition =
+            stats.positions.reduce((sum, p) => sum + p, 0) / stats.positions.length;
 
-          // --- REFACTOR #2: Calculate true average position ---
-          const validPositions = stats.positions.filter(p => p > 0); // Filter out 0s
-          const trueAvgPosition = validPositions.length > 0
-            ? validPositions.reduce((sum, p) => sum + p, 0) / validPositions.length
-            : 0;
+          // --- NEW BAYESIAN AVERAGE LOGIC ---
+          // (avgScore * gamesPlayed + P * C) / (gamesPlayed + C)
+          // This score is the "confidence" score
+          const bayesianScore =
+            (avgNormalizedScore * stats.gamesPlayed + P * C) / (stats.gamesPlayed + C);
 
-          // --- REFACTOR: Use clearer variable names for comparison ---
-          if (penalizedScore > bestPenalizedScore) {
-            bestPenalizedScore = penalizedScore;
-            bestRawAvgScore = avgWeightedScore;
+          if (bayesianScore > bestBayesianScore) {
+            bestBayesianScore = bayesianScore;
             bestGameId = gameId;
+            bestTrueAvg = avgNormalizedScore;
             bestGamesPlayed = stats.gamesPlayed;
-            bestAvgPosition = trueAvgPosition;
+            bestAvgPosition = avgPosition;
           }
         }
 
@@ -407,12 +414,10 @@ export const statsRouter = createTRPCRouter({
           result.push({
             playerName,
             bestGame: game?.name ?? "Unknown",
-            // 'weightedWinRate' is the raw, un-penalized score
-            weightedWinRate: Math.round(bestRawAvgScore * 100),
+            trueAvgScore: bestTrueAvg,
             gamesPlayed: bestGamesPlayed,
-            avgPosition: Math.round(bestAvgPosition * 10) / 10,
-            // 'confidenceScore' is the final score *after* the penalty
-            confidenceScore: Math.round(bestPenalizedScore * 100),
+            avgPosition: bestAvgPosition,
+            bayesianScore: bestBayesianScore,
           });
         }
       }
