@@ -211,4 +211,70 @@ export const statsRouter = createTRPCRouter({
 
       return { players, positions: Array.from({ length: maxPosition }, (_, i) => i + 1), data };
     }),
+
+  // ────────────────────────────────────────────────────────────────
+  // NEW: Game High Scores (only integer scores)
+  // ────────────────────────────────────────────────────────────────
+  getGameHighScores: privateProcedure
+    .input(z.object({ groupId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { groupId } = input;
+
+      const sessions = await ctx.prisma.gameSession.findMany({
+        where: { groupId, status: "COMPLETED" },
+        include: {
+          PlayerGameSessionJunction: { include: { player: true } },
+          GameSessionGameJunction: { include: { game: true } },
+        },
+      });
+
+      const allGames = await ctx.prisma.game.findMany();
+      const gameMap = new Map(allGames.map((g) => [g.id, g]));
+
+      const gameHighScores = new Map<string, { gameName: string; highScore: number; playerName: string }>();
+
+      for (const session of sessions) {
+        const gamesInSession =
+          session.GameSessionGameJunction.length > 0
+            ? session.GameSessionGameJunction.map((g) => g.game)
+            : (session.gameId ? [gameMap.get(session.gameId) ?? null] : []);
+
+        const baseIdsInSession = new Set<string>();
+        for (const g of gamesInSession) {
+          if (!g) continue;
+          const baseId = g.isExpansion && g.baseGameId ? g.baseGameId : g.id;
+          baseIdsInSession.add(baseId);
+        }
+
+        for (const baseId of baseIdsInSession) {
+          const game = gameMap.get(baseId);
+          if (!game) continue;
+
+          for (const pgs of session.PlayerGameSessionJunction) {
+            if (!pgs.score) continue;
+
+            // Try to parse the score as an integer
+            const scoreNum = parseInt(pgs.score, 10);
+            if (isNaN(scoreNum)) continue;
+
+            const playerName = pgs.player.nickname ?? pgs.player.name;
+            const existing = gameHighScores.get(baseId);
+
+            if (!existing || scoreNum > existing.highScore) {
+              gameHighScores.set(baseId, {
+                gameName: game.name,
+                highScore: scoreNum,
+                playerName,
+              });
+            }
+          }
+        }
+      }
+
+      const result = Array.from(gameHighScores.values()).sort((a, b) => 
+        a.gameName.localeCompare(b.gameName)
+      );
+
+      return result;
+    }),
 });

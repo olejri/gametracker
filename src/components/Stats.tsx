@@ -116,6 +116,57 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
   );
 };
 
+const GameHighScoresTable: React.FC<{
+  highScores: Array<{ gameName: string; highScore: number; playerName: string }>;
+}> = ({ highScores }) => {
+  return (
+    <div className="mt-10 bg-white rounded-xl shadow p-4">
+      <h2 className="text-xl font-semibold text-center mb-4">
+        Game High Scores
+      </h2>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Game
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                High Score
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Player
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {highScores.map((game, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {game.gameName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                  {game.highScore}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {game.playerName}
+                </td>
+              </tr>
+            ))}
+            {highScores.length === 0 && (
+              <tr>
+                <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
+                  No high scores available yet. Scores must be numeric values.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 const PlayerPositionHeatmap: React.FC<{
   data: Array<{ position: number } & Record<string, number>>;
   players: string[];
@@ -217,7 +268,15 @@ const Stats: React.FC<DashboardProps> = (props) => {
     groupId: props.groupName,
   });
 
-  if (isLoading || matrixLoading || posLoading) {
+  const {
+    data: highScores,
+    isLoading: highScoresLoading,
+    isError: highScoresError,
+  } = api.stats.getGameHighScores.useQuery({
+    groupId: props.groupName,
+  });
+
+  if (isLoading || matrixLoading || posLoading || highScoresLoading) {
     return (
       <div className="flex grow">
         <LoadingPage />
@@ -225,7 +284,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
     );
   }
 
-  if (isError || matrixError || posError || !sessions || !matrixData || !positionMatrix) {
+  if (isError || matrixError || posError || highScoresError || !sessions || !matrixData || !positionMatrix) {
     return <div className="text-center text-gray-500">No stats available.</div>;
   }
 
@@ -299,6 +358,10 @@ const Stats: React.FC<DashboardProps> = (props) => {
           players={positionMatrix.players}
           positions={positionMatrix.positions}
         />
+      )}
+
+      {highScores && (
+        <GameHighScoresTable highScores={highScores} />
       )}
     </div>
   );
