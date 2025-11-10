@@ -277,4 +277,132 @@ export const statsRouter = createTRPCRouter({
 
       return result;
     }),
+
+  // ────────────────────────────────────────────────────────────────
+  // NEW: Best Game Per Player (weighted by position and sample size)
+  // ────────────────────────────────────────────────────────────────
+  getBestGamePerPlayer: privateProcedure
+    .input(z.object({ groupId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { groupId } = input;
+
+      const sessions = await ctx.prisma.gameSession.findMany({
+        where: { groupId, status: "COMPLETED" },
+        include: {
+          PlayerGameSessionJunction: { include: { player: true } },
+          GameSessionGameJunction: { include: { game: true } },
+        },
+      });
+
+      const allGames = await ctx.prisma.game.findMany();
+      const gameMap = new Map(allGames.map((g) => [g.id, g]));
+
+      // Map: playerNickname -> gameBaseId -> { scores: number[], gamesPlayed: number }
+      const playerGameStats = new Map<string, Map<string, { scores: number[]; gamesPlayed: number }>>();
+
+      // Position weights: 1st = 1.0, 2nd = 0.6, 3rd = 0.3, 4th+ = 0.1
+      const getPositionWeight = (position: number | null): number => {
+        if (!position) return 0;
+        if (position === 1) return 1.0;
+        if (position === 2) return 0.6;
+        if (position === 3) return 0.3;
+        return 0.1;
+      };
+
+      for (const session of sessions) {
+        const gamesInSession =
+          session.GameSessionGameJunction.length > 0
+            ? session.GameSessionGameJunction.map((g) => g.game)
+            : (session.gameId ? [gameMap.get(session.gameId) ?? null] : []);
+
+        const baseIdsInSession = new Set<string>();
+        for (const g of gamesInSession) {
+          if (!g) continue;
+          const baseId = g.isExpansion && g.baseGameId ? g.baseGameId : g.id;
+          baseIdsInSession.add(baseId);
+        }
+
+        for (const baseId of baseIdsInSession) {
+          for (const pgs of session.PlayerGameSessionJunction) {
+            const nickname = pgs.player.nickname ?? pgs.player.name;
+            if (!nickname) continue;
+
+            let gameMap = playerGameStats.get(nickname);
+            if (!gameMap) {
+              gameMap = new Map<string, { scores: number[]; gamesPlayed: number }>();
+              playerGameStats.set(nickname, gameMap);
+            }
+
+            let stats = gameMap.get(baseId);
+            if (!stats) {
+              stats = { scores: [], gamesPlayed: 0 };
+              gameMap.set(baseId, stats);
+            }
+
+            const weight = getPositionWeight(pgs.position);
+            stats.scores.push(weight);
+            stats.gamesPlayed += 1;
+          }
+        }
+      }
+
+      // Calculate best game for each player
+      const result: Array<{
+        playerName: string;
+        bestGame: string;
+        weightedWinRate: number;
+        gamesPlayed: number;
+        avgPosition: number;
+        confidenceScore: number;
+      }> = [];
+
+      for (const [playerName, gameStats] of playerGameStats.entries()) {
+        let bestGameId: string | null = null;
+        let bestScore = 0;
+        let bestGamesPlayed = 0;
+        let bestAvgPosition = 0;
+        let bestConfidence = 0;
+
+        for (const [gameId, stats] of gameStats.entries()) {
+          // Calculate average weighted score
+          const avgWeightedScore = stats.scores.reduce((sum, s) => sum + s, 0) / stats.gamesPlayed;
+          
+          // Apply confidence factor based on sample size
+          // Games with fewer than 3 plays get penalized
+          const confidenceFactor = Math.min(1.0, stats.gamesPlayed / 3);
+          const confidenceScore = avgWeightedScore * confidenceFactor;
+
+          // Calculate average position for display
+          const avgPosition = stats.scores.reduce((sum, s) => {
+            if (s >= 1.0) return sum + 1;
+            if (s >= 0.6) return sum + 2;
+            if (s >= 0.3) return sum + 3;
+            return sum + 4;
+          }, 0) / stats.gamesPlayed;
+
+          if (confidenceScore > bestScore) {
+            bestScore = confidenceScore;
+            bestGameId = gameId;
+            bestGamesPlayed = stats.gamesPlayed;
+            bestAvgPosition = avgPosition;
+            bestConfidence = avgWeightedScore;
+          }
+        }
+
+        if (bestGameId) {
+          const game = gameMap.get(bestGameId);
+          result.push({
+            playerName,
+            bestGame: game?.name ?? "Unknown",
+            weightedWinRate: Math.round(bestConfidence * 100),
+            gamesPlayed: bestGamesPlayed,
+            avgPosition: Math.round(bestAvgPosition * 10) / 10,
+            confidenceScore: Math.round(bestScore * 100),
+          });
+        }
+      }
+
+      result.sort((a, b) => a.playerName.localeCompare(b.playerName));
+      return result;
+    }),
 });
