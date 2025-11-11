@@ -104,6 +104,33 @@ export const groupRouter = createTRPCRouter({
     });
   }),
 
+  getAllGroupsWithMembershipStatus: privateProcedure.query(async ({ ctx: { prisma, userId } }) => {
+    const player = await getPlayerByClerkId(prisma, userId);
+    
+    // Get all non-hidden groups
+    const allGroups = await prisma.gameGroup.findMany({
+      where: { hidden: false },
+      include: {
+        PlayerGameGroupJunction: {
+          where: { playerId: player.id }
+        }
+      },
+      orderBy: { name: "asc" }
+    });
+
+    // Map groups with membership status
+    return allGroups.map((group) => {
+      const junction = group.PlayerGameGroupJunction[0];
+      return {
+        groupId: group.id,
+        groupName: group.name,
+        isMember: !!junction && junction.inviteStatus !== "REMOVED",
+        isActive: junction?.gameGroupIsActive ?? false,
+        inviteStatus: junction?.inviteStatus ?? null,
+      };
+    });
+  }),
+
   switchActiveGameGroup: privateProcedure
     .input(z.object({ groupId: z.string() }))
     .mutation(async ({ ctx: { prisma, userId }, input }) => {
