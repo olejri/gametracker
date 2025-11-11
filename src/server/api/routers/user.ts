@@ -233,7 +233,14 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      // Set player as inactive instead of deleting to preserve game history
+      // Update player nickname to "Removed" and mark as inactive
+      // This preserves game history while indicating the player is no longer active
+      await ctx.prisma.player.update({
+        where: { id: player.id },
+        data: { nickname: "Removed" }
+      });
+
+      // Set player as inactive in the group
       return ctx.prisma.playerGameGroupJunction.update({
         where: {
           groupId_playerId: {

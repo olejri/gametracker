@@ -142,8 +142,7 @@ export const groupRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const playersFromDb = await ctx.prisma.playerGameGroupJunction.findMany({
         where: { 
-          groupId: input.groupId,
-          inviteStatus: { not: "REMOVED" }
+          groupId: input.groupId
         },
         include: { Player: true }
       });
