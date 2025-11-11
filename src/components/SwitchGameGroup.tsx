@@ -7,7 +7,7 @@ import { GameGroupContext } from "npm/context/GameGroupContext";
 import { useUser } from "@clerk/nextjs";
 
 const SwitchGameGroupView = () => {
-  const { data, isLoading, isError, error } = api.group.getGameGroupsWithStatus.useQuery();
+  const { data, isLoading, isError, error } = api.group.getAllGroupsWithMembershipStatus.useQuery();
   const router = useRouter();
   const { setGameGroup } = useContext(GameGroupContext);
   const { user } = useUser();
@@ -24,12 +24,12 @@ const SwitchGameGroupView = () => {
   const switchToGroup = api.group.switchActiveGameGroup.useMutation({
     onMutate: (variables) => {
       // Find the name of the group being switched to
-      const groupName = data?.find((g) => g.groupId === variables.groupId)?.GameGroup?.name;
+      const groupName = data?.find((g) => g.groupId === variables.groupId)?.groupName;
       setSwitchingTo(groupName ?? "the selected group");
     },
     onSuccess: async (data) => {
       await ctx.group.getActiveGameGroup.invalidate();
-      await ctx.group.getGameGroupsWithStatus.invalidate();
+      await ctx.group.getAllGroupsWithMembershipStatus.invalidate();
 
       setGameGroup(data.groupId);
       void router.push(`/${data.groupId}/dashboard`);
@@ -40,18 +40,35 @@ const SwitchGameGroupView = () => {
     },
   });
 
+  const requestToJoin = api.user.askForInvite.useMutation({
+    onMutate: (variables) => {
+      const groupName = data?.find((g) => g.groupId === variables.groupId)?.groupName;
+      setSwitchingTo(groupName ?? "the selected group");
+    },
+    onSuccess: async () => {
+      await ctx.group.getAllGroupsWithMembershipStatus.invalidate();
+    },
+    onSettled: () => {
+      setTimeout(() => setSwitchingTo(null), 1500);
+    },
+  });
+
   if (isLoading) return <LoadingPage />;
   if (isError) return <p>{error?.message}</p>;
 
   return (
     <div className="relative mx-auto max-w-7xl sm:px-6 lg:px-8">
-      {/* 🌀 Overlay during group switching */}
-      {switchToGroup.isLoading && (
+      {/* 🌀 Overlay during group switching or requesting */}
+      {(switchToGroup.isLoading || requestToJoin.isLoading) && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm transition-opacity duration-300">
           <div className="flex flex-col items-center space-y-4">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-400 border-t-transparent" />
             <p className="text-lg font-semibold text-gray-700">
-              Taking you to <span className="text-blue-700">{switchingTo}</span> dashboard...
+              {switchToGroup.isLoading ? (
+                <>Taking you to <span className="text-blue-700">{switchingTo}</span> dashboard...</>
+              ) : (
+                <>Requesting to join <span className="text-blue-700">{switchingTo}</span>...</>
+              )}
             </p>
           </div>
         </div>
@@ -94,28 +111,47 @@ const SwitchGameGroupView = () => {
               >
                 <div className="flex flex-1 flex-col p-8">
                   <h3 className="mt-6 text-sm font-medium text-gray-900">
-                    {group.GameGroup.name}
+                    {group.groupName}
                   </h3>
                 </div>
 
                 <div>
                   <div className="-mt-px flex divide-x divide-gray-200">
                     <div className="-ml-px flex w-0 flex-1">
-                      {group.gameGroupIsActive ? (
+                      {group.isActive ? (
                         <div className="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
                           <span className="inline-flex items-center rounded-md bg-green-100 px-2.5 py-0.5 text-sm font-medium text-green-800">
                             Active
                           </span>
                         </div>
+                      ) : group.isMember ? (
+                        group.inviteStatus === "PENDING" ? (
+                          <div className="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
+                            <span className="inline-flex items-center rounded-md bg-blue-100 px-2.5 py-0.5 text-sm font-medium text-blue-800">
+                              Pending Approval
+                            </span>
+                          </div>
+                        ) : (
+                          <button
+                            disabled={switchToGroup.isLoading || requestToJoin.isLoading}
+                            onClick={() => switchToGroup.mutate({ groupId: group.groupId })}
+                            className="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <ArrowsRightLeftIcon className="h-5 w-5 text-gray-600" aria-hidden="true" />
+                            <span className="inline-flex items-center rounded-md bg-yellow-50 px-2.5 py-0.5 text-sm font-medium text-yellow-700">
+                              Switch
+                            </span>
+                          </button>
+                        )
                       ) : (
                         <button
-                          disabled={switchToGroup.isLoading}
-                          onClick={() => switchToGroup.mutate({ groupId: group.groupId })}
-                          className="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={switchToGroup.isLoading || requestToJoin.isLoading}
+                          onClick={() => requestToJoin.mutate({ groupId: group.groupId })}
+                          className="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                         >
                           <ArrowsRightLeftIcon className="h-5 w-5 text-gray-600" aria-hidden="true" />
-                          <span className="inline-flex items-center rounded-md bg-yellow-50 px-2.5 py-0.5 text-sm font-medium text-yellow-700">
-                            Switch
+                          <span className="inline-flex items-center rounded-md bg-purple-50 px-2.5 py-0.5 text-sm font-medium text-purple-700">
+                            Request to Join
                           </span>
                         </button>
                       )}
