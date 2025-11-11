@@ -38,7 +38,8 @@ export const superAdminRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       const adminJunctions = await ctx.prisma.playerGameGroupJunction.findMany({
         where: {
-          role: "ADMIN"
+          role: "ADMIN",
+          inviteStatus: { not: "REMOVED" }
         },
         include: {
           Player: true,

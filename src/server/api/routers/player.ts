@@ -175,6 +175,39 @@ export const playerRouter = createTRPCRouter({
       });
     }),
 
+  updateNickname: privateProcedure
+    .input(
+      z.object({
+        playerId: z.string(),
+        nickname: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Check if nickname is already taken by another player
+      const existingPlayer = await ctx.prisma.player.findFirst({
+        where: {
+          nickname: input.nickname,
+          id: { not: input.playerId }
+        }
+      });
+
+      if (existingPlayer) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Nickname already taken"
+        });
+      }
+
+      return await ctx.prisma.player.update({
+        where: {
+          id: input.playerId
+        },
+        data: {
+          nickname: input.nickname
+        }
+      });
+    }),
+
   updatePlayerAdmin: adminProcedure
     .input(
       z.object({

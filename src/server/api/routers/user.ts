@@ -204,5 +204,108 @@ export const userRouter = createTRPCRouter({
           role: "ADMIN"
         }
       });
+    }),
+
+  removeUserFromGroup: groupAdminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        playerId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      const player = await getPlayerById(ctx.prisma, input.playerId);
+      const currentUser = await getPlayerByClerkId(ctx.prisma, ctx.userId);
+
+      // Prevent admin from removing themselves
+      if (player.id === currentUser.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot remove yourself from the group"
+        });
+      }
+
+      // Check if player is in the group
+      const existingJunction = await ctx.prisma.playerGameGroupJunction.findUnique({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        }
+      });
+
+      if (!existingJunction) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Player is not a member of this group"
+        });
+      }
+
+      // Update player nickname to "Removed" and mark as inactive
+      // This preserves game history while indicating the player is no longer active
+      await ctx.prisma.player.update({
+        where: { id: player.id },
+        data: { nickname: "Removed" }
+      });
+
+      // Set player as inactive in the group
+      return ctx.prisma.playerGameGroupJunction.update({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        },
+        data: {
+          inviteStatus: "REMOVED",
+          gameGroupIsActive: false
+        }
+      });
+    }),
+
+  declineInvite: groupAdminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        playerId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      const player = await getPlayerById(ctx.prisma, input.playerId);
+
+      // Check if player has a pending invite
+      const existingJunction = await ctx.prisma.playerGameGroupJunction.findUnique({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        }
+      });
+
+      if (!existingJunction) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No invite found for this player"
+        });
+      }
+
+      if (existingJunction.inviteStatus !== "PENDING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This invite is not pending"
+        });
+      }
+
+      // Delete the pending invitation
+      return ctx.prisma.playerGameGroupJunction.delete({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        }
+      });
     })
 });
