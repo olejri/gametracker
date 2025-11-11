@@ -181,5 +181,24 @@ export const groupRouter = createTRPCRouter({
         },
         include: { Player: true }
       });
+    }),
+
+  toggleGroupHidden: adminProcedure
+    .input(z.object({ gameGroup: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const group = await ctx.prisma.gameGroup.findUnique({
+        where: { id: input.gameGroup }
+      });
+
+      if (!group) {
+        throw new Error("Group not found");
+      }
+
+      const updated = await ctx.prisma.gameGroup.update({
+        where: { id: input.gameGroup },
+        data: { hidden: !group.hidden }
+      });
+
+      return { hidden: updated.hidden };
     })
 });
