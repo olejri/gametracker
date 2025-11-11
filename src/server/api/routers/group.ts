@@ -107,9 +107,22 @@ export const groupRouter = createTRPCRouter({
   getAllGroupsWithMembershipStatus: privateProcedure.query(async ({ ctx: { prisma, userId } }) => {
     const player = await getPlayerByClerkId(prisma, userId);
     
-    // Get all non-hidden groups
+    // Get all non-hidden groups OR hidden groups where player is a member
     const allGroups = await prisma.gameGroup.findMany({
-      where: { hidden: false },
+      where: {
+        OR: [
+          { hidden: false },
+          {
+            hidden: true,
+            PlayerGameGroupJunction: {
+              some: {
+                playerId: player.id,
+                inviteStatus: { not: "REMOVED" }
+              }
+            }
+          }
+        ]
+      },
       include: {
         PlayerGameGroupJunction: {
           where: { playerId: player.id }
