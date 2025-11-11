@@ -215,6 +215,15 @@ export const userRouter = createTRPCRouter({
     ).mutation(async ({ ctx, input }) => {
       await checkIfGameGroupExists(ctx.prisma, input.groupId);
       const player = await getPlayerById(ctx.prisma, input.playerId);
+      const currentUser = await getPlayerByClerkId(ctx.prisma, ctx.userId);
+
+      // Prevent admin from removing themselves
+      if (player.id === currentUser.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot remove yourself from the group"
+        });
+      }
 
       // Check if player is in the group
       const existingJunction = await ctx.prisma.playerGameGroupJunction.findUnique({
