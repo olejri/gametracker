@@ -233,13 +233,17 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      // Delete the junction record to remove user from group
-      return ctx.prisma.playerGameGroupJunction.delete({
+      // Set player as inactive instead of deleting to preserve game history
+      return ctx.prisma.playerGameGroupJunction.update({
         where: {
           groupId_playerId: {
             groupId: input.groupId,
             playerId: player.id
           }
+        },
+        data: {
+          inviteStatus: "REMOVED",
+          gameGroupIsActive: false
         }
       });
     }),

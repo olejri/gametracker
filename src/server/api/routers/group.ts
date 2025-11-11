@@ -95,7 +95,10 @@ export const groupRouter = createTRPCRouter({
   getGameGroupsWithStatus: privateProcedure.query(async ({ ctx: { prisma, userId } }) => {
     const player = await getPlayerByClerkId(prisma, userId);
     return await prisma.playerGameGroupJunction.findMany({
-      where: { playerId: player.id },
+      where: { 
+        playerId: player.id,
+        inviteStatus: { not: "REMOVED" }
+      },
       include: { GameGroup: true },
       orderBy: { gameGroupIsActive: "desc" }
     });
@@ -138,7 +141,10 @@ export const groupRouter = createTRPCRouter({
     .input(z.object({ groupId: z.string() }))
     .query(async ({ ctx, input }) => {
       const playersFromDb = await ctx.prisma.playerGameGroupJunction.findMany({
-        where: { groupId: input.groupId },
+        where: { 
+          groupId: input.groupId,
+          inviteStatus: { not: "REMOVED" }
+        },
         include: { Player: true }
       });
 
@@ -170,7 +176,10 @@ export const groupRouter = createTRPCRouter({
     .input(z.object({ gameGroup: z.string() }))
     .query(async ({ ctx, input }) => {
       return await ctx.prisma.playerGameGroupJunction.findMany({
-        where: { groupId: input.gameGroup },
+        where: { 
+          groupId: input.gameGroup,
+          inviteStatus: { not: "REMOVED" }
+        },
         include: { Player: true }
       });
     })
