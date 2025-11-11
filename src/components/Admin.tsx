@@ -343,7 +343,7 @@ const AdminView = (props: {
                 className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"
               >
                 <div className="flex flex-1 flex-col p-8">
-                  <h3 className="mt-6 text-sm font-medium text-gray-900">{player.Player.name}</h3>
+                  <h3 className="mt-6 text-sm font-medium text-gray-900">{player.Player.nickname || player.Player.name}</h3>
                   <h3 className="mt-6 text-sm font-medium text-gray-900">Wants to join {gameGroup}</h3>
                 </div>
                 <div>
