@@ -82,7 +82,6 @@ const AdminView = (props: {
 
   // Add new state to control the visibility of the invitation list
   const [showInvitations, setShowInvitations] = React.useState(false);
-  const [showPlayers, setShowPlayers] = React.useState(false);
 
   if (isLoading || emailIsLoading || allPlayersIsloading) {
     return <LoadingPage />;
