@@ -204,5 +204,88 @@ export const userRouter = createTRPCRouter({
           role: "ADMIN"
         }
       });
+    }),
+
+  removeUserFromGroup: groupAdminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        playerId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      const player = await getPlayerById(ctx.prisma, input.playerId);
+
+      // Check if player is in the group
+      const existingJunction = await ctx.prisma.playerGameGroupJunction.findUnique({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        }
+      });
+
+      if (!existingJunction) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Player is not a member of this group"
+        });
+      }
+
+      // Delete the junction record to remove user from group
+      return ctx.prisma.playerGameGroupJunction.delete({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        }
+      });
+    }),
+
+  declineInvite: groupAdminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        playerId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      const player = await getPlayerById(ctx.prisma, input.playerId);
+
+      // Check if player has a pending invite
+      const existingJunction = await ctx.prisma.playerGameGroupJunction.findUnique({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        }
+      });
+
+      if (!existingJunction) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No invite found for this player"
+        });
+      }
+
+      if (existingJunction.inviteStatus !== "PENDING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This invite is not pending"
+        });
+      }
+
+      // Delete the pending invitation
+      return ctx.prisma.playerGameGroupJunction.delete({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        }
+      });
     })
 });

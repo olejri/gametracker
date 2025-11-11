@@ -58,6 +58,24 @@ const AdminView = (props: {
     }
   });
 
+  const removeUser = api.user.removeUserFromGroup.useMutation({
+    onSuccess: () => {
+      void router.reload();
+    },
+    onError: (error) => {
+      console.log(error);
+    }
+  });
+
+  const declineInvite = api.user.declineInvite.useMutation({
+    onSuccess: () => {
+      void router.reload();
+    },
+    onError: (error) => {
+      console.log(error);
+    }
+  });
+
   const [email, setEmail] = React.useState("");
   const [name, setName] = React.useState("");
   const [nickname, setNickname] = React.useState("");
@@ -130,12 +148,12 @@ const AdminView = (props: {
                 <dd className="text-sm text-gray-500">PlayerId: {player.id.substring(0,8)}</dd>
               </dl>
             </div>
-            {player.role !== "ADMIN" && (
-              <div>
-                <div className="-mt-px flex divide-x divide-gray-200">
+            <div>
+              <div className="-mt-px flex divide-x divide-gray-200">
+                {player.role !== "ADMIN" && (
                   <div className="-ml-px flex w-0 flex-1">
                     <button
-                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-b-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-gray-50`}
+                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-gray-50`}
                       onClick={() => {
                         promoteToAdmin.mutate({
                           playerId: player.id,
@@ -148,9 +166,28 @@ const AdminView = (props: {
                       Promote to Admin
                     </button>
                   </div>
+                )}
+                <div className="-ml-px flex w-0 flex-1">
+                  <button
+                    className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-red-50`}
+                    onClick={() => {
+                      if (confirm(`Are you sure you want to remove ${player.nickname || player.name} from the group?`)) {
+                        removeUser.mutate({
+                          playerId: player.id,
+                          groupId: gameGroup
+                        });
+                      }
+                    }}
+                    disabled={removeUser.isLoading}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-red-600">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                    </svg>
+                    Remove
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
           </li>
         ))}
       </ul>
@@ -312,16 +349,34 @@ const AdminView = (props: {
                   <div className="-mt-px flex divide-x divide-gray-200">
                     <div className="-ml-px flex w-0 flex-1">
                       <button
-                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900`}
+                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-green-50`}
                         onClick={() => {
                           acceptPlayer.mutate({
                             playerId: player.playerId,
                             groupId: gameGroup
                           });
                         }}
+                        disabled={acceptPlayer.isLoading}
                       >
-                        <UserPlusIcon className="h-5 w-5 text-gray-600" aria-hidden="true" />
-                        Accept {player.Player.name}
+                        <UserPlusIcon className="h-5 w-5 text-green-600" aria-hidden="true" />
+                        Accept
+                      </button>
+                    </div>
+                    <div className="-ml-px flex w-0 flex-1">
+                      <button
+                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-red-50`}
+                        onClick={() => {
+                          declineInvite.mutate({
+                            playerId: player.playerId,
+                            groupId: gameGroup
+                          });
+                        }}
+                        disabled={declineInvite.isLoading}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-red-600">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Decline
                       </button>
                     </div>
                   </div>
