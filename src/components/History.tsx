@@ -98,7 +98,7 @@ const History = ({ groupName }: DashboardProps) => {
     }
 
     return (
-      <div className="-my-2 -mx-4 sm:-mx-6 lg:-mx-8">
+      <div className="relative -my-2 -mx-4 sm:-mx-6 lg:-mx-8">
         <div className="inline-block min-w-full py-2 align-middle">
           <table className="min-w-full border-separate border-spacing-0">
             <thead>
@@ -210,7 +210,7 @@ const History = ({ groupName }: DashboardProps) => {
       <div className="mt-8 flow-root">
         {/* Filter Controls */}
         {sessions.length > 0 && (
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="relative z-20 mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Game Filter */}
             <Combobox
               as="div"
