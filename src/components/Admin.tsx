@@ -1,9 +1,8 @@
 import React from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage, LoadingSpinner } from "npm/components/loading";
-import { UserPlusIcon, ChevronUpIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
+import { UserPlusIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/router";
-import dayjs from "dayjs";
 import { Button } from "npm/components/ui";
 
 const AdminView = (props: {
@@ -90,8 +89,73 @@ const AdminView = (props: {
   const [name, setName] = React.useState("");
   const [nickname, setNickname] = React.useState("");
 
-  // Add new state to control the visibility of the invitation list
-  const [showInvitations, setShowInvitations] = React.useState(false);
+  // Combine all users into a single list with status information
+  const allUsers = React.useMemo(() => {
+    const users: Array<{
+      id: string;
+      nickname: string | null;
+      name: string;
+      email: string | null;
+      clerkId: string | null;
+      role: string;
+      inviteStatus: string;
+      status: "Admin" | "Member" | "Invited" | "Want to join";
+      statusColor: string;
+    }> = [];
+
+    // Add accepted players (active members and admins)
+    gamesInGroup?.forEach((game) => {
+      if (game.inviteStatus === "ACCEPTED") {
+        users.push({
+          id: game.Player.id,
+          nickname: game.Player.nickname,
+          name: game.Player.name,
+          email: game.Player.email,
+          clerkId: game.Player.clerkId,
+          role: game.role,
+          inviteStatus: game.inviteStatus,
+          status: game.role === "ADMIN" ? "Admin" : "Member",
+          statusColor: game.role === "ADMIN" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
+        });
+      }
+    });
+
+    // Add pending players (want to join)
+    data?.forEach((junction) => {
+      users.push({
+        id: junction.Player.id,
+        nickname: junction.Player.nickname,
+        name: junction.Player.name,
+        email: junction.Player.email,
+        clerkId: junction.Player.clerkId,
+        role: junction.role,
+        inviteStatus: junction.inviteStatus,
+        status: "Want to join",
+        statusColor: "bg-yellow-100 text-yellow-800"
+      });
+    });
+
+    // Add invited players (email invites that haven't been accepted yet)
+    emailInvites?.data.forEach((invite) => {
+      // Only add if there's not already a player with this email in pending status
+      const existingUser = users.find(u => u.email === invite.email_address);
+      if (!existingUser) {
+        users.push({
+          id: invite.id,
+          nickname: null,
+          name: invite.email_address,
+          email: invite.email_address,
+          clerkId: null,
+          role: "MEMBER",
+          inviteStatus: "INVITED",
+          status: "Invited",
+          statusColor: "bg-blue-100 text-blue-800"
+        });
+      }
+    });
+
+    return users;
+  }, [gamesInGroup, data, emailInvites]);
 
   if (isLoading || emailIsLoading || allPlayersIsloading || currentPlayerIsLoading || allGameGroupsIsLoading) {
     return <LoadingPage />;
@@ -101,34 +165,6 @@ const AdminView = (props: {
     return <p>{error?.message}{emailError?.message}{allPlayersError?.message}</p>;
   }
 
-  function ShowInvitationsButton() {
-    return <>
-      {!showInvitations && (<button type="button"
-                                    className="text-gray-700 bg-white font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2"
-                                    onClick={() => setShowInvitations(!showInvitations)}>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5"
-             stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
-        <span className="sr-only">Icon description</span>
-      </button>)}
-      {showInvitations && (<button type="button"
-                                   className="text-gray-700 bg-white font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2"
-                                   onClick={() => setShowInvitations(!showInvitations)}>
-        <ChevronUpIcon className="w-6 h-6" aria-hidden="true" />
-        <span className="sr-only">Icon description</span>
-      </button>)}
-    </>;
-  }
-
-  const players = gamesInGroup?.map((game) =>
-  {
-    return {
-      ...game.Player,
-      "role" : game.role
-    }
-  });
-
   return (
     <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
       <div className="relative">
@@ -136,65 +172,115 @@ const AdminView = (props: {
           <div className="w-full border-t border-gray-300" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-2 text-sm text-gray-500">Active users in {gameGroup}</span>
+          <span className="bg-white px-2 text-sm text-gray-500">All users in {gameGroup}</span>
         </div>
       </div>
       <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {players.map((player) => (
+        {allUsers.map((user) => (
           <li
-            key={player.id}
+            key={user.id}
             className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"
           >
             <div className="flex flex-1 flex-col p-8">
-              <h3 className="mt-6 text-sm font-medium text-gray-900">{player.nickname}</h3>
+              <div className="flex justify-center mb-2">
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${user.statusColor}`}>
+                  {user.status}
+                </span>
+              </div>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">{user.nickname || user.name}</h3>
               <dl className="mt-1 flex flex-grow flex-col justify-between">
-                <dd className="text-sm text-gray-500">Name: {player.name}</dd>
-                <dd className="text-sm text-gray-500">Email: {player.email}</dd>
-                {player.role === "ADMIN" ?
-                  (<dd className="text-sm text-red-500">Role: {player.role}</dd>)
-                  : (<dd className="text-sm text-gray-500">Role: {player.role}</dd>)}
-                <dd className="text-sm text-gray-500">ClerkId: {player.clerkId?.substring(0, 10)}</dd>
-                <dd className="text-sm text-gray-500">PlayerId: {player.id.substring(0,8)}</dd>
+                {user.nickname && <dd className="text-sm text-gray-500">Name: {user.name}</dd>}
+                {user.email && <dd className="text-sm text-gray-500">Email: {user.email}</dd>}
+                {user.clerkId && <dd className="text-sm text-gray-500">ClerkId: {user.clerkId.substring(0, 10)}</dd>}
+                {user.inviteStatus !== "INVITED" && <dd className="text-sm text-gray-500">PlayerId: {user.id.substring(0,8)}</dd>}
               </dl>
             </div>
             <div>
               <div className="-mt-px flex divide-x divide-gray-200">
-                {player.role !== "ADMIN" && (
-                  <div className="-ml-px flex w-0 flex-1">
-                    <button
-                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-gray-50`}
-                      onClick={() => {
-                        promoteToAdmin.mutate({
-                          playerId: player.id,
-                          groupId: gameGroup
-                        });
-                      }}
-                      disabled={promoteToAdmin.isLoading}
-                    >
-                      <ShieldCheckIcon className="h-5 w-5 text-green-600" aria-hidden="true" />
-                      Promote to Admin
-                    </button>
-                  </div>
-                )}
-                {currentPlayer?.id !== player.id && (
-                  <div className="-ml-px flex w-0 flex-1">
-                    <button
-                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-red-50`}
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to remove ${player.nickname || player.name} from the group?`)) {
-                          removeUser.mutate({
-                            playerId: player.id,
+                {/* Show accept/decline for pending users */}
+                {user.inviteStatus === "PENDING" && (
+                  <>
+                    <div className="flex w-0 flex-1">
+                      <button
+                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-green-50`}
+                        onClick={() => {
+                          acceptPlayer.mutate({
+                            playerId: user.id,
                             groupId: gameGroup
                           });
-                        }
-                      }}
-                      disabled={removeUser.isLoading}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-red-600">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-                      </svg>
-                      Remove
-                    </button>
+                        }}
+                        disabled={acceptPlayer.isLoading}
+                      >
+                        <UserPlusIcon className="h-5 w-5 text-green-600" aria-hidden="true" />
+                        Accept
+                      </button>
+                    </div>
+                    <div className="flex w-0 flex-1">
+                      <button
+                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-red-50`}
+                        onClick={() => {
+                          declineInvite.mutate({
+                            playerId: user.id,
+                            groupId: gameGroup
+                          });
+                        }}
+                        disabled={declineInvite.isLoading}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-red-600">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Decline
+                      </button>
+                    </div>
+                  </>
+                )}
+                {/* Show promote/remove for accepted members */}
+                {user.inviteStatus === "ACCEPTED" && (
+                  <>
+                    {user.role !== "ADMIN" && (
+                      <div className="-ml-px flex w-0 flex-1">
+                        <button
+                          className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-gray-50`}
+                          onClick={() => {
+                            promoteToAdmin.mutate({
+                              playerId: user.id,
+                              groupId: gameGroup
+                            });
+                          }}
+                          disabled={promoteToAdmin.isLoading}
+                        >
+                          <ShieldCheckIcon className="h-5 w-5 text-green-600" aria-hidden="true" />
+                          Promote to Admin
+                        </button>
+                      </div>
+                    )}
+                    {currentPlayer?.id !== user.id && (
+                      <div className="-ml-px flex w-0 flex-1">
+                        <button
+                          className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-red-50`}
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to remove ${user.nickname || user.name} from the group?`)) {
+                              removeUser.mutate({
+                                playerId: user.id,
+                                groupId: gameGroup
+                              });
+                            }
+                          }}
+                          disabled={removeUser.isLoading}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-red-600">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                          </svg>
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+                {/* For invited users, just show status */}
+                {user.inviteStatus === "INVITED" && (
+                  <div className="flex w-full justify-center py-4">
+                    <span className="text-sm text-gray-500">Awaiting acceptance</span>
                   </div>
                 )}
               </div>
@@ -335,112 +421,7 @@ const AdminView = (props: {
           </div>
         </div>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center">
-            {ShowInvitationsButton()}
-            <span className="bg-white px-2 text-sm text-gray-500">Pending new users invitations</span>
-            {ShowInvitationsButton()}
-          </div>
-        </div>
-        {showInvitations && (<>
-          <div className="px-4 py-5 sm:p-6">
-            <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {emailInvites?.data.map((invitation) => (
-                <li
-                  key={invitation.id}
-                  className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"
-                >
-                  <div className="flex flex-1 flex-col p-8">
-                    <h3
-                      className="mt-6 text-sm font-medium text-gray-900">{dayjs(invitation.created_at).format("DD.MM.YYYY")}</h3>
-                    <dl className="mt-1 flex flex-grow flex-col justify-between">
-                      <dd className="text-sm text-gray-500">{invitation.email_address}</dd>
-                    </dl>
-                  </div>
-                  <div>
-                    <div className="-mt-px flex divide-x divide-gray-200">
-                      <div className="-ml-px flex w-0 flex-1">
-                      <span
-                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg py-4 text-sm font-semibold text-gray-900`}
-                      >
-                        Status
-                      </span>
-                        <span
-                          className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg py-4 text-sm font-semibold bg-yellow-50 text-yellow-700`}
-                        >
-                        {invitation.status}
-                      </span>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </>)}
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="bg-white px-2 text-sm text-gray-500">Players that wants to join {gameGroup}</span>
-          </div>
-        </div>
-        <div className="px-4 py-5 sm:p-6">
-          <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {data?.map((player) => (
-              <li
-                key={player.playerId}
-                className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"
-              >
-                <div className="flex flex-1 flex-col p-8">
-                  <h3 className="mt-6 text-sm font-medium text-gray-900">{player.Player.nickname || player.Player.name}</h3>
-                  <h3 className="mt-6 text-sm font-medium text-gray-900">Wants to join {gameGroup}</h3>
-                </div>
-                <div>
-                  <div className="-mt-px flex divide-x divide-gray-200">
-                    <div className="-ml-px flex w-0 flex-1">
-                      <button
-                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-green-50`}
-                        onClick={() => {
-                          acceptPlayer.mutate({
-                            playerId: player.playerId,
-                            groupId: gameGroup
-                          });
-                        }}
-                        disabled={acceptPlayer.isLoading}
-                      >
-                        <UserPlusIcon className="h-5 w-5 text-green-600" aria-hidden="true" />
-                        Accept
-                      </button>
-                    </div>
-                    <div className="-ml-px flex w-0 flex-1">
-                      <button
-                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-red-50`}
-                        onClick={() => {
-                          declineInvite.mutate({
-                            playerId: player.playerId,
-                            groupId: gameGroup
-                          });
-                        }}
-                        disabled={declineInvite.isLoading}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-red-600">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        Decline
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </div>);
 };
