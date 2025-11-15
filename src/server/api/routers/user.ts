@@ -81,7 +81,7 @@ export const userRouter = createTRPCRouter({
     )
     .query(async ({ input, ctx }) => {
       await checkIfGameGroupExists(ctx.prisma, input.gameGroup);
-      return ctx.prisma.playerGameGroupJunction.findMany({
+      const pendingPlayers = await ctx.prisma.playerGameGroupJunction.findMany({
         where: {
           groupId: input.gameGroup,
           inviteStatus: "PENDING"
@@ -89,6 +89,34 @@ export const userRouter = createTRPCRouter({
           Player: true
         }
       });
+
+      // Enrich with Clerk email if available
+      const enrichedPlayers = await Promise.all(
+        pendingPlayers.map(async (junction) => {
+          let clerkEmail = junction.Player.email;
+          
+          // If player has clerkId but no email, try to fetch from Clerk
+          if (junction.Player.clerkId && !clerkEmail) {
+            try {
+              const clerkUser = await clerkClient.users.getUser(junction.Player.clerkId);
+              clerkEmail = clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId)?.emailAddress || null;
+            } catch (error) {
+              // If we can't fetch from Clerk, just use what we have
+              console.error("Failed to fetch Clerk user email:", error);
+            }
+          }
+
+          return {
+            ...junction,
+            Player: {
+              ...junction.Player,
+              email: clerkEmail
+            }
+          };
+        })
+      );
+
+      return enrichedPlayers;
     }),
 
   sendInvite: adminProcedure
