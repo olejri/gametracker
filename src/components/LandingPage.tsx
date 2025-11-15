@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { SignInButton } from "@clerk/nextjs";
 
 interface RecentGame {
   id: string;
@@ -53,9 +54,11 @@ export default function LandingPage() {
             Track multiple players, record scores in real time, and settle every
             match with clear standings.
           </p>
-          <button className="rounded-lg bg-green-500 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-green-600">
-            Sign in
-          </button>
+          <SignInButton mode="modal">
+            <button className="rounded-lg bg-green-500 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-green-600 cursor-pointer">
+              Sign in
+            </button>
+          </SignInButton>
         </div>
       </div>
 

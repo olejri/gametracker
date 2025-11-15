@@ -2,8 +2,7 @@ import { type AppType } from "next/app";
 import {
   ClerkProvider,
   SignedIn,
-  SignedOut,
-  SignInButton
+  SignedOut
 } from "@clerk/nextjs";
 
 import { api } from "npm/utils/api";
@@ -40,9 +39,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
         </GameGroupContextProvider>
       </SignedIn>
       <SignedOut>
-        <SignInButton mode="modal">
-          <LandingPage />
-        </SignInButton>
+        <LandingPage />
       </SignedOut>
     </ClerkProvider>
   );
