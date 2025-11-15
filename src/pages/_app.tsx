@@ -16,6 +16,7 @@ import { GameGroupContextProvider } from "npm/context/GameGroupContext";
 import HasChosenGameGroup from "npm/components/HasChosenGameGroup";
 import NotChosenGameGroup from "npm/components/NotChosenGameGroup";
 import MainComponent from "npm/components/MainLayout";
+import LandingPage from "npm/components/LandingPage";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
 
@@ -40,13 +41,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
       </SignedIn>
       <SignedOut>
         <SignInButton mode="modal">
-          <div className="flex flex-col items-center justify-center h-screen bg-gray-800 text-white">
-            <h1 className="text-4xl font-bold mb-4">Welcome to Game Tracker</h1>
-            <p className="text-lg mb-8">Please sign in to track your favorite games</p>
-            <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-              Sign in
-            </button>
-          </div>
+          <LandingPage />
         </SignInButton>
       </SignedOut>
     </ClerkProvider>
