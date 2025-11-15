@@ -54,7 +54,33 @@ export default function LandingPage() {
             Track multiple players, record scores in real time, and settle every
             match with clear standings.
           </p>
-          <SignInButton mode="modal">
+          <SignInButton 
+            mode="modal"
+            appearance={{
+              baseTheme: undefined,
+              variables: {
+                colorPrimary: "#22c55e", // green-500
+                colorBackground: "#1f2937", // gray-800
+                colorInputBackground: "#374151", // gray-700
+                colorInputText: "#ffffff",
+                colorText: "#ffffff",
+                colorTextSecondary: "#d1d5db", // gray-300
+                colorDanger: "#ef4444",
+              },
+              elements: {
+                rootBox: "bg-gray-800",
+                card: "bg-gray-800 border-gray-700",
+                headerTitle: "text-white",
+                headerSubtitle: "text-gray-300",
+                socialButtonsBlockButton: "bg-gray-700 border-gray-600 hover:bg-gray-600 text-white",
+                formButtonPrimary: "bg-green-500 hover:bg-green-600",
+                formFieldInput: "bg-gray-700 border-gray-600 text-white",
+                footerActionLink: "text-green-500 hover:text-green-400",
+                identityPreviewText: "text-white",
+                formFieldLabel: "text-gray-300",
+              }
+            }}
+          >
             <button className="rounded-lg bg-green-500 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-green-600 cursor-pointer">
               Sign in
             </button>
