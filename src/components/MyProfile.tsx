@@ -13,10 +13,11 @@ const MyProfile = () => {
   });
 
   const [nickname, setNickname] = React.useState(player?.nickname ?? "");
+  const [name, setName] = React.useState(player?.name ?? "");
   useEffect(() => {
     setNickname(player?.nickname ?? "");
-
-  }, [player?.nickname]);
+    setName(player?.name ?? "");
+  }, [player?.nickname, player?.name]);
 
   if (isLoading) {
     return <LoadingPage />;
@@ -26,6 +27,14 @@ const MyProfile = () => {
   }
   function isNicknameDifferent() {
     return nickname !== player?.nickname;
+  }
+
+  function isNameDifferent() {
+    return name !== player?.name;
+  }
+
+  function hasChanges() {
+    return isNicknameDifferent() || isNameDifferent();
   }
 
   return (
@@ -40,12 +49,15 @@ const MyProfile = () => {
                   Name
                 </label>
                 <input
-                  value={player.name}
-                  disabled={true}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                  }}
+                  value={name}
                   type="text"
                   name="name"
                   id="name"
                   className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  placeholder="Enter your name"
                 />
               </div>
               <div
@@ -70,10 +82,10 @@ const MyProfile = () => {
           <div className="bg-gray-50 px-4 py-4 sm:px-6">
             {!mutation.isLoading ? (
               <Button
-                disabled={mutation.isLoading || !isNicknameDifferent()}
+                disabled={mutation.isLoading || !hasChanges()}
                 variant="primary"
                 onClick={() => {
-                  mutation.mutate({ nickname });
+                  mutation.mutate({ nickname, name });
                 }}
               >
                 Update profile
