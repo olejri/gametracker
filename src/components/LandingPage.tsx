@@ -56,7 +56,7 @@ export default function LandingPage() {
           </p>
           <SignInButton mode="modal">
             <button className="rounded-lg bg-green-500 px-8 py-3 text-lg font-bold text-white transition-colors hover:bg-green-600 cursor-pointer">
-              Sign in
+              Start tracking
             </button>
           </SignInButton>
         </div>
