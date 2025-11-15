@@ -8,4 +8,77 @@
   --color-tertiary: #00f;
 }
 
+/* Clerk Sign-In Modal Dark Theme - Only for modals triggered from landing page */
+/* This targets the Clerk modal overlay and content */
+.cl-modalContent {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+.cl-card {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.cl-headerTitle,
+.cl-headerSubtitle,
+.cl-socialButtonsBlockButtonText,
+.cl-formFieldLabel,
+.cl-footerActionText {
+  color: #ffffff !important;
+}
+
+.cl-headerSubtitle {
+  color: #d1d5db !important;
+}
+
+.cl-formFieldInput {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #ffffff !important;
+}
+
+.cl-formFieldInput:focus {
+  border-color: #22c55e !important;
+}
+
+.cl-formButtonPrimary {
+  background-color: #22c55e !important;
+  color: #ffffff !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: #16a34a !important;
+}
+
+.cl-socialButtonsBlockButton {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #ffffff !important;
+}
+
+.cl-socialButtonsBlockButton:hover {
+  background-color: #4b5563 !important;
+}
+
+.cl-footerActionLink {
+  color: #22c55e !important;
+}
+
+.cl-footerActionLink:hover {
+  color: #16a34a !important;
+}
+
+.cl-identityPreviewText {
+  color: #ffffff !important;
+}
+
+.cl-dividerLine {
+  background-color: #4b5563 !important;
+}
+
+.cl-dividerText {
+  color: #9ca3af !important;
+}
+
 
