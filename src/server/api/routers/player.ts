@@ -156,24 +156,37 @@ export const playerRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const player = await getPlayerByClerkId(ctx.prisma, ctx.userId)
 
-      //check if nickname is already taken
-      const allPlayers = await ctx.prisma.player.findMany({});
+      // Only check if nickname is taken if it has changed
+      const nicknameChanged = input.nickname !== player.nickname;
+      if (nicknameChanged) {
+        const allPlayers = await ctx.prisma.player.findMany({});
+        const nicknameAlreadyTaken = allPlayers.some((p) => p.nickname === input.nickname && p.id !== player.id);
+        if (nicknameAlreadyTaken) throw new TRPCError(
+          {
+            code: "BAD_REQUEST",
+            message: "Nickname already taken"
+          });
+      }
 
-      const nicknameAlreadyTaken = allPlayers.some((p) => p.nickname === input.nickname && p.id !== player.id);
-      if (nicknameAlreadyTaken) throw new TRPCError(
-        {
-          code: "BAD_REQUEST",
-          message: "Nickname already taken"
-        });
+      // Build update data with only changed fields
+      const updateData: { nickname?: string; name?: string } = {};
+      if (nicknameChanged) {
+        updateData.nickname = input.nickname;
+      }
+      if (input.name !== player.name) {
+        updateData.name = input.name;
+      }
+
+      // Only update if there are changes
+      if (Object.keys(updateData).length === 0) {
+        return player;
+      }
 
       return await ctx.prisma.player.update({
         where: {
           id: player.id
         },
-        data: {
-          nickname: input.nickname,
-          name: input.name
-        }
+        data: updateData
       });
     }),
 
