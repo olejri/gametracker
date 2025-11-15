@@ -89,14 +89,6 @@ const AdminView = (props: {
   const [name, setName] = React.useState("");
   const [nickname, setNickname] = React.useState("");
 
-  if (isLoading || emailIsLoading || allPlayersIsloading || currentPlayerIsLoading || allGameGroupsIsLoading) {
-    return <LoadingPage />;
-  }
-
-  if (isError || emailIsError || allPlayersIsError) {
-    return <p>{error?.message}{emailError?.message}{allPlayersError?.message}</p>;
-  }
-
   // Combine all users into a single list with status information
   const allUsers = React.useMemo(() => {
     const users: Array<{
@@ -164,6 +156,14 @@ const AdminView = (props: {
 
     return users;
   }, [gamesInGroup, data, emailInvites]);
+
+  if (isLoading || emailIsLoading || allPlayersIsloading || currentPlayerIsLoading || allGameGroupsIsLoading) {
+    return <LoadingPage />;
+  }
+
+  if (isError || emailIsError || allPlayersIsError) {
+    return <p>{error?.message}{emailError?.message}{allPlayersError?.message}</p>;
+  }
 
   return (
     <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">

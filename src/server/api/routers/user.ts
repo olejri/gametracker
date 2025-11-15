@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import * as process from "process";
 import { type ClerkInvite } from "npm/components/Types";
 import { checkIfGameGroupExists, getPlayerByClerkId, getPlayerById } from "npm/server/helpers/filterUserForClient";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export const userRouter = createTRPCRouter({
   getPlayer: privateProcedure
@@ -99,7 +100,10 @@ export const userRouter = createTRPCRouter({
           if (junction.Player.clerkId && !clerkEmail) {
             try {
               const clerkUser = await clerkClient.users.getUser(junction.Player.clerkId);
-              clerkEmail = clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId)?.emailAddress || null;
+              const primaryEmail = clerkUser.emailAddresses.find(
+                e => e.id === clerkUser.primaryEmailAddressId
+              );
+              clerkEmail = primaryEmail?.emailAddress ?? null;
             } catch (error) {
               // If we can't fetch from Clerk, just use what we have
               console.error("Failed to fetch Clerk user email:", error);
