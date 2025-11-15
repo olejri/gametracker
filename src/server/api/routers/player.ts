@@ -149,7 +149,8 @@ export const playerRouter = createTRPCRouter({
   updatePlayer: privateProcedure
     .input(
       z.object({
-        nickname: z.string()
+        nickname: z.string(),
+        name: z.string()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -158,7 +159,7 @@ export const playerRouter = createTRPCRouter({
       //check if nickname is already taken
       const allPlayers = await ctx.prisma.player.findMany({});
 
-      const nicknameAlreadyTaken = allPlayers.some((player) => player.nickname === input.nickname);
+      const nicknameAlreadyTaken = allPlayers.some((p) => p.nickname === input.nickname && p.id !== player.id);
       if (nicknameAlreadyTaken) throw new TRPCError(
         {
           code: "BAD_REQUEST",
@@ -170,7 +171,8 @@ export const playerRouter = createTRPCRouter({
           id: player.id
         },
         data: {
-          nickname: input.nickname
+          nickname: input.nickname,
+          name: input.name
         }
       });
     }),
