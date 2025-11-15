@@ -45,7 +45,7 @@ const AdminView = (props: {
   const router = useRouter();
   const acceptPlayer = api.user.acceptInvite.useMutation({
     onSuccess: () => {
-      void router.push(`/${gameGroup}/dashboard`);
+      void router.reload();
     }
   });
 
