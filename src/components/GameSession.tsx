@@ -94,7 +94,7 @@ const GameSession = (props: GameSessionProps) => {
     );
   }
   if (isError) {
-    return <div className="text-center mt-4">{error?.message}</div>;
+    return <div className="text-center mt-4 text-gray-900 dark:text-white">{error?.message}</div>;
   }
 
   const isInReadOnlyMode = game.status === "Completed" || game.status === "Cancelled";
@@ -115,7 +115,7 @@ const GameSession = (props: GameSessionProps) => {
   };
   return (
     <div className="container mx-auto sm:px-6 lg:px-8">
-      <div className="overflow-hidden bg-white shadow sm:rounded-lg">
+      <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
         <div className="grid grid-cols-2">
           <div className="px-4 py-5 sm:p-6">
             <Image src={game.image_url} alt="My Image" width={300} height={300} className="rounded-lg mt-4" />
@@ -123,12 +123,12 @@ const GameSession = (props: GameSessionProps) => {
               {game.status}
             </StatusBadge>
           </div>
-          <div className="overflow-hidden rounded-lg bg-white shadow">
+          <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
               <div className="isolate -space-y-px rounded-md shadow-sm">
                 <div
-                  className="relative rounded-md rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                  <label htmlFor="name" className="block text-xs font-medium text-gray-900">
+                  className="relative rounded-md rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="name" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Game Name
                   </label>
                   <input
@@ -137,13 +137,13 @@ const GameSession = (props: GameSessionProps) => {
                     value={game.gameName}
                     name="name"
                     id="name"
-                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     placeholder="Game Name"
                   />
                 </div>
                 <div
-                  className="relative rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                  <label htmlFor="description" className="block text-xs font-medium text-gray-900">
+                  className="relative rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="description" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Description
                   </label>
                   {!updateDescription.isLoading  ? <input
@@ -162,7 +162,7 @@ const GameSession = (props: GameSessionProps) => {
                     value={description}
                     name="description"
                     id="description"
-                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   />: <LoadingSpinner size={30} />}
                 </div>
                 {game.expansions.length > 0 && <div
@@ -171,7 +171,7 @@ const GameSession = (props: GameSessionProps) => {
                     Expansions
                   </label>
                   <div
-                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   >
                     {game.expansions.map((expansion) => (
                       <span
@@ -205,7 +205,7 @@ const GameSession = (props: GameSessionProps) => {
                       value={dateText}
                       name="date"
                       id="date"
-                      className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                      className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     />: <LoadingSpinner size={30} />}
                 </div>
               </div>

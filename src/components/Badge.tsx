@@ -12,7 +12,7 @@ const Badge: React.FC<BadgeProps> = ({ children, className = "", title }) => {
     <span
       title={title}
       className={classNames(
-        "inline-flex items-center justify-center rounded-full 0 px-2 text-xs font-medium text-gray-700 ring-2 ring-white",
+        "inline-flex items-center justify-center rounded-full 0 px-2 text-xs font-medium text-gray-700 ring-2 ring-white dark:text-gray-300 dark:ring-gray-900",
         className
       )}
     >

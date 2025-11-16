@@ -12,8 +12,8 @@ import { classNames } from "npm/lib/utils";
 import { Combobox } from "@headlessui/react";
 import { ChevronUpDownIcon, XMarkIcon } from "@heroicons/react/20/solid";
 
-const tdBorder = "border-b border-gray-300";
-const hiddenLgCell = "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell";
+const tdBorder = "border-b border-gray-300 dark:border-gray-700";
+const hiddenLgCell = "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell dark:text-gray-400";
 
 const History = ({ groupName }: DashboardProps) => {
   const { data, isLoading, isError } = api.session.getAllCompletedSessions.useQuery({
@@ -82,16 +82,16 @@ const History = ({ groupName }: DashboardProps) => {
     }
 
     if (isError) {
-      return <div className="px-4 py-6 text-sm text-red-600">Failed to load history.</div>;
+      return <div className="px-4 py-6 text-sm text-red-600 dark:text-red-400">Failed to load history.</div>;
     }
 
     if (!sessions.length) {
-      return <div className="px-4 py-6 text-sm text-gray-600">No completed sessions yet.</div>;
+      return <div className="px-4 py-6 text-sm text-gray-600 dark:text-gray-400">No completed sessions yet.</div>;
     }
 
     if (!filteredSessions.length) {
       return (
-        <div className="px-4 py-6 text-sm text-gray-600">
+        <div className="px-4 py-6 text-sm text-gray-600 dark:text-gray-400">
           No sessions match the current filters.
         </div>
       );
@@ -122,7 +122,7 @@ const History = ({ groupName }: DashboardProps) => {
                     <td
                       className={classNames(
                         rowHasBorder && tdBorder,
-                        "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                        "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8 dark:text-white",
                       )}
                     >
                       <Link href={href} className="block h-full w-full">
@@ -133,7 +133,7 @@ const History = ({ groupName }: DashboardProps) => {
                     <td
                       className={classNames(
                         rowHasBorder && tdBorder,
-                        "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                        "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8 dark:text-white",
                       )}
                     >
                       <Link href={href} className="block h-full w-full">
@@ -182,7 +182,7 @@ const History = ({ groupName }: DashboardProps) => {
                     <td
                       className={classNames(
                         rowHasBorder && tdBorder,
-                        "w-6 px-3 py-4 text-sm text-gray-500",
+                        "w-6 px-3 py-4 text-sm text-gray-500 dark:text-gray-400",
                       )}
                     >
                       <Link href={href} className="block h-full w-full">
@@ -220,12 +220,12 @@ const History = ({ groupName }: DashboardProps) => {
                 setGameQuery("");
               }}
             >
-              <Combobox.Label className="block text-sm font-medium text-gray-900">
+              <Combobox.Label className="block text-sm font-medium text-gray-900 dark:text-white">
                 Filter by Game
               </Combobox.Label>
               <div className="relative mt-2">
                 <Combobox.Input
-                  className="w-full rounded-md border-0 bg-white py-2 pl-3 pr-20 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  className="w-full rounded-md border-0 bg-white py-2 pl-3 pr-20 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:ring-gray-600"
                   onChange={(event) => setGameQuery(event.target.value)}
                   displayValue={(gameName: string) => gameName}
                   placeholder="Search games..."
@@ -238,7 +238,7 @@ const History = ({ groupName }: DashboardProps) => {
                         setGameFilter("");
                         setGameQuery("");
                       }}
-                      className="mr-1 rounded p-1 hover:bg-gray-100"
+                      className="mr-1 rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       <XMarkIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                     </button>
@@ -252,7 +252,7 @@ const History = ({ groupName }: DashboardProps) => {
                 </div>
 
                 {filteredGames.length > 0 && (
-                  <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                  <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-800 dark:ring-gray-600">
                     {filteredGames.map((game) => (
                       <Combobox.Option
                         key={game}
@@ -260,7 +260,7 @@ const History = ({ groupName }: DashboardProps) => {
                         className={({ active }) =>
                           classNames(
                             "relative cursor-default select-none py-2 pl-3 pr-9",
-                            active ? "bg-indigo-600 text-white" : "text-gray-900"
+                            active ? "bg-indigo-600 text-white" : "text-gray-900 dark:text-white"
                           )
                         }
                       >
@@ -290,12 +290,12 @@ const History = ({ groupName }: DashboardProps) => {
                 setPlayerQuery("");
               }}
             >
-              <Combobox.Label className="block text-sm font-medium text-gray-900">
+              <Combobox.Label className="block text-sm font-medium text-gray-900 dark:text-white">
                 Filter by Player
               </Combobox.Label>
               <div className="relative mt-2">
                 <Combobox.Input
-                  className="w-full rounded-md border-0 bg-white py-2 pl-3 pr-20 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  className="w-full rounded-md border-0 bg-white py-2 pl-3 pr-20 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:ring-gray-600"
                   onChange={(event) => setPlayerQuery(event.target.value)}
                   displayValue={(playerId: string) => {
                     const player = uniquePlayers.find((p) => p.id === playerId);
@@ -311,7 +311,7 @@ const History = ({ groupName }: DashboardProps) => {
                         setPlayerFilter("");
                         setPlayerQuery("");
                       }}
-                      className="mr-1 rounded p-1 hover:bg-gray-100"
+                      className="mr-1 rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       <XMarkIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                     </button>
@@ -325,7 +325,7 @@ const History = ({ groupName }: DashboardProps) => {
                 </div>
 
                 {filteredPlayers.length > 0 && (
-                  <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                  <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-800 dark:ring-gray-600">
                     {filteredPlayers.map((player) => (
                       <Combobox.Option
                         key={player.id}
@@ -333,7 +333,7 @@ const History = ({ groupName }: DashboardProps) => {
                         className={({ active }) =>
                           classNames(
                             "relative cursor-default select-none py-2 pl-3 pr-9",
-                            active ? "bg-indigo-600 text-white" : "text-gray-900"
+                            active ? "bg-indigo-600 text-white" : "text-gray-900 dark:text-white"
                           )
                         }
                       >
