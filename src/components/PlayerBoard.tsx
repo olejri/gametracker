@@ -154,10 +154,10 @@ const PlayerBoard = (props: {
             </div>
           </Dialog>
         </Transition.Root>
-        <div className="hidden sm:relative sm:inset-y-0 sm:z-50 sm:flex sm:w-72 sm:flex-col sm:flex-none">
-          <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r-2 border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 px-6 pb-4 min-h-screen">
-            <nav className="flex flex-1 flex-col">
-              <ul role="list" className="flex flex-1 flex-col gap-y-7">
+        <div className="hidden sm:flex sm:w-72 sm:flex-col sm:flex-none sm:mr-4">
+          <div className="flex flex-col gap-y-5 bg-white dark:bg-gray-800 px-6 py-6 rounded-lg shadow-none sm:rounded-lg">
+            <nav className="flex flex-col">
+              <ul role="list" className="flex flex-col gap-y-7">
                 <li>
                   <ul role="list" className="-mx-2 space-y-1">
                     {navigation.map((item) => (
