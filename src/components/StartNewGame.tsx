@@ -96,7 +96,7 @@ const StartNewGame = (props: DashboardProps) => {
                           id={`exp-${game.id}`}
                           name={`exp-${game.id}`}
                           type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600"
+                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600 dark:bg-gray-700 dark:checked:bg-indigo-600 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
                         />
                       </div>
                     </div>
@@ -123,7 +123,7 @@ const StartNewGame = (props: DashboardProps) => {
                           id={`person-${person.id}`}
                           name={`person-${person.id}`}
                           type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600"
+                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600 dark:bg-gray-700 dark:checked:bg-indigo-600 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
                         />
                       </div>
                     </div>
