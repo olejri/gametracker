@@ -166,8 +166,8 @@ const GameSession = (props: GameSessionProps) => {
                   />: <LoadingSpinner size={30} />}
                 </div>
                 {game.expansions.length > 0 && <div
-                  className="relative rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                  <label htmlFor="expansion" className="block text-xs font-medium text-gray-900">
+                  className="relative rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="expansion" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Expansions
                   </label>
                   <div
@@ -176,14 +176,14 @@ const GameSession = (props: GameSessionProps) => {
                     {game.expansions.map((expansion) => (
                       <span
                         key={expansion.gameId}
-                        className="inline-flex items-center rounded-md bg-green-100 px-2.5 py-0.5 text-sm font-medium text-green-800">
+                        className="inline-flex items-center rounded-md bg-green-100 px-2.5 py-0.5 text-sm font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
                   {expansion.gameName}
                 </span>))}
                   </div>
                 </div>}
                 <div
-                  className="relative rounded-b-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                  <label htmlFor="date" className="block text-xs font-medium text-gray-900">
+                  className="relative rounded-b-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="date" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Date
                   </label>
                   {!updateDate.isLoading  ?
@@ -213,7 +213,7 @@ const GameSession = (props: GameSessionProps) => {
           </div>
         </div>
       </div>
-      <div className="overflow-hidden bg-white shadow sm:rounded-lg">
+      <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {sortPlayers(game.players).map((player) => (
@@ -228,7 +228,7 @@ const GameSession = (props: GameSessionProps) => {
           </div>
         </div>
       </div>
-      {game.status === GameSessionStatus.Ongoing ? <div className="overflow-hidden bg-white shadow sm:rounded-lg">
+      {game.status === GameSessionStatus.Ongoing ? <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
         <div className="px-4 py-5 sm:p-6">
           <div className="gap-2">
             <Button
@@ -259,7 +259,7 @@ const GameSession = (props: GameSessionProps) => {
               Delete session
             </Button>
           </div>
-          {haveError ? <div className="text-center mt-4 text-red-600">Error while finish or deleting the session</div> : <></>}
+          {haveError ? <div className="text-center mt-4 text-red-600 dark:text-red-400">Error while finish or deleting the session</div> : <></>}
         </div>
       </div> : <> </>}
     </div>
