@@ -81,19 +81,19 @@ const SuperAdminView = () => {
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Super Admin Dashboard</h1>
-        <p className="mt-2 text-sm text-gray-600">Manage all players, groups, and admins across the platform</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Super Admin Dashboard</h1>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Manage all players, groups, and admins across the platform</p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6">
+      <div className="border-b border-gray-200 mb-6 dark:border-gray-700">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab("players")}
             className={`${
               activeTab === "players"
-                ? "border-indigo-500 text-indigo-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
           >
             All Players ({allPlayers?.length || 0})
@@ -102,8 +102,8 @@ const SuperAdminView = () => {
             onClick={() => setActiveTab("groups")}
             className={`${
               activeTab === "groups"
-                ? "border-indigo-500 text-indigo-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
           >
             All Groups ({allGroups?.length || 0})
@@ -112,8 +112,8 @@ const SuperAdminView = () => {
             onClick={() => setActiveTab("admins")}
             className={`${
               activeTab === "admins"
-                ? "border-indigo-500 text-indigo-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
           >
             All Admins ({allAdmins?.length || 0})
@@ -124,27 +124,27 @@ const SuperAdminView = () => {
       {/* Players Tab */}
       {activeTab === "players" && (
         <div>
-          <div className="overflow-hidden bg-white shadow sm:rounded-md">
-            <ul role="list" className="divide-y divide-gray-200">
+          <div className="overflow-hidden bg-white shadow sm:rounded-md dark:bg-gray-800">
+            <ul role="list" className="divide-y divide-gray-200 dark:divide-gray-700">
               {allPlayers?.map((player) => (
-                <li key={player.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                <li key={player.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center">
-                        <p className="truncate text-sm font-medium text-indigo-600">{player.nickname || player.name}</p>
+                        <p className="truncate text-sm font-medium text-indigo-600 dark:text-indigo-400">{player.nickname || player.name}</p>
                         {player.isSuperAdmin && (
-                          <span className="ml-2 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                          <span className="ml-2 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-300">
                             SUPERADMIN
                           </span>
                         )}
                       </div>
                       <div className="mt-2 sm:flex sm:justify-between">
                         <div className="sm:flex">
-                          <p className="flex items-center text-sm text-gray-500">
+                          <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                             {player.email}
                           </p>
                         </div>
-                        <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                        <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 dark:text-gray-400">
                           <p>
                             Member of {player.PlayerGameGroupJunction.length} group(s)
                           </p>
@@ -153,8 +153,8 @@ const SuperAdminView = () => {
                       <div className="mt-2">
                         {player.PlayerGameGroupJunction.map((junction) => (
                           <div key={junction.id} className="inline-flex items-center mr-4 mb-2">
-                            <span className="text-xs text-gray-600">{junction.GameGroup.name}</span>
-                            <span className={`ml-1 text-xs ${junction.role === "ADMIN" ? "text-red-600" : "text-gray-500"}`}>
+                            <span className="text-xs text-gray-600 dark:text-gray-400">{junction.GameGroup.name}</span>
+                            <span className={`ml-1 text-xs ${junction.role === "ADMIN" ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}>
                               ({junction.role})
                             </span>
                             <button
@@ -213,11 +213,11 @@ const SuperAdminView = () => {
                 Create New Dashboard
               </button>
             ) : (
-              <div className="bg-white shadow sm:rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Dashboard</h3>
+              <div className="bg-white shadow sm:rounded-lg p-6 dark:bg-gray-800">
+                <h3 className="text-lg font-medium text-gray-900 mb-4 dark:text-white">Create New Dashboard</h3>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="groupId" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="groupId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Dashboard ID (used in URL)
                     </label>
                     <input
@@ -226,11 +226,11 @@ const SuperAdminView = () => {
                       value={newGroupId}
                       onChange={(e) => setNewGroupId(e.target.value)}
                       placeholder="e.g., game-night-2024"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder:text-gray-400"
                     />
                   </div>
                   <div>
-                    <label htmlFor="groupName" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="groupName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Dashboard Name
                     </label>
                     <input
@@ -239,7 +239,7 @@ const SuperAdminView = () => {
                       value={newGroupName}
                       onChange={(e) => setNewGroupName(e.target.value)}
                       placeholder="e.g., Game Night 2024"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder:text-gray-400"
                     />
                   </div>
                   <div className="flex gap-3">
@@ -275,10 +275,10 @@ const SuperAdminView = () => {
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {allGroups?.map((group) => (
-              <div key={group.id} className="overflow-hidden bg-white shadow rounded-lg">
+              <div key={group.id} className="overflow-hidden bg-white shadow rounded-lg dark:bg-gray-800">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">{group.name}</h3>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">{group.name}</h3>
                     <button
                       onClick={() => {
                         if (confirm(`Delete group "${group.name}"? This will remove all members.`)) {
@@ -290,22 +290,22 @@ const SuperAdminView = () => {
                       <TrashIcon className="h-5 w-5" />
                     </button>
                   </div>
-                  <div className="text-sm text-gray-500 mb-2">
+                  <div className="text-sm text-gray-500 mb-2 dark:text-gray-400">
                     ID: <span className="font-mono text-xs">{group.id}</span>
                   </div>
-                  <div className="text-sm text-gray-500 mb-4">
+                  <div className="text-sm text-gray-500 mb-4 dark:text-gray-400">
                     {group.PlayerGameGroupJunction.length} member(s)
                   </div>
 
                   {/* Add Member Section */}
                   {addingMemberToGroup === group.id ? (
-                    <div className="mb-4 p-3 bg-gray-50 rounded-md">
-                      <h4 className="text-sm font-medium text-gray-900 mb-2">Add Member</h4>
+                    <div className="mb-4 p-3 bg-gray-50 rounded-md dark:bg-gray-700">
+                      <h4 className="text-sm font-medium text-gray-900 mb-2 dark:text-white">Add Member</h4>
                       <div className="space-y-2 max-h-40 overflow-y-auto">
                         {getAvailablePlayers(group.id).length > 0 ? (
                           getAvailablePlayers(group.id).map((player) => (
                             <div key={player.id} className="flex items-center justify-between text-sm">
-                              <span className="text-gray-700">{player.nickname || player.name}</span>
+                              <span className="text-gray-700 dark:text-gray-300">{player.nickname || player.name}</span>
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => {
@@ -359,8 +359,8 @@ const SuperAdminView = () => {
                     {group.PlayerGameGroupJunction.map((junction) => (
                       <div key={junction.id} className="flex items-center justify-between text-sm">
                         <div>
-                          <span className="text-gray-900">{junction.Player.nickname || junction.Player.name}</span>
-                          <span className={`ml-2 ${junction.role === "ADMIN" ? "text-red-600 font-medium" : "text-gray-500"}`}>
+                          <span className="text-gray-900 dark:text-white">{junction.Player.nickname || junction.Player.name}</span>
+                          <span className={`ml-2 ${junction.role === "ADMIN" ? "text-red-600 font-medium dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}>
                             ({junction.role})
                           </span>
                         </div>
@@ -390,20 +390,20 @@ const SuperAdminView = () => {
       {/* Admins Tab */}
       {activeTab === "admins" && (
         <div>
-          <div className="overflow-hidden bg-white shadow sm:rounded-md">
-            <ul role="list" className="divide-y divide-gray-200">
+          <div className="overflow-hidden bg-white shadow sm:rounded-md dark:bg-gray-800">
+            <ul role="list" className="divide-y divide-gray-200 dark:divide-gray-700">
               {allAdmins?.map((junction) => (
-                <li key={junction.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                <li key={junction.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center">
-                        <p className="truncate text-sm font-medium text-indigo-600">
+                        <p className="truncate text-sm font-medium text-indigo-600 dark:text-indigo-400">
                           {junction.Player.nickname || junction.Player.name}
                         </p>
-                        <span className="ml-2 text-sm text-gray-500">→</span>
-                        <p className="ml-2 text-sm font-medium text-gray-900">{junction.GameGroup.name}</p>
+                        <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">→</span>
+                        <p className="ml-2 text-sm font-medium text-gray-900 dark:text-white">{junction.GameGroup.name}</p>
                       </div>
-                      <div className="mt-2 text-sm text-gray-500">
+                      <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                         {junction.Player.email}
                       </div>
                     </div>
