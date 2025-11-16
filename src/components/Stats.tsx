@@ -120,42 +120,42 @@ const GameHighScoresTable: React.FC<{
   highScores: Array<{ gameName: string; highScore: number; playerName: string }>;
 }> = ({ highScores }) => {
   return (
-    <div className="mt-10 bg-white rounded-xl shadow p-4">
-      <h2 className="text-xl font-semibold text-center mb-4">
+    <div className="mt-10 bg-white rounded-xl shadow p-4 dark:bg-gray-800">
+      <h2 className="text-xl font-semibold text-center mb-4 dark:text-white">
         Game High Scores
       </h2>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                 Game
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                 High Score
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                 Player
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
             {highScores.map((game, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                   {game.gameName}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold dark:text-white">
                   {game.highScore}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {game.playerName}
                 </td>
               </tr>
             ))}
             {highScores.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                   No high scores available yet. Scores must be numeric values.
                 </td>
               </tr>
@@ -182,31 +182,31 @@ const PlayerPositionHeatmap: React.FC<{
   const maxVal = Math.max(...data.flatMap((row) => players.map((p) => row[p] ?? 0)));
 
   return (
-    <div className="mt-10 bg-white rounded-xl shadow p-4">
-      <h2 className="text-xl font-semibold text-center mb-4">
+    <div className="mt-10 bg-white rounded-xl shadow p-4 dark:bg-gray-800">
+      <h2 className="text-xl font-semibold text-center mb-4 dark:text-white">
         Player Position Distribution
       </h2>
       <div className="overflow-x-auto">
         <div
-          className="grid border-b border-gray-200"
+          className="grid border-b border-gray-200 dark:border-gray-700"
           style={{
             gridTemplateColumns: `100px repeat(${players.length}, minmax(90px, 1fr))`,
           }}
         >
-          <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500">
+          <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
             Position
           </div>
           {players.map((p) => (
             <div
               key={p}
-              className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center"
+              className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center dark:text-gray-400"
             >
               {p}
             </div>
           ))}
         </div>
 
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
           {data.map(({ position, ...rest }) => (
             <div
               key={position}
@@ -215,7 +215,7 @@ const PlayerPositionHeatmap: React.FC<{
                 gridTemplateColumns: `100px repeat(${players.length}, minmax(90px, 1fr))`,
               }}
             >
-              <div className="px-3 py-2 text-sm font-medium text-gray-800">
+              <div className="px-3 py-2 text-sm font-medium text-gray-800 dark:text-white">
                 {position}
               </div>
               {players.map((p) => {
@@ -235,7 +235,7 @@ const PlayerPositionHeatmap: React.FC<{
                     title={`${p} • Position ${position} • ${count} times (${percentage.toFixed(1)}%)`}
                   >
                     <span>{count}</span>
-                    <span className="text-[11px] text-gray-600">{percentage.toFixed(0)}%</span>
+                    <span className="text-[11px] text-gray-600 dark:text-gray-700">{percentage.toFixed(0)}%</span>
                   </div>
                 );
               })}
@@ -258,57 +258,57 @@ const BestGamePerPlayerTable: React.FC<{
   }>;
 }> = ({ bestGames }) => {
   return (
-    <div className="mt-10 bg-white rounded-xl shadow p-4">
-      <h2 className="text-xl font-semibold text-center mb-4">
+    <div className="mt-10 bg-white rounded-xl shadow p-4 dark:bg-gray-800">
+      <h2 className="text-xl font-semibold text-center mb-4 dark:text-white">
         Best Game Per Player
       </h2>
-      <p className="text-center text-sm text-gray-600 mb-4 px-2">
+      <p className="text-center text-sm text-gray-600 mb-4 px-2 dark:text-gray-400">
         Shows each player&apos;s best game using a normalized rank.
         A 1st place finish is 100% and last place is 0%, fairly weighting games
         with different player counts.
       </p>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
               Player
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
               Best Game
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
               True Avg. Score
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
               Games Played
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
               Avg Position
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
               Bayesian Score
             </th>
           </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
           {bestGames.map((item, index) => (
-            <tr key={index} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                 {item.playerName}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                 {item.bestGame}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
                     {Math.round(item.trueAvgScore * 100)}%
                   </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center dark:text-gray-400">
                 {item.gamesPlayed}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center dark:text-gray-400">
                 {item.avgPosition.toFixed(1)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
@@ -326,7 +326,7 @@ const BestGamePerPlayerTable: React.FC<{
           ))}
           {bestGames.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+              <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                 No data available yet. Play some games to see best game statistics!
               </td>
             </tr>
@@ -334,7 +334,7 @@ const BestGamePerPlayerTable: React.FC<{
           </tbody>
         </table>
       </div>
-      <div className="mt-4 text-xs text-gray-500 text-center">
+      <div className="mt-4 text-xs text-gray-500 text-center dark:text-gray-400">
         <p>💡 <strong>Bayesian Score</strong> is a confidence-adjusted score. Games with few plays are pulled toward a 50% average.</p>
         <p>This provides a more realistic ranking than True Average Score alone.</p>
       </div>
@@ -428,7 +428,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
 
   return (
     <div className="px-4 sm:px-6 lg:px-14">
-      <h1 className="text-2xl font-bold text-center">Stats</h1>
+      <h1 className="text-2xl font-bold text-center dark:text-white">Stats</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
         <StatCard title="Total Sessions" value={sessions.length} />

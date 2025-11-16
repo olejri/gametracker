@@ -49,31 +49,31 @@ const InfoModal = (props: {
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <Dialog.Panel
-                className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 dark:bg-gray-800">
                 <div>
                   <div className="mt-3 text-center sm:mt-5">
-                    <Dialog.Title as="h3"   className="block text-2xl font-medium text-gray-700">
+                    <Dialog.Title as="h3"   className="block text-2xl font-medium text-gray-700 dark:text-gray-200">
                       {title}
                     </Dialog.Title>
                     <div className="mt-2">
                       <div className="grid grid-cols-1 gap-2">
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           <div dangerouslySetInnerHTML={{ __html: message }} />
                         </div>
                         <div>
                           <label
-                            className="block text-lg font-medium text-gray-700"
+                            className="block text-lg font-medium text-gray-700 dark:text-gray-300"
                           >Categories:</label>
                           <p
-                            className="text-sm text-gray-500"
+                            className="text-sm text-gray-500 dark:text-gray-400"
                           >{categories}</p>
                         </div>
                         <div>
                           <label
-                            className="block text-lg font-medium text-gray-700"
+                            className="block text-lg font-medium text-gray-700 dark:text-gray-300"
                           >Mechanics:</label>
                           <p
-                            className="text-sm text-gray-500"
+                            className="text-sm text-gray-500 dark:text-gray-400"
                           >{mechanics}</p>
                         </div>
                       </div>
@@ -83,7 +83,7 @@ const InfoModal = (props: {
                 <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
                   <button
                     type="button"
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0 dark:bg-gray-700 dark:text-white dark:ring-gray-600 dark:hover:bg-gray-600"
                     onClick={() => setOpen({ open: false, name: "" })}
                   >
                     Back
