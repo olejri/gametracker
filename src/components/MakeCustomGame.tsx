@@ -38,12 +38,12 @@ const MakeCustomGame = () => {
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
-        <div className="overflow-hidden rounded-lg bg-white shadow">
+        <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
           <div className="px-4 py-5 sm:p-6">
             <div className="isolate -space-y-px rounded-md shadow-sm">
               <div
-                className="relative rounded-md rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                <label htmlFor="name" className="block text-xs font-medium text-gray-900">
+                className="relative rounded-md rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                <label htmlFor="name" className="block text-xs font-medium text-gray-900 dark:text-white">
                   Name
                 </label>
                 <input
@@ -55,13 +55,13 @@ const MakeCustomGame = () => {
                   type="text"
                   name="name"
                   id="name"
-                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   placeholder="Game Name"
                 />
               </div>
               <div
-                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                <label htmlFor="description" className="block text-xs font-medium text-gray-900">
+                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                <label htmlFor="description" className="block text-xs font-medium text-gray-900 dark:text-white">
                   Description
                 </label>
                 <input
@@ -73,13 +73,13 @@ const MakeCustomGame = () => {
                   type="text"
                   name="description"
                   id="description"
-                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   placeholder="Short description of the game"
                 />
               </div>
               <div
-                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                <label htmlFor="image_url" className="block text-xs font-medium text-gray-900">
+                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                <label htmlFor="image_url" className="block text-xs font-medium text-gray-900 dark:text-white">
                   Image Url
                 </label>
                 <input
@@ -91,13 +91,13 @@ const MakeCustomGame = () => {
                   type="text"
                   name="image_url"
                   id="image_url"
-                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   placeholder="Full path to image"
                 />
               </div>
               <div
-                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                <label htmlFor="players" className="block text-xs font-medium text-gray-900">
+                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                <label htmlFor="players" className="block text-xs font-medium text-gray-900 dark:text-white">
                   Players
                 </label>
                 <input
@@ -109,13 +109,13 @@ const MakeCustomGame = () => {
                   type="text"
                   name="players"
                   id="players"
-                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   placeholder="2-6"
                 />
               </div>
               <div
-                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                <label htmlFor="playtime" className="block text-xs font-medium text-gray-900">
+                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                <label htmlFor="playtime" className="block text-xs font-medium text-gray-900 dark:text-white">
                   Playtime
                 </label>
                 <input
@@ -127,13 +127,13 @@ const MakeCustomGame = () => {
                   type="text"
                   name="playtime"
                   id="playtime"
-                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   placeholder="60-120"
                 />
               </div>
               <div
-                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                <label htmlFor="mechanics" className="block text-xs font-medium text-gray-900">
+                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                <label htmlFor="mechanics" className="block text-xs font-medium text-gray-900 dark:text-white">
                   Mechanics
                 </label>
                 <input
@@ -145,13 +145,13 @@ const MakeCustomGame = () => {
                   type="text"
                   name="mechanics"
                   id="mechanics"
-                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   placeholder="Card Drafting, Hand Management"
                 />
               </div>
               <div
-                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                <label htmlFor="categories" className="block text-xs font-medium text-gray-900">
+                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                <label htmlFor="categories" className="block text-xs font-medium text-gray-900 dark:text-white">
                   Categories
                 </label>
                 <input
@@ -163,13 +163,13 @@ const MakeCustomGame = () => {
                   type="text"
                   name="categories"
                   id="categories"
-                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   placeholder="Adventure, Animals, Asymmetric"
                 />
               </div>
               <div
-                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                <label htmlFor="expansion" className="block text-xs font-medium text-gray-900">
+                className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                <label htmlFor="expansion" className="block text-xs font-medium text-gray-900 dark:text-white">
                   Is expansion?
                 </label>
                 <input
@@ -197,13 +197,13 @@ const MakeCustomGame = () => {
               </div>
               {game.isExpansion && (
                 <div
-                  className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                  <label htmlFor="basegame" className="block text-xs font-medium text-gray-900">
+                  className="relative rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="basegame" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Base game
                   </label>
                   <select
                     value={game.baseGameId}
-                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     name="basegame"
                     id="basegame"
                     onChange={(event) => {
@@ -223,7 +223,7 @@ const MakeCustomGame = () => {
                 </div>)}
             </div>
           </div>
-          <div className="bg-gray-50 px-4 py-4 sm:px-6">
+          <div className="bg-gray-50 px-4 py-4 sm:px-6 dark:bg-gray-700">
             {!mutation.isLoading ? (
               <Button
                 disabled={mutation.isLoading}
@@ -237,7 +237,7 @@ const MakeCustomGame = () => {
             ) : (
               <LoadingSpinner size={30} />
             )}
-              {mutation.isError && <div className="text-red-500">Something went wrong when saving the custom game</div>}
+              {mutation.isError && <div className="text-red-500 dark:text-red-400">Something went wrong when saving the custom game</div>}
             </div>
         </div>
       </div>

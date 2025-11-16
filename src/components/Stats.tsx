@@ -18,10 +18,10 @@ const StatCard = ({
   value: string | number;
   subtitle?: string;
 }) => (
-  <div className="rounded-xl bg-white p-4 shadow text-center">
-    <h3 className="text-gray-600 text-sm">{title}</h3>
-    <p className="text-2xl font-bold">{value}</p>
-    {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+  <div className="rounded-xl bg-white p-4 shadow text-center dark:bg-gray-800">
+    <h3 className="text-gray-600 text-sm dark:text-gray-400">{title}</h3>
+    <p className="text-2xl font-bold dark:text-white">{value}</p>
+    {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
   </div>
 );
 
@@ -48,34 +48,34 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
   });
 
   return (
-    <div className="mt-10 bg-white rounded-xl shadow p-4">
-      <h2 className="text-xl font-semibold text-center mb-4">
+    <div className="mt-10 bg-white rounded-xl shadow p-4 dark:bg-gray-800">
+      <h2 className="text-xl font-semibold text-center mb-4 dark:text-white">
         Player Performance Heatmap
       </h2>
       <div className="overflow-x-auto">
         <div
-          className="grid border-b border-gray-200"
+          className="grid border-b border-gray-200 dark:border-gray-700"
           style={{
             gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${players.length}, minmax(90px, 1fr))`,
           }}
         >
-          <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500">
+          <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
             Game
           </div>
-          <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center">
+          <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center dark:text-gray-400">
             Games
           </div>
           {players.map((p) => (
             <div
               key={p}
-              className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center"
+              className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center dark:text-gray-400"
             >
               {p}
             </div>
           ))}
         </div>
 
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
           {rows.map(({ game, gameCount, cells }) => (
             <div
               key={game}
@@ -84,10 +84,10 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
                 gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${players.length}, minmax(90px, 1fr))`,
               }}
             >
-              <div className="px-3 py-2 text-sm font-medium text-gray-800">
+              <div className="px-3 py-2 text-sm font-medium text-gray-800 dark:text-white">
                 {game}
               </div>
-              <div className="px-3 py-2 text-sm text-center text-gray-600">
+              <div className="px-3 py-2 text-sm text-center text-gray-600 dark:text-gray-400">
                 {gameCount}
               </div>
               {cells.map((rate, idx) => {

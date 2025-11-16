@@ -59,7 +59,7 @@ const PlayerBoard = (props: {
   ];
 
   if (isLoading) return <LoadingPage />;
-  if (isError) return <div>{error?.message}</div>;
+  if (isError) return <div className="text-gray-900 dark:text-white">{error?.message}</div>;
 
   return (
     <>
@@ -105,7 +105,7 @@ const PlayerBoard = (props: {
                       </button>
                     </div>
                   </Transition.Child>
-                  <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
+                  <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-gray-800 px-6 pb-4 rounded-md">
                     <div className="flex h-16 shrink-0 items-center">
                     </div>
                     <nav className="flex flex-1 flex-col">
@@ -121,15 +121,15 @@ const PlayerBoard = (props: {
                                 }}
                                   className={classNames(
                                     item.current
-                                      ? "bg-gray-50 text-indigo-600"
-                                      : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
+                                      ? "bg-gray-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400"
+                                      : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-indigo-400 dark:hover:bg-gray-700",
                                     "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
                                   )}
                                 ><span
                                   className={classNames(
                                     item.iconBackground,
                                     item.iconForeground,
-                                    "inline-flex rounded-lg p-3 ring-4 ring-white"
+                                    "inline-flex rounded-lg p-3 ring-4 ring-white dark:ring-gray-800"
                                   )}
                                 >
                                   <item.icon
@@ -154,10 +154,10 @@ const PlayerBoard = (props: {
             </div>
           </Dialog>
         </Transition.Root>
-        <div className="hidden sm:relative sm:inset-y-0 sm:z-50 sm:flex sm:w-45 sm:flex-col sm:flex-none">
-          <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r-2 border-gray-200 bg-white px-6 pb-4">
-            <nav className="flex flex-1 flex-col">
-              <ul role="list" className="flex flex-1 flex-col gap-y-7">
+        <div className="hidden sm:flex sm:w-72 sm:flex-col sm:flex-none sm:mr-4">
+          <div className="flex flex-col gap-y-5 bg-white dark:bg-gray-800 px-6 py-6 rounded-lg shadow-none sm:rounded-lg">
+            <nav className="flex flex-col">
+              <ul role="list" className="flex flex-col gap-y-7">
                 <li>
                   <ul role="list" className="-mx-2 space-y-1">
                     {navigation.map((item) => (
@@ -166,8 +166,8 @@ const PlayerBoard = (props: {
                           onClick={item.onClick}
                           className={classNames(
                             item.current
-                              ? "bg-gray-50 text-indigo-600"
-                              : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
+                              ? "bg-gray-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400"
+                              : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-indigo-400 dark:hover:bg-gray-700",
                             "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
                           )}
                         >
@@ -175,7 +175,7 @@ const PlayerBoard = (props: {
                             className={classNames(
                               item.iconBackground,
                               item.iconForeground,
-                              "inline-flex rounded-lg p-3 ring-4 ring-white"
+                              "inline-flex rounded-lg p-3 ring-4 ring-white dark:ring-gray-800"
                             )}
                           >
                           <item.icon
@@ -200,7 +200,7 @@ const PlayerBoard = (props: {
           <main className="">
             <div className="px-4 sm:px-6">
               <div className="mx-auto max-w-7xl sm:px-6">
-                <div className="overflow-hidden bg-white shadow-none sm:rounded-lg">
+                <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
                   <div className="px-4 py-5 sm:p-6">
                     {currentTab === "me" && (<MyProfile />)}
                     {currentTab === "collection" &&(<MyCollection />)}
@@ -211,13 +211,6 @@ const PlayerBoard = (props: {
               </div>
             </div>
           </main>
-          <div
-            className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 bg-white px-4 shadow-none sm:gap-x-6 sm:px-8">
-            <button type="button" className="-m-2.5 p-2.5 text-gray-700 sm:hidden" onClick={() => setSidebarOpen(true)}>
-              <span className="sr-only">Open sidebar</span>
-              <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-            </button>
-          </div>
         </div>
       </div>
     </>

@@ -162,21 +162,21 @@ const AdminView = (props: {
   }
 
   if (isError || emailIsError || allPlayersIsError) {
-    return <p>{error?.message}{emailError?.message}{allPlayersError?.message}</p>;
+    return <p className="text-gray-900 dark:text-white">{error?.message}{emailError?.message}{allPlayersError?.message}</p>;
   }
 
   return (
     <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
       <div className="relative">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
-          <div className="w-full border-t border-gray-300" />
+          <div className="w-full border-t border-gray-300 dark:border-gray-600" />
         </div>
       </div>
       <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {allUsers.map((user) => (
           <li
             key={user.id}
-            className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"
+            className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow dark:divide-gray-700 dark:bg-gray-800"
           >
             <div className="flex flex-1 flex-col p-8">
               <div className="flex justify-center mb-2">
@@ -184,22 +184,22 @@ const AdminView = (props: {
                   {user.status}
                 </span>
               </div>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">{user.nickname || user.name}</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{user.nickname || user.name}</h3>
               <dl className="mt-1 flex flex-grow flex-col justify-between">
-                {user.nickname && <dd className="text-sm text-gray-500">Name: {user.name}</dd>}
-                {user.email && <dd className="text-sm text-gray-500">Email: {user.email}</dd>}
-                {user.clerkId && <dd className="text-sm text-gray-500">ClerkId: {user.clerkId.substring(0, 10)}</dd>}
-                {user.inviteStatus !== "INVITED" && <dd className="text-sm text-gray-500">PlayerId: {user.id.substring(0,8)}</dd>}
+                {user.nickname && <dd className="text-sm text-gray-500 dark:text-gray-400">Name: {user.name}</dd>}
+                {user.email && <dd className="text-sm text-gray-500 dark:text-gray-400">Email: {user.email}</dd>}
+                {user.clerkId && <dd className="text-sm text-gray-500 dark:text-gray-400">ClerkId: {user.clerkId.substring(0, 10)}</dd>}
+                {user.inviteStatus !== "INVITED" && <dd className="text-sm text-gray-500 dark:text-gray-400">PlayerId: {user.id.substring(0,8)}</dd>}
               </dl>
             </div>
             <div>
-              <div className="-mt-px flex divide-x divide-gray-200">
+              <div className="-mt-px flex divide-x divide-gray-200 dark:divide-gray-700">
                 {/* Show accept/decline for pending users */}
                 {user.inviteStatus === "PENDING" && (
                   <>
                     <div className="flex w-0 flex-1">
                       <button
-                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-green-50`}
+                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-green-50 dark:text-white dark:hover:bg-green-900/20`}
                         onClick={() => {
                           acceptPlayer.mutate({
                             playerId: user.id,
@@ -214,7 +214,7 @@ const AdminView = (props: {
                     </div>
                     <div className="flex w-0 flex-1">
                       <button
-                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-red-50`}
+                        className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-red-50 dark:text-white dark:hover:bg-red-900/20`}
                         onClick={() => {
                           declineInvite.mutate({
                             playerId: user.id,
@@ -237,7 +237,7 @@ const AdminView = (props: {
                     {user.role !== "ADMIN" && (
                       <div className="-ml-px flex w-0 flex-1">
                         <button
-                          className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-gray-50`}
+                          className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-700`}
                           onClick={() => {
                             promoteToAdmin.mutate({
                               playerId: user.id,
@@ -254,7 +254,7 @@ const AdminView = (props: {
                     {currentPlayer?.id !== user.id && (
                       <div className="-ml-px flex w-0 flex-1">
                         <button
-                          className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-red-50`}
+                          className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-red-50 dark:text-white dark:hover:bg-red-900/20`}
                           onClick={() => {
                             if (confirm(`Are you sure you want to remove ${user.nickname || user.name} from the group?`)) {
                               removeUser.mutate({
@@ -277,7 +277,7 @@ const AdminView = (props: {
                 {/* For invited users, just show status */}
                 {user.inviteStatus === "INVITED" && (
                   <div className="flex w-full justify-center py-4">
-                    <span className="text-sm text-gray-500">Awaiting acceptance</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Awaiting acceptance</span>
                   </div>
                 )}
               </div>
@@ -287,12 +287,12 @@ const AdminView = (props: {
       </ul>
       
       {/* Group Visibility Toggle */}
-      <div className="mt-6 overflow-hidden bg-white shadow sm:rounded-lg">
+      <div className="mt-6 overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
         <div className="px-4 py-5 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-medium leading-6 text-gray-900">Group Visibility</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">Group Visibility</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {allGameGroups?.find(g => g.id === gameGroup)?.hidden 
                   ? "This group is currently hidden from new players. They cannot see or request to join it."
                   : "This group is visible to all players. They can see it and request to join."}
@@ -330,19 +330,19 @@ const AdminView = (props: {
         </div>
       </div>
 
-      <div className="overflow-hidden bg-white shadow-none sm:rounded-lg">
+      <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
         <div
           className="px-4 py-5 sm:p-6"
         >
           <label
-            className={"text-sm font-medium text-gray-700"}
+            className={"text-sm font-medium text-gray-700 dark:text-gray-300"}
           >Invite users</label>
-          <div className="overflow-hidden rounded-lg bg-white shadow">
+          <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
               <div className="isolate -space-y-px rounded-md shadow-sm">
                 <div
-                  className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                  <label htmlFor="name" className="block text-xs font-medium text-gray-900">
+                  className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="name" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Name
                   </label>
                   <input
@@ -352,13 +352,13 @@ const AdminView = (props: {
                     type="text"
                     name="name"
                     id="name"
-                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     placeholder="Full name"
                   />
                 </div>
                 <div
-                  className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                  <label htmlFor="name" className="block text-xs font-medium text-gray-900">
+                  className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="name" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Nickname
                   </label>
                   <input
@@ -368,13 +368,13 @@ const AdminView = (props: {
                     type="text"
                     name="name"
                     id="name"
-                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     placeholder="Nickname"
                   />
                 </div>
                 <div
-                  className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                  <label htmlFor="name" className="block text-xs font-medium text-gray-900">
+                  className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="name" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Email
                   </label>
                   <input
@@ -384,13 +384,13 @@ const AdminView = (props: {
                     type="text"
                     name="name"
                     id="name"
-                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     placeholder="Email address"
                   />
                 </div>
               </div>
             </div>
-            <div className="bg-gray-50 px-4 py-4 sm:px-6">
+            <div className="bg-gray-50 px-4 py-4 sm:px-6 dark:bg-gray-700">
               {mutation.isLoading ? (
                 <LoadingSpinner size={30} />
               ) : (

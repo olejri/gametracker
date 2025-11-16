@@ -13,7 +13,7 @@ const ExportView = (props: DashboardProps) => {
   }
 
   if (isError) {
-    return <p>{error?.message}</p>;
+    return <p className="text-gray-900 dark:text-white">{error?.message}</p>;
   }
   function triggerDownload(stringContent = '', filename = 'download.blob') {
     const blob = new Blob([stringContent], { type: 'text/plain' })
@@ -37,7 +37,7 @@ const ExportView = (props: DashboardProps) => {
         Download
       </Button>
       <div className="w-full h-auto">
-    <textarea className="w-full" value={data.data} readOnly={true} style={{
+    <textarea className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" value={data.data} readOnly={true} style={{
       height: "800px"
     }} />
       </div>

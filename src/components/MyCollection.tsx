@@ -41,7 +41,7 @@ const MyCollection = () => {
   const [mutateError, setMutateError] = useState<string>("");
 
   if (allIsLoading || ownedIsloading || mutateDelete.isLoading) return <LoadingPage />;
-  if (allIsError || ownIsError) return <div>{allError?.message} {ownError?.message}</div>;
+  if (allIsError || ownIsError) return <div className="text-gray-900 dark:text-white">{allError?.message} {ownError?.message}</div>;
 
   const gamesThatCanBeMarkedAsOwned = allGames.filter(game => !ownedGames.some(ownedGame => ownedGame.name === game.name));
   const sortedOwnedGames = ownedGames.sort((a, b) => a.name.localeCompare(b.name));
@@ -65,14 +65,14 @@ const MyCollection = () => {
           Add
           </button>
         )}
-        {mutateError && <div className="text-red-500">{mutateError}</div>}
+        {mutateError && <div className="text-red-500 dark:text-red-400">{mutateError}</div>}
       </div>
       <div className="relative">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
-          <div className="w-full border-t border-gray-300" />
+          <div className="w-full border-t border-gray-300 dark:border-gray-700" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900">My games</span>
+          <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900 dark:bg-gray-900 dark:text-white">My games</span>
         </div>
       </div>
       <div>
@@ -80,17 +80,17 @@ const MyCollection = () => {
           {sortedOwnedGames.map((game) => (
             <li
               key={game.name}
-              className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow"
+              className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow dark:divide-gray-700 dark:bg-gray-800"
             >
               <div className="flex flex-1 flex-col p-8">
                 <Image className="mx-auto sm:h-auto sm:w-52 flex-shrink-0" src={game.image_url} alt="" width={200}
                        height={200} priority={true} />
-                <h3 className="mt-6 text-sm font-medium text-gray-900">{game.name}</h3>
+                <h3 className="mt-6 text-sm font-medium text-gray-900 dark:text-white">{game.name}</h3>
                 <dl className="mt-1 flex flex-grow flex-col justify-between">
-                  <dd className="text-sm text-gray-500">Players: {game.players}</dd>
-                  <dd className="text-sm text-gray-500">Time: {game.playtime}</dd>
+                  <dd className="text-sm text-gray-500 dark:text-gray-400">Players: {game.players}</dd>
+                  <dd className="text-sm text-gray-500 dark:text-gray-400">Time: {game.playtime}</dd>
                   <dd
-                    className="text-sm text-red-500 hover:text-red-700 cursor-pointer"
+                    className="text-sm text-red-500 hover:text-red-700 cursor-pointer dark:text-red-400 dark:hover:text-red-300"
                     onClick={() => {
                       mutateDelete.mutate({ gameId: game.id })
                     }}
@@ -98,27 +98,27 @@ const MyCollection = () => {
                 </dl>
               </div>
               <div>
-                <div className="-mt-px flex divide-x divide-gray-200">
+                <div className="-mt-px flex divide-x divide-gray-200 dark:divide-gray-700">
                   <div className="flex w-0 flex-1">
                     {game.isExpansion ?
                       <div
-                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900"
+                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white"
                       >
-                        <span className="ml-2 text-green-500">An expansion</span></div> :
+                        <span className="ml-2 text-green-500 dark:text-green-400">An expansion</span></div> :
                       <div
-                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900"
+                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white"
                       >
-                        <span className="ml-2 text-green-500">Base game</span></div>
+                        <span className="ml-2 text-green-500 dark:text-green-400">Base game</span></div>
                     }
                   </div>
                   <div className="-ml-px flex w-0 flex-1">
                     <button
-                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900`}
+                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white`}
                       onClick={() => {
                         setModalOpen({ open: true, name: game.name });
                       }}
                     >
-                      <AcademicCapIcon className="h-5 w-5 text-gray-600" aria-hidden="true" />
+                      <AcademicCapIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" aria-hidden="true" />
                       Description
                     </button>
                     <InfoModal

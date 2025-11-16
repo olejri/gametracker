@@ -34,7 +34,7 @@ const StartNewGame = (props: DashboardProps) => {
   });
 
   if (error) {
-    return <div className="text-center mt-4">{error}</div>;
+    return <div className="text-center mt-4 text-gray-900 dark:text-white">{error}</div>;
   }
 
   if (generateYourGameSession) {
@@ -72,22 +72,22 @@ const StartNewGame = (props: DashboardProps) => {
   return (
     <>
       <form id="game">
-        <div className="overflow-hidden rounded-lg bg-white sm:shadow w-full sm:w-6/12">
+        <div className="overflow-hidden rounded-lg bg-white sm:shadow w-full sm:w-6/12 dark:bg-gray-800">
           <div className="overflow-hidden rounded-lg shadow-none">
             <div className="px-4 py-5 sm:p-6">
               <SelectWithSearch items={games} selectedItem={chosenGame} setSelectedItem={setChosenGameAndExpansions}
                                 title={"Pick a game"} placeholder={""} />
             </div>
           </div>
-          <div className="overflow-hidden rounded-lg bg-white shadow-none">
+          <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
               {chosenExpansions.length > 0 ? <fieldset>
-                <legend className="text-base font-semibold leading-6 text-gray-900">Pick expansions</legend>
-                <div className="mt-4 divide-y divide-gray-200 border-t border-b border-gray-200">
+                <legend className="text-base font-semibold leading-6 text-gray-900 dark:text-white">Pick expansions</legend>
+                <div className="mt-4 divide-y divide-gray-200 border-t border-b border-gray-200 dark:divide-gray-700 dark:border-gray-700">
                   {chosenExpansions.map((game) => (
                     <div key={game.id} className="relative flex items-start py-4">
                       <div className="min-w-0 flex-1 text-sm leading-6">
-                        <label htmlFor={`person-${game.id}`} className="select-none font-medium text-gray-900">
+                        <label htmlFor={`person-${game.id}`} className="select-none font-medium text-gray-900 dark:text-white">
                           {game.name}
                         </label>
                       </div>
@@ -96,7 +96,7 @@ const StartNewGame = (props: DashboardProps) => {
                           id={`exp-${game.id}`}
                           name={`exp-${game.id}`}
                           type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600 dark:bg-gray-700 dark:checked:bg-indigo-600 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
                         />
                       </div>
                     </div>
@@ -106,15 +106,15 @@ const StartNewGame = (props: DashboardProps) => {
               }
             </div>
           </div>
-          <div className="overflow-hidden rounded-lg bg-white shadow-none">
+          <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
               <fieldset>
-                <legend className="text-base font-semibold leading-6 text-gray-900">Pick players</legend>
-                <div className="mt-4 divide-y divide-gray-200 border-t border-b border-gray-200">
+                <legend className="text-base font-semibold leading-6 text-gray-900 dark:text-white">Pick players</legend>
+                <div className="mt-4 divide-y divide-gray-200 border-t border-b border-gray-200 dark:divide-gray-700 dark:border-gray-700">
                   {players.data.map((person) => (
                     <div key={person.id} className="relative flex items-start py-4">
                       <div className="min-w-0 flex-1 text-sm leading-6">
-                        <label htmlFor={`person-${person.id}`} className="select-none font-medium text-gray-900">
+                        <label htmlFor={`person-${person.id}`} className="select-none font-medium text-gray-900 dark:text-white">
                           {person.nickname ?? person.name}
                         </label>
                       </div>
@@ -123,7 +123,7 @@ const StartNewGame = (props: DashboardProps) => {
                           id={`person-${person.id}`}
                           name={`person-${person.id}`}
                           type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600 dark:bg-gray-700 dark:checked:bg-indigo-600 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
                         />
                       </div>
                     </div>
@@ -132,7 +132,7 @@ const StartNewGame = (props: DashboardProps) => {
               </fieldset>
             </div>
           </div>
-          <div className="overflow-hidden shadow-none">
+          <div className="overflow-hidden shadow-none dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
               <Button
                 disabled={disabled}
@@ -174,14 +174,6 @@ const StartNewGame = (props: DashboardProps) => {
           </div>
         </div>
       </form>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-          <div className="w-full border-t border-gray-300" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900">Games owned by {props.groupName}</span>
-        </div>
-      </div>
     </>
   );
 };

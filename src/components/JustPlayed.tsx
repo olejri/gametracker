@@ -20,7 +20,7 @@ const RecentlyActivities = (props: {
       <LoadingSpinner size={60} />
     </div>
   );
-  if (isError) return <p>{error?.message}</p>;
+  if (isError) return <p className="text-gray-900 dark:text-white">{error?.message}</p>;
 
   return (
     <div className="flow-root">
@@ -30,13 +30,13 @@ const RecentlyActivities = (props: {
             <Link href={`/`+groupId+`/session/${game.sessionId}`}>
               <div className="relative pb-8">
                 {eventIdx !== lastFive.length - 1 ? (
-                  <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" />
+                  <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-600" aria-hidden="true" />
                 ) : null}
                 <div className="relative flex space-x-3">
                   <div>
                   <span
                     className={classNames(
-                      "h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white"
+                      "h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white dark:ring-gray-800"
                     )}
                   >
                     <Image className="mx-auto sm:h-auto sm:w-52 flex-shrink-0 rounded-full" src={game.image_url} alt=""
@@ -46,11 +46,11 @@ const RecentlyActivities = (props: {
                   </div>
                   <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
                     <div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {game.gameName}{" "}
                       </p>
                     </div>
-                    <div className="whitespace-nowrap text-right text-sm text-gray-500">
+                    <div className="whitespace-nowrap text-right text-sm text-gray-500 dark:text-gray-400">
                       {dayjs(game.createdAt).fromNow()}
                     </div>
                   </div>

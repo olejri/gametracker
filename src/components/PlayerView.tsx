@@ -38,25 +38,25 @@ const PlayerView = (props: {
   return (
     <div
       key={player.playerId}
-      className="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400"
+      className="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500"
     >
       <div className="flex-shrink-0">
         <Image
           width={30}
           height={30}
           key={player.playerId}
-          className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+          className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-900"
           src={player.profileImageUrl}
           alt={player.nickname ?? player.playerId}
         />
       </div>
       <div className="min-w-0 flex-1">
         <div className="grid grid-flow-row-dense grid-cols-3 gap-10">
-          <p className="text-sm font-medium text-gray-900">{player.nickname}</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">{player.nickname}</p>
           <div className="grid grid-cols-1">
-            <label>Score</label>
+            <label className="dark:text-gray-300">Score</label>
             {!isUpdatingScore ? <input type="text" id={"score" + player.playerId}
-                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-gray-600"
                    value={player.score}
                    readOnly={isInReadOnlyMode}
                    required
@@ -73,13 +73,13 @@ const PlayerView = (props: {
             />: <LoadingSpinner />}
           </div>
           <div className="grid grid-cols-1">
-            <label>Position</label>
+            <label className="dark:text-gray-300">Position</label>
             {!isUpdatingPos ? (
               <select
                 disabled={isInReadOnlyMode}
                 id={player.playerId}
                 name={"position" + player.playerId}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent appearance-none"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent appearance-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-gray-600 dark:[&>option]:bg-gray-700 dark:[&>option]:text-white"
                 style={{
                   WebkitAppearance: "none",
                   MozAppearance: "none",
@@ -101,7 +101,7 @@ const PlayerView = (props: {
                 {Array.from(Array(numberOfPlayers).keys()).map((i) => {
                   if (i !== 0) {
                     return (
-                      <option key={i} value={i}>
+                      <option key={i} value={i} className="dark:bg-gray-700 dark:text-white">
                         {i}
                       </option>
                     );
