@@ -10,7 +10,7 @@ export const Card: React.FC<CardProps> = ({ children, className = "" }) => {
   return (
     <div
       className={classNames(
-        "overflow-hidden bg-white shadow sm:rounded-lg",
+        "overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800",
         className
       )}
     >
