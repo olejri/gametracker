@@ -1,12 +1,13 @@
 import React from "react";
 import { Disclosure } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { LoadingPage } from "npm/components/loading";
 import { useRouter } from "next/router";
 import { api } from "npm/utils/api";
 import { useGameGroupContext } from "npm/context/GameGroupContext";
 import { classNames } from "npm/lib/utils";
+import { useTheme } from "npm/context/ThemeContext";
 
 type ContainerProps = {
   children: React.ReactNode; //👈 children prop typr
@@ -21,6 +22,7 @@ const MainComponent = (props: ContainerProps) => {
     { clerkId: user?.id || "" },
     { enabled: !!user?.id }
   );
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   if (!isLoaded || !isSignedIn || !user || isLoading) {
     return <LoadingPage />;
@@ -60,7 +62,7 @@ const MainComponent = (props: ContainerProps) => {
   return (
     <>
       <div className="min-h-full">
-        <Disclosure as="nav" className="border-b border-gray-200 bg-white">
+        <Disclosure as="nav" className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
           {({ open }) => (
             <>
               <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -80,8 +82,8 @@ const MainComponent = (props: ContainerProps) => {
                           href={item.href}
                           className={classNames(
                             item.current
-                              ? "border-indigo-500 text-gray-900"
-                              : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
+                              ? "border-indigo-500 text-gray-900 dark:text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100",
                             "inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium"
                           )}
                           aria-current={item.current ? "page" : undefined}
@@ -91,13 +93,24 @@ const MainComponent = (props: ContainerProps) => {
                       ))}
                     </div>
                   </div>
-                  <div className="hidden sm:ml-6 sm:flex sm:items-center">
+                  <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
+                    <button
+                      onClick={toggleDarkMode}
+                      className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                      aria-label="Toggle dark mode"
+                    >
+                      {isDarkMode ? (
+                        <SunIcon className="h-6 w-6" aria-hidden="true" />
+                      ) : (
+                        <MoonIcon className="h-6 w-6" aria-hidden="true" />
+                      )}
+                    </button>
                     <UserButton />
                   </div>
                   <div className="-mr-2 flex items-center sm:hidden">
                     {/* Mobile menu button */}
                     <Disclosure.Button
-                      className="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                      className="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
                       <span className="sr-only">Open main menu</span>
                       {open ? (
                         <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
@@ -118,8 +131,8 @@ const MainComponent = (props: ContainerProps) => {
                       href={item.href}
                       className={classNames(
                         item.current
-                          ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                          : "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800",
+                          ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200"
+                          : "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
                         "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
                       )}
                       aria-current={item.current ? "page" : undefined}
@@ -127,16 +140,34 @@ const MainComponent = (props: ContainerProps) => {
                       {item.name}
                     </Disclosure.Button>
                   ))}
+                  <div className="border-t border-gray-200 pt-3 dark:border-gray-700">
+                    <button
+                      onClick={toggleDarkMode}
+                      className="flex w-full items-center px-4 py-2 text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                    >
+                      {isDarkMode ? (
+                        <>
+                          <SunIcon className="mr-3 h-6 w-6" aria-hidden="true" />
+                          Light mode
+                        </>
+                      ) : (
+                        <>
+                          <MoonIcon className="mr-3 h-6 w-6" aria-hidden="true" />
+                          Dark mode
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </Disclosure.Panel>
             </>
           )}
         </Disclosure>
 
-        <div className="py-10">
+        <div className="py-10 dark:bg-gray-900">
           <header>
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900"></h1>
+              <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white"></h1>
             </div>
           </header>
           <main>

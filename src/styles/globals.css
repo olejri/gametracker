@@ -8,6 +8,10 @@
   --color-tertiary: #00f;
 }
 
+body {
+  @apply bg-white dark:bg-gray-900;
+}
+
 /* Clerk Sign-In Modal Dark Theme - Only for modals triggered from landing page */
 /* This targets the Clerk modal overlay and content */
 .cl-modalContent {
