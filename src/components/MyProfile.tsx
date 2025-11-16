@@ -23,7 +23,7 @@ const MyProfile = () => {
     return <LoadingPage />;
   }
   if (isError) {
-    return <div>{error?.message}</div>;
+    return <div className="text-gray-900 dark:text-white">{error?.message}</div>;
   }
   function isNicknameDifferent() {
     return nickname !== player?.nickname;
@@ -40,12 +40,12 @@ const MyProfile = () => {
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
-        <div className="overflow-hidden rounded-lg bg-white shadow">
+        <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
           <div className="px-4 py-5 sm:p-6">
             <div className="isolate -space-y-px rounded-md shadow-sm">
               <div
-                className="relative rounded-md rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                <label htmlFor="name" className="block text-xs font-medium text-gray-900">
+                className="relative rounded-md rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                <label htmlFor="name" className="block text-xs font-medium text-gray-900 dark:text-white">
                   Name
                 </label>
                 <input
@@ -56,13 +56,13 @@ const MyProfile = () => {
                   type="text"
                   name="name"
                   id="name"
-                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   placeholder="Enter your name"
                 />
               </div>
               <div
-                className="relative rounded-md rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600">
-                <label htmlFor="nickname" className="block text-xs font-medium text-gray-900">
+                className="relative rounded-md rounded-t-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                <label htmlFor="nickname" className="block text-xs font-medium text-gray-900 dark:text-white">
                   Nickname
                 </label>
                 <input
@@ -73,13 +73,13 @@ const MyProfile = () => {
                   type="text"
                   name="nickname"
                   id="nickname"
-                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                   placeholder="Choose a nickname"
                 />
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-4 py-4 sm:px-6">
+          <div className="bg-gray-50 px-4 py-4 sm:px-6 dark:bg-gray-700">
             {!mutation.isLoading ? (
               <Button
                 disabled={mutation.isLoading || !hasChanges()}
@@ -93,7 +93,7 @@ const MyProfile = () => {
             ) : (
               <LoadingSpinner size={30} />
             )}
-            {mutation.isError && <div className="text-red-500">{mutation.error?.message}</div>}
+            {mutation.isError && <div className="text-red-500 dark:text-red-400">{mutation.error?.message}</div>}
           </div>
         </div>
       </div>

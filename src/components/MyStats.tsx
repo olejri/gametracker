@@ -7,8 +7,8 @@ import { classNames } from "npm/lib/utils";
 
 type WinBadgeVariant = "green" | "yellow" | "red";
 
-const tdBorder = "border-b border-gray-300";
-const hiddenLgCell = "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell";
+const tdBorder = "border-b border-gray-300 dark:border-gray-700";
+const hiddenLgCell = "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell dark:text-gray-400";
 
 const percentStr = (n: number) => (Math.round(n * 100) / 100).toFixed(2);
 
@@ -19,9 +19,9 @@ const winVariant = (winPercentage: number): WinBadgeVariant => {
 };
 
 const winBadgeClass: Record<WinBadgeVariant, string> = {
-  green: "bg-green-100 text-green-800",
-  yellow: "bg-yellow-100 text-yellow-600",
-  red: "bg-red-100 text-red-800",
+  green: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  yellow: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-300",
+  red: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
 };
 
 const MyStats = ({ groupName }: { groupName: string }) => {
@@ -29,7 +29,7 @@ const MyStats = ({ groupName }: { groupName: string }) => {
   const rows = useMemo(() => myStats ?? [], [myStats]);
 
   if (isLoading) return <LoadingPage />;
-  if (isError) return <p className="px-4 py-2 text-sm text-red-600">{error?.message}</p>;
+  if (isError) return <p className="px-4 py-2 text-sm text-red-600 dark:text-red-400">{error?.message}</p>;
 
   return (
     <div className="px-4 sm:px-6 lg:px-14">
@@ -57,7 +57,7 @@ const MyStats = ({ groupName }: { groupName: string }) => {
                       <td
                         className={classNames(
                           rowHasBorder && tdBorder,
-                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8 dark:text-white",
                         )}
                       >
                         {game.gameName}
@@ -66,7 +66,7 @@ const MyStats = ({ groupName }: { groupName: string }) => {
                       <td
                         className={classNames(
                           rowHasBorder && tdBorder,
-                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8 dark:text-white",
                         )}
                       >
                         {game.numberOfGamesPlayed}
@@ -75,7 +75,7 @@ const MyStats = ({ groupName }: { groupName: string }) => {
                       <td
                         className={classNames(
                           rowHasBorder && tdBorder,
-                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8 dark:text-white",
                         )}
                       >
                         {game.numberOfFirstPlaceWins}
@@ -92,7 +92,7 @@ const MyStats = ({ groupName }: { groupName: string }) => {
                       <td
                         className={classNames(
                           rowHasBorder && tdBorder,
-                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8",
+                          "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8 dark:text-white",
                         )}
                       >
                         <Badge className={classNames("px-2.5 py-0.5", winClass)} title={`${percentStr(game.winPrecentage)}`}>
