@@ -26,8 +26,8 @@ const SearchBar = (props: {
 
   return (
     <div className="">
-      <h1 className="text-xl font-bold mb-4">Search after a game</h1>
-      <input className="border border-gray-300 rounded py-2 px-4" type="text" placeholder="Name of the game"
+      <h1 className="text-xl font-bold mb-4 dark:text-white">Search after a game</h1>
+      <input className="border border-gray-300 rounded py-2 px-4 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500" type="text" placeholder="Name of the game"
              onChange={(e) => setSearchName(e.target.value)} />
       <Button
         variant="primary"
