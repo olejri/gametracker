@@ -105,7 +105,7 @@ const PlayerBoard = (props: {
                       </button>
                     </div>
                   </Transition.Child>
-                  <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-gray-800 px-6 pb-4">
+                  <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-gray-800 px-6 pb-4 rounded-md">
                     <div className="flex h-16 shrink-0 items-center">
                     </div>
                     <nav className="flex flex-1 flex-col">
@@ -211,13 +211,6 @@ const PlayerBoard = (props: {
               </div>
             </div>
           </main>
-          <div
-            className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 bg-white px-4 shadow-none sm:gap-x-6 sm:px-8 dark:bg-gray-800">
-            <button type="button" className="-m-2.5 p-2.5 text-gray-700 dark:text-gray-300 sm:hidden" onClick={() => setSidebarOpen(true)}>
-              <span className="sr-only">Open sidebar</span>
-              <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-            </button>
-          </div>
         </div>
       </div>
     </>
