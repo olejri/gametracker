@@ -71,16 +71,17 @@ model GameSessionGameJunction {
 }
 
 model GameSession {
-  id                        String                      @id @default(uuid())
-  gameId                    String
-  result                    String?
-  status                    String
-  createdAt                 DateTime                    @default(now())
-  updatedAt                 DateTime                    @updatedAt
-  groupId                   String                      @default("game-night")
-  description               String?
-  PlayerGameSessionJunction PlayerGameSessionJunction[]
-  GameSessionGameJunction   GameSessionGameJunction[]
+  id                            String                          @id @default(uuid())
+  gameId                        String
+  result                        String?
+  status                        String
+  createdAt                     DateTime                        @default(now())
+  updatedAt                     DateTime                        @updatedAt
+  groupId                       String                          @default("game-night")
+  description                   String?
+  PlayerGameSessionJunction     PlayerGameSessionJunction[]
+  GameSessionGameJunction       GameSessionGameJunction[]
+  GameSessionRandomizationLog   GameSessionRandomizationLog[]
 }
 
 model PlayerGameJunction {
@@ -108,4 +109,14 @@ model PlayerGameGroupJunction {
   Player            Player    @relation(fields: [playerId], references: [id])
 
   @@unique([groupId, playerId])
+}
+
+model GameSessionRandomizationLog {
+  id            String      @id @default(uuid())
+  gameSessionId String
+  type          String
+  data          Json
+  createdAt     DateTime    @default(now())
+
+  GameSession   GameSession @relation(fields: [gameSessionId], references: [id])
 }

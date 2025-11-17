@@ -22,6 +22,9 @@ const GameSession = (props: GameSessionProps) => {
   const [haveError, setHaveError] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const path = useRouter();
+  const [seatAssignments, setSeatAssignments] = useState<Record<string, number> | null>(null);
+  const [startingPlayer, setStartingPlayer] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   const updateGameSession = api.session.updateGameSession.useMutation({
     onSuccess: () => {
@@ -73,6 +76,25 @@ const GameSession = (props: GameSessionProps) => {
       setIsUpdating(true);
     }
   });
+
+  const rollSeats = api.session.rollSeats.useMutation({
+    onSuccess: (data) => {
+      setSeatAssignments(data.seatAssignments);
+      void ctx.session.getRandomizationHistory.invalidate();
+    }
+  });
+
+  const rollStartingPlayer = api.session.rollStartingPlayer.useMutation({
+    onSuccess: (data) => {
+      setStartingPlayer(data.startingPlayer);
+      void ctx.session.getRandomizationHistory.invalidate();
+    }
+  });
+
+  const { data: randomizationHistory } = api.session.getRandomizationHistory.useQuery(
+    { gameSessionId: game?.sessionId ?? "" },
+    { enabled: !!game?.sessionId }
+  );
 
 
   const [description, setDescription] = useState<string>(game?.description ?? "");
@@ -228,7 +250,106 @@ const GameSession = (props: GameSessionProps) => {
           </div>
         </div>
       </div>
-      {game.status === GameSessionStatus.Ongoing ? <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+      {game.status === GameSessionStatus.Ongoing ? (
+        <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
+              Randomization Tools
+            </h3>
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Button
+                variant="primary"
+                onClick={() => {
+                  rollSeats.mutate({ gameSessionId: game.sessionId });
+                }}
+                disabled={rollSeats.isLoading}
+              >
+                {rollSeats.isLoading ? "Rolling..." : "Roll Seats"}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  rollStartingPlayer.mutate({ gameSessionId: game.sessionId });
+                }}
+                disabled={rollStartingPlayer.isLoading}
+              >
+                {rollStartingPlayer.isLoading ? "Rolling..." : "Roll Starting Player"}
+              </Button>
+              {randomizationHistory && randomizationHistory.length > 0 && (
+                <Button
+                  variant="primary"
+                  onClick={() => setShowHistory(!showHistory)}
+                >
+                  {showHistory ? "Hide History" : "Show History"}
+                </Button>
+              )}
+            </div>
+            
+            {seatAssignments && (
+              <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <h4 className="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">
+                  Latest Seat Assignments:
+                </h4>
+                <div className="text-sm text-green-800 dark:text-green-200">
+                  {Object.entries(seatAssignments).map(([player, seat]) => (
+                    <div key={player} className="mb-1">
+                      <span className="font-medium">{player}:</span> Seat {seat}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {startingPlayer && (
+              <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                  Latest Starting Player:
+                </h4>
+                <div className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                  {startingPlayer}
+                </div>
+              </div>
+            )}
+
+            {showHistory && randomizationHistory && randomizationHistory.length > 0 && (
+              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-200 mb-3">
+                  Randomization History
+                </h4>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {randomizationHistory.map((log) => (
+                    <div
+                      key={log.id}
+                      className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          {log.type === "seat_order" ? "Seat Order" : "Starting Player"}
+                        </span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
+                          {dayjs(log.createdAt).format("MMM D, YYYY h:mm A")}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-700 dark:text-gray-300">
+                        {log.type === "seat_order" ? (
+                          Object.entries(log.data as Record<string, number>).map(([player, seat]) => (
+                            <div key={player} className="mb-1">
+                              {player}: Seat {seat}
+                            </div>
+                          ))
+                        ) : (
+                          <div>Starting player: {(log.data as { startingPlayer: string }).startingPlayer}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+      {game.status === GameSessionStatus.Ongoing ? <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
         <div className="px-4 py-5 sm:p-6">
           <div className="gap-2">
             <Button

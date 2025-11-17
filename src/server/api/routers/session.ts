@@ -589,6 +589,11 @@ export const sessionRouter = createTRPCRouter({
           gameSessionId: input.sessionId
         }
       });
+      await ctx.prisma.gameSessionRandomizationLog.deleteMany({
+        where: {
+          gameSessionId: input.sessionId
+        }
+      });
       await ctx.prisma.gameSession.delete({
         where: {
           id: input.sessionId
@@ -657,6 +662,122 @@ export const sessionRouter = createTRPCRouter({
           createdAt: input.date
         }
       });
+    }),
+
+  rollSeats: privateProcedure
+    .input(
+      z.object({
+        gameSessionId: z.string().min(1)
+      }))
+    .mutation(async ({ ctx, input }) => {
+      // Fetch all players in this game session
+      const playerJunctions = await ctx.prisma.playerGameSessionJunction.findMany({
+        where: {
+          gameSessionId: input.gameSessionId
+        },
+        include: {
+          player: true
+        }
+      });
+
+      if (playerJunctions.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No players found in this game session"
+        });
+      }
+
+      // Shuffle the players
+      const shuffled = [...playerJunctions].sort(() => Math.random() - 0.5);
+
+      // Assign seat positions
+      const seatAssignments: Record<string, number> = {};
+      shuffled.forEach((junction, index) => {
+        seatAssignments[junction.player.nickname ?? junction.player.name] = index + 1;
+      });
+
+      // Save to randomization log
+      const log = await ctx.prisma.gameSessionRandomizationLog.create({
+        data: {
+          gameSessionId: input.gameSessionId,
+          type: "seat_order",
+          data: seatAssignments
+        }
+      });
+
+      return {
+        log,
+        seatAssignments
+      };
+    }),
+
+  rollStartingPlayer: privateProcedure
+    .input(
+      z.object({
+        gameSessionId: z.string().min(1)
+      }))
+    .mutation(async ({ ctx, input }) => {
+      // Fetch all players in this game session
+      const playerJunctions = await ctx.prisma.playerGameSessionJunction.findMany({
+        where: {
+          gameSessionId: input.gameSessionId
+        },
+        include: {
+          player: true
+        }
+      });
+
+      if (playerJunctions.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No players found in this game session"
+        });
+      }
+
+      // Select a random player
+      const randomIndex = Math.floor(Math.random() * playerJunctions.length);
+      const selectedPlayer = playerJunctions[randomIndex];
+      
+      if (!selectedPlayer) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to select starting player"
+        });
+      }
+
+      const startingPlayerName = selectedPlayer.player.nickname ?? selectedPlayer.player.name;
+
+      // Save to randomization log
+      const log = await ctx.prisma.gameSessionRandomizationLog.create({
+        data: {
+          gameSessionId: input.gameSessionId,
+          type: "starting_player",
+          data: { startingPlayer: startingPlayerName }
+        }
+      });
+
+      return {
+        log,
+        startingPlayer: startingPlayerName
+      };
+    }),
+
+  getRandomizationHistory: publicProcedure
+    .input(
+      z.object({
+        gameSessionId: z.string().min(1)
+      }))
+    .query(async ({ ctx, input }) => {
+      const logs = await ctx.prisma.gameSessionRandomizationLog.findMany({
+        where: {
+          gameSessionId: input.gameSessionId
+        },
+        orderBy: {
+          createdAt: "desc"
+        }
+      });
+
+      return logs;
     })
 
 });
