@@ -589,6 +589,11 @@ export const sessionRouter = createTRPCRouter({
           gameSessionId: input.sessionId
         }
       });
+      await ctx.prisma.gameSessionRandomizationLog.deleteMany({
+        where: {
+          gameSessionId: input.sessionId
+        }
+      });
       await ctx.prisma.gameSession.delete({
         where: {
           id: input.sessionId
