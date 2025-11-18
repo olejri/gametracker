@@ -92,7 +92,7 @@ const GameSession = (props: GameSessionProps) => {
       // Stop the animation after it completes
       setTimeout(() => {
         setRollingPlayerIndex(null);
-      }, 10000);
+      }, 3000);
     }
   });
 
@@ -103,14 +103,14 @@ const GameSession = (props: GameSessionProps) => {
     let currentTime = 0;
     
     // First 7 seconds: fast cycling (100ms intervals)
-    while (currentTime < 7000) {
-      intervals.push(100);
-      currentTime += 100;
+    while (currentTime < 2000) {
+      intervals.push(300);
+      currentTime += 300;
     }
     
     // Last 3 seconds: slow down to 1 second intervals
-    intervals.push(1000); // 7s -> 8s
-    intervals.push(1000); // 8s -> 9s
+    intervals.push(500); // 7s -> 8s
+    intervals.push(700); // 8s -> 9s
     intervals.push(1000); // 9s -> 10s
     
     let currentIndex = 0;
