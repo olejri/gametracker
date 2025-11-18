@@ -96,74 +96,76 @@ const GameSession = (props: GameSessionProps) => {
     const sortedPlayers = sortPlayers(game.players);
     const numPlayers = sortedPlayers.length;
     
-    // Start the mutation to get the target player
-    rollStartingPlayer.mutate(
-      { gameSessionId: game.sessionId },
-      {
-        onSuccess: (data) => {
-          // Find the target player index
-          const targetIndex = sortedPlayers.findIndex(
-            (player) => player.nickname === data.startingPlayer
-          );
-          
-          if (targetIndex === -1) {
-            setRollingPlayerIndex(null);
-            return;
+    // Animation schedule: start fast, slow down in last 3 seconds
+    // Total duration: 10 seconds
+    const intervals: number[] = [];
+    let currentTime = 0;
+    
+    // First 7 seconds: fast cycling (100ms intervals)
+    while (currentTime < 7000) {
+      intervals.push(100);
+      currentTime += 100;
+    }
+    
+    // Last 3 seconds: slow down to 1 second intervals
+    intervals.push(1000); // 7s -> 8s
+    intervals.push(1000); // 8s -> 9s
+    intervals.push(1000); // 9s -> 10s
+    
+    let currentIndex = 0;
+    let intervalIndex = 0;
+    let targetIndex: number | null = null;
+    let backendFetched = false;
+    
+    // Fetch the starting player from backend after 9 seconds
+    setTimeout(() => {
+      rollStartingPlayer.mutate(
+        { gameSessionId: game.sessionId },
+        {
+          onSuccess: (data) => {
+            // Find the target player index
+            const foundIndex = sortedPlayers.findIndex(
+              (player) => player.nickname === data.startingPlayer
+            );
+            targetIndex = foundIndex >= 0 ? foundIndex : null;
+            backendFetched = true;
           }
-          
-          // Animation schedule: start fast, slow down in last 3 seconds
-          // Total duration: 10 seconds
-          const intervals: number[] = [];
-          let currentTime = 0;
-          
-          // First 7 seconds: fast cycling (100ms intervals)
-          while (currentTime < 7000) {
-            intervals.push(100);
-            currentTime += 100;
-          }
-          
-          // Last 3 seconds: slow down to 1 second intervals
-          intervals.push(1000); // 7s -> 8s
-          intervals.push(1000); // 8s -> 9s
-          intervals.push(1000); // 9s -> 10s
-          
-          let currentIndex = 0;
-          let intervalIndex = 0;
-          
-          const animate = () => {
-            if (intervalIndex >= intervals.length) {
-              // Animation complete - hold on final player for 2 seconds then clear
-              setTimeout(() => {
-                setRollingPlayerIndex(null);
-              }, 2000);
-              return;
-            }
-            
-            // For the last few steps, calculate position to land on target
-            const stepsRemaining = intervals.length - intervalIndex;
-            if (stepsRemaining <= 4) {
-              // Calculate exactly where we need to be to land on target
-              currentIndex = (targetIndex - stepsRemaining + 1 + numPlayers * 100) % numPlayers;
-            }
-            
-            setRollingPlayerIndex(currentIndex);
-            
-            if (stepsRemaining > 4) {
-              // Normal increment for fast phase
-              currentIndex = (currentIndex + 1) % numPlayers;
-            }
-            
-            intervalIndex++;
-            
-            if (intervalIndex < intervals.length) {
-              setTimeout(animate, intervals[intervalIndex]);
-            }
-          };
-          
-          animate();
         }
+      );
+    }, 9000);
+    
+    const animate = () => {
+      if (intervalIndex >= intervals.length) {
+        // Animation complete - hold on final player for 2 seconds then clear
+        setTimeout(() => {
+          setRollingPlayerIndex(null);
+        }, 2000);
+        return;
       }
-    );
+      
+      // For the last few steps, if we have the target, land on it
+      const stepsRemaining = intervals.length - intervalIndex;
+      if (backendFetched && targetIndex !== null && stepsRemaining <= 3) {
+        // Calculate exactly where we need to be to land on target
+        currentIndex = (targetIndex - stepsRemaining + 1 + numPlayers * 100) % numPlayers;
+      }
+      
+      setRollingPlayerIndex(currentIndex);
+      
+      // Normal increment when not in landing phase
+      if (!backendFetched || targetIndex === null || stepsRemaining > 3) {
+        currentIndex = (currentIndex + 1) % numPlayers;
+      }
+      
+      intervalIndex++;
+      
+      if (intervalIndex < intervals.length) {
+        setTimeout(animate, intervals[intervalIndex]);
+      }
+    };
+    
+    // Start animation immediately
+    animate();
   };
 
   const { data: randomizationHistory } = api.session.getRandomizationHistory.useQuery(
