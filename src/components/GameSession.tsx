@@ -26,6 +26,7 @@ const GameSession = (props: GameSessionProps) => {
   const [startingPlayer, setStartingPlayer] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [rollingPlayerIndex, setRollingPlayerIndex] = useState<number | null>(null);
+  const [animationOnGoing, setAnimationOnGoing] = useState<boolean | null>(null);
 
   const updateGameSession = api.session.updateGameSession.useMutation({
     onSuccess: () => {
@@ -93,6 +94,7 @@ const GameSession = (props: GameSessionProps) => {
   });
 
   const startRollingAnimation = () => {
+    if(!game) return;
     const sortedPlayers = sortPlayers(game.players);
     const numPlayers = sortedPlayers.length;
     
@@ -102,15 +104,15 @@ const GameSession = (props: GameSessionProps) => {
     let currentTime = 0;
     
     // First 7 seconds: fast cycling (100ms intervals)
-    while (currentTime < 7000) {
-      intervals.push(100);
-      currentTime += 100;
+    while (currentTime < 5000) {
+      intervals.push(300);
+      currentTime += 300;
     }
     
     // Last 3 seconds: slow down to 1 second intervals
-    intervals.push(1000); // 7s -> 8s
-    intervals.push(1000); // 8s -> 9s
-    intervals.push(1000); // 9s -> 10s
+    intervals.push(400); // 7s -> 8s
+    intervals.push(600); // 8s -> 9s
+    intervals.push(800); // 9s -> 10s
     
     let currentIndex = 0;
     let intervalIndex = 0;
@@ -132,9 +134,10 @@ const GameSession = (props: GameSessionProps) => {
           }
         }
       );
-    }, 9000);
+    }, 3000);
     
     const animate = () => {
+      console.log(`Animating index: ${currentIndex}, intervalIndex: ${intervalIndex}`);
       if (intervalIndex >= intervals.length) {
         // Animation complete - hold on final player for 2 seconds then clear
         setTimeout(() => {
@@ -142,12 +145,18 @@ const GameSession = (props: GameSessionProps) => {
         }, 2000);
         return;
       }
-      
+
       // For the last few steps, if we have the target, land on it
       const stepsRemaining = intervals.length - intervalIndex;
       if (backendFetched && targetIndex !== null && stepsRemaining <= 3) {
         // Calculate exactly where we need to be to land on target
         currentIndex = (targetIndex - stepsRemaining + 1 + numPlayers * 100) % numPlayers;
+        if(stepsRemaining === 1){
+          setAnimationOnGoing(false)
+          setTimeout(() => {
+            setRollingPlayerIndex(null);
+          }, 3000);
+        }
       }
       
       setRollingPlayerIndex(currentIndex);
@@ -165,6 +174,7 @@ const GameSession = (props: GameSessionProps) => {
     };
     
     // Start animation immediately
+    setAnimationOnGoing(true)
     animate();
   };
 
@@ -349,7 +359,7 @@ const GameSession = (props: GameSessionProps) => {
                 onClick={startRollingAnimation}
                 disabled={rollStartingPlayer.isLoading}
               >
-                {rollStartingPlayer.isLoading ? "Rolling..." : "Roll Starting Player"}
+                {animationOnGoing ? "Rolling..." : "Roll Starting Player"}
               </Button>
               {randomizationHistory && randomizationHistory.length > 0 && (
                 <Button
@@ -362,11 +372,11 @@ const GameSession = (props: GameSessionProps) => {
             </div>
             
             {seatAssignments && (
-              <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <h4 className="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">
-                  Latest Seat Assignments:
+              <div className="mb-4 p-4 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-green-900/20 rounded-lg">
+                <h4 className="text-sm font-semibold text-black dark:text-green-300 mb-2">
+                  Seat Assignments:
                 </h4>
-                <div className="text-sm text-green-800 dark:text-green-200">
+                <div className="text-sm text-black dark:text-green-200">
                   {Object.entries(seatAssignments).map(([player, seat]) => (
                     <div key={player} className="mb-1">
                       <span className="font-medium">{player}:</span> Seat {seat}
@@ -376,12 +386,12 @@ const GameSession = (props: GameSessionProps) => {
               </div>
             )}
             
-            {startingPlayer && (
-              <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
-                  Latest Starting Player:
+            {startingPlayer && !animationOnGoing &&(
+              <div className="mb-4 p-4 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-blue-900/20 rounded-lg">
+                <h4 className="text-sm font-semibold text-black dark:text-blue-300 mb-2">
+                  Starting Player:
                 </h4>
-                <div className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                <div className="text-sm text-black dark:text-blue-200 font-medium">
                   {startingPlayer}
                 </div>
               </div>
