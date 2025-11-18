@@ -85,4 +85,20 @@ body {
   color: #9ca3af !important;
 }
 
+/* Animation for rolling starting player */
+.player-rolling-animation {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  border-color: #f59e0b !important;
+  border-width: 2px !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5) !important;
+  transform: scale(1.03);
+  transition: all 0.2s ease-in-out;
+}
+
+/* Dark mode version */
+.dark .player-rolling-animation {
+  background: linear-gradient(135deg, #78350f 0%, #92400e 100%) !important;
+  border-color: #f59e0b !important;
+}
+
 
