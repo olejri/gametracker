@@ -25,7 +25,7 @@ const GameSession = (props: GameSessionProps) => {
   const [seatAssignments, setSeatAssignments] = useState<Record<string, number> | null>(null);
   const [startingPlayer, setStartingPlayer] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
-  const [isRollingStartingPlayer, setIsRollingStartingPlayer] = useState(false);
+  const [rollingPlayerIndex, setRollingPlayerIndex] = useState<number | null>(null);
 
   const updateGameSession = api.session.updateGameSession.useMutation({
     onSuccess: () => {
@@ -89,12 +89,49 @@ const GameSession = (props: GameSessionProps) => {
     onSuccess: (data) => {
       setStartingPlayer(data.startingPlayer);
       void ctx.session.getRandomizationHistory.invalidate();
-      // Keep animation running for the full duration (5 iterations * 0.6s = 3s)
+      // Stop the animation after it completes
       setTimeout(() => {
-        setIsRollingStartingPlayer(false);
-      }, 3000);
+        setRollingPlayerIndex(null);
+      }, 10000);
     }
   });
+
+  const startRollingAnimation = (numPlayers: number) => {
+    // Animation schedule: start fast, slow down in last 3 seconds
+    // Total duration: 10 seconds
+    const intervals: number[] = [];
+    let currentTime = 0;
+    
+    // First 7 seconds: fast cycling (100ms intervals)
+    while (currentTime < 7000) {
+      intervals.push(100);
+      currentTime += 100;
+    }
+    
+    // Last 3 seconds: slow down to 1 second intervals
+    intervals.push(1000); // 7s -> 8s
+    intervals.push(1000); // 8s -> 9s
+    intervals.push(1000); // 9s -> 10s
+    
+    let currentIndex = 0;
+    let intervalIndex = 0;
+    
+    const animate = () => {
+      if (intervalIndex >= intervals.length) {
+        return;
+      }
+      
+      setRollingPlayerIndex(currentIndex);
+      currentIndex = (currentIndex + 1) % numPlayers;
+      intervalIndex++;
+      
+      if (intervalIndex < intervals.length) {
+        setTimeout(animate, intervals[intervalIndex]);
+      }
+    };
+    
+    animate();
+  };
 
   const { data: randomizationHistory } = api.session.getRandomizationHistory.useQuery(
     { gameSessionId: game?.sessionId ?? "" },
@@ -243,14 +280,14 @@ const GameSession = (props: GameSessionProps) => {
       <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {sortPlayers(game.players).map((player) => (
+            {sortPlayers(game.players).map((player, index) => (
               <PlayerView
                 key={player.playerId}
                 player={player}
                 updatePlayer={updatePlayer}
                 isInReadOnlyMode={isInReadOnlyMode}
                 numberOfPlayers={game.players.length + 1}
-                isRolling={isRollingStartingPlayer}
+                isRolling={rollingPlayerIndex === index}
               ></PlayerView>
             ))}
           </div>
@@ -275,7 +312,7 @@ const GameSession = (props: GameSessionProps) => {
               <Button
                 variant="primary"
                 onClick={() => {
-                  setIsRollingStartingPlayer(true);
+                  startRollingAnimation(game.players.length);
                   rollStartingPlayer.mutate({ gameSessionId: game.sessionId });
                 }}
                 disabled={rollStartingPlayer.isLoading}
