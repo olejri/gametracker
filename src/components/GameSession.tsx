@@ -25,6 +25,7 @@ const GameSession = (props: GameSessionProps) => {
   const [seatAssignments, setSeatAssignments] = useState<Record<string, number> | null>(null);
   const [startingPlayer, setStartingPlayer] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [isRollingStartingPlayer, setIsRollingStartingPlayer] = useState(false);
 
   const updateGameSession = api.session.updateGameSession.useMutation({
     onSuccess: () => {
@@ -88,6 +89,10 @@ const GameSession = (props: GameSessionProps) => {
     onSuccess: (data) => {
       setStartingPlayer(data.startingPlayer);
       void ctx.session.getRandomizationHistory.invalidate();
+      // Keep animation running for the full duration (5 iterations * 0.6s = 3s)
+      setTimeout(() => {
+        setIsRollingStartingPlayer(false);
+      }, 3000);
     }
   });
 
@@ -245,6 +250,7 @@ const GameSession = (props: GameSessionProps) => {
                 updatePlayer={updatePlayer}
                 isInReadOnlyMode={isInReadOnlyMode}
                 numberOfPlayers={game.players.length + 1}
+                isRolling={isRollingStartingPlayer}
               ></PlayerView>
             ))}
           </div>
@@ -269,6 +275,7 @@ const GameSession = (props: GameSessionProps) => {
               <Button
                 variant="primary"
                 onClick={() => {
+                  setIsRollingStartingPlayer(true);
                   rollStartingPlayer.mutate({ gameSessionId: game.sessionId });
                 }}
                 disabled={rollStartingPlayer.isLoading}

@@ -9,8 +9,9 @@ const PlayerView = (props: {
   updatePlayer: (player: PlayerNicknameAndScore) => void,
   isInReadOnlyMode: boolean
   numberOfPlayers: number
+  isRolling?: boolean
 }) => {
-  const { isInReadOnlyMode, numberOfPlayers } = props;
+  const { isInReadOnlyMode, numberOfPlayers, isRolling } = props;
   const [player, setPlayer] = React.useState<PlayerNicknameAndScore>(props.player);
   const [isUpdatingPos, setIsUpdatingPos] = React.useState(false);
   const [isUpdatingScore, setIsUpdatingScore] = React.useState(false);
@@ -38,7 +39,7 @@ const PlayerView = (props: {
   return (
     <div
       key={player.playerId}
-      className="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500"
+      className={`relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500 ${isRolling ? 'player-rolling-animation' : ''}`}
     >
       <div className="flex-shrink-0">
         <Image
