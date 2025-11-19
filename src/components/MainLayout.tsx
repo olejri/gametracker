@@ -1,6 +1,6 @@
 import React from "react";
 import { Disclosure } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon, MoonIcon, SunIcon, ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { LoadingPage } from "npm/components/loading";
 import { useRouter } from "next/router";
@@ -40,8 +40,6 @@ const MainComponent = (props: ContainerProps) => {
       href: "/" + gameGroup + "/player/" + user.id,
       current: pathname === "/[dashboardId]/player/[playerId]"
     },
-    { name: "Switch", href: "/" + gameGroup + "/switch", current: pathname === "/[dashboardId]/switch" },
-    { name: "Export", href: "/" + gameGroup + "/export", current: pathname === "/[dashboardId]/export" },
   ];
 
   if (data?.role === "ADMIN") {
@@ -105,6 +103,13 @@ const MainComponent = (props: ContainerProps) => {
                         <MoonIcon className="h-6 w-6" aria-hidden="true" />
                       )}
                     </button>
+                    <a
+                      href={"/" + gameGroup + "/switch"}
+                      className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                      aria-label="Switch dashboard"
+                    >
+                      <ArrowsRightLeftIcon className="h-6 w-6" aria-hidden="true" />
+                    </a>
                     <UserButton />
                   </div>
                   <div className="-mr-2 flex items-center sm:hidden">
@@ -157,6 +162,13 @@ const MainComponent = (props: ContainerProps) => {
                         </>
                       )}
                     </button>
+                    <a
+                      href={"/" + gameGroup + "/switch"}
+                      className="flex w-full items-center px-4 py-2 text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                    >
+                      <ArrowsRightLeftIcon className="mr-3 h-6 w-6" aria-hidden="true" />
+                      Switch dashboard
+                    </a>
                   </div>
                 </div>
               </Disclosure.Panel>
