@@ -3,10 +3,13 @@ import { GameGroupContext } from "npm/context/GameGroupContext";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import { UserPlusIcon } from "@heroicons/react/24/solid";
-import { useUser } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import { useTheme } from "npm/context/ThemeContext";
 
 const JoinGameGroupView = () => {
   const { user } = useUser();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const { data, isLoading } = api.group.getActiveGameGroup.useQuery();
   const { data: allGameGroups, isLoading: allGameGroupsIsLoading } = api.group.getAllGameGroups.useQuery();
   const { data: pending, isLoading: pendingIsLoading, isError, error } = api.group.getAllPendingGameGroups.useQuery();
@@ -21,9 +24,11 @@ const JoinGameGroupView = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   const updateNickname = api.player.updateNickname.useMutation({
-    onSuccess: () => {
-      void ctx.user.getPlayer.invalidate();
+    onSuccess: async () => {
+      // Wait for the player data to be refreshed
+      await ctx.user.getPlayer.invalidate();
       setShowNicknameModal(false);
+      setNickname("");
       if (selectedGroupId) {
         askForInvite.mutate({ groupId: selectedGroupId });
         setSelectedGroupId(null);
@@ -77,10 +82,44 @@ const JoinGameGroupView = () => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-      <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
-        <div className="px-4 py-5 sm:p-6">
-          <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+    <div className="min-h-screen dark:bg-gray-900">
+      {/* Navigation Header */}
+      <nav className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 justify-between">
+            <div className="flex flex-shrink-0 items-center">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Game Tracker</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={toggleDarkMode}
+                className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? (
+                  <SunIcon className="h-6 w-6" aria-hidden="true" />
+                ) : (
+                  <MoonIcon className="h-6 w-6" aria-hidden="true" />
+                )}
+              </button>
+              <UserButton />
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="py-10">
+        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Join a Game Group</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Select a game group to join and start tracking your games.
+            </p>
+          </div>
+          <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
+            <div className="px-4 py-5 sm:p-6">
+              <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {allGameGroups?.filter((g) => !g.hidden).map((group) => (
               <li
                 key={group.id}
@@ -115,7 +154,9 @@ const JoinGameGroupView = () => {
                 </div>
               </li>
             ))}
-          </ul>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -178,7 +219,8 @@ const JoinGameGroupView = () => {
           </div>
         </div>
       )}
-    </div>);
+    </div>
+  );
 };
 
 export default JoinGameGroupView;
