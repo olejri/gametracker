@@ -106,7 +106,7 @@ const MainComponent = (props: ContainerProps) => {
                     <a
                       href={"/" + gameGroup + "/switch"}
                       className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
-                      aria-label="Switch tenant"
+                      aria-label="Switch dashboard"
                     >
                       <ArrowsRightLeftIcon className="h-6 w-6" aria-hidden="true" />
                     </a>
@@ -167,7 +167,7 @@ const MainComponent = (props: ContainerProps) => {
                       className="flex w-full items-center px-4 py-2 text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
                     >
                       <ArrowsRightLeftIcon className="mr-3 h-6 w-6" aria-hidden="true" />
-                      Switch tenant
+                      Switch dashboard
                     </a>
                   </div>
                 </div>
