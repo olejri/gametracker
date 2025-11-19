@@ -3,7 +3,8 @@ import {
   CircleStackIcon,
   PlayIcon,
   PuzzlePieceIcon,
-  Square3Stack3DIcon
+  Square3Stack3DIcon,
+  ArrowDownTrayIcon
 } from "@heroicons/react/24/outline";
 import React from "react";
 import Link from "next/link";
@@ -61,6 +62,14 @@ const actions = (groupName: string) => {
       icon: ChartPieIcon,
       iconForeground: ICON_COLORS.indigo.foreground,
       iconBackground: ICON_COLORS.indigo.background
+    },
+    {
+      title: "Export",
+      message: "Download your game data as CSV",
+      href: "/" + groupName + "/export",
+      icon: ArrowDownTrayIcon,
+      iconForeground: ICON_COLORS.sky.foreground,
+      iconBackground: ICON_COLORS.sky.background
     }
   ];
 };
