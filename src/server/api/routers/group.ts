@@ -41,10 +41,14 @@ export const groupRouter = createTRPCRouter({
 
     if (!player) {
       const user = filterUserForClient(clerkUser);
+      const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+      const playerName = fullName || user.emailAddress || user.username || "New Player";
+      
       player = await ctx.prisma.player.create({
         data: {
           clerkId: ctx.userId,
-          name: user.username ?? "New Player"
+          name: playerName,
+          email: user.emailAddress
         }
       });
     }

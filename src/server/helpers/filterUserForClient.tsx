@@ -6,7 +6,10 @@ export const filterUserForClient = (user: User) => {
   return {
     id: user.id,
     username: user.username,
-    profileImageUrl: user.profileImageUrl
+    profileImageUrl: user.profileImageUrl,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    emailAddress: user.emailAddresses.find(e => e.id === user.primaryEmailAddressId)?.emailAddress ?? null
   };
 };
 
