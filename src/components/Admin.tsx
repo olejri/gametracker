@@ -346,9 +346,10 @@ const AdminView = (props: {
                     Name
                   </label>
                   <input
-                    onBlur={(e) => {
+                    onChange={(e) => {
                       setName(e.target.value);
                     }}
+                    value={name}
                     type="text"
                     name="name"
                     id="name"
@@ -358,32 +359,34 @@ const AdminView = (props: {
                 </div>
                 <div
                   className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
-                  <label htmlFor="name" className="block text-xs font-medium text-gray-900 dark:text-white">
+                  <label htmlFor="nickname" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Nickname
                   </label>
                   <input
-                    onBlur={(e) => {
+                    onChange={(e) => {
                       setNickname(e.target.value);
                     }}
+                    value={nickname}
                     type="text"
-                    name="name"
-                    id="name"
+                    name="nickname"
+                    id="nickname"
                     className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     placeholder="Nickname"
                   />
                 </div>
                 <div
                   className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
-                  <label htmlFor="name" className="block text-xs font-medium text-gray-900 dark:text-white">
+                  <label htmlFor="email" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Email
                   </label>
                   <input
-                    onBlur={(e) => {
+                    onChange={(e) => {
                       setEmail(e.target.value);
                     }}
+                    value={email}
                     type="text"
-                    name="name"
-                    id="name"
+                    name="email"
+                    id="email"
                     className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     placeholder="Email address"
                   />
