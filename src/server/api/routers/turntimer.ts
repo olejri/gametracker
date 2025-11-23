@@ -1,6 +1,15 @@
 import { z } from "zod";
 import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import type { GameSession } from "@prisma/client";
+
+// Helper function to get remaining time with fallback chain
+const getRemainingTime = (
+  junctionRemainingTime: number | null | undefined,
+  sessionDefaultTime: number | null | undefined
+): number => {
+  return junctionRemainingTime ?? sessionDefaultTime ?? 0;
+};
 
 export const turnTimerRouter = createTRPCRouter({
   // Initialize turn-based timer for a session
@@ -93,7 +102,7 @@ export const turnTimerRouter = createTRPCRouter({
         players: session.PlayerGameSessionJunction.map((junction) => ({
           playerId: junction.playerId,
           playerName: junction.player.nickname ?? junction.player.name,
-          remainingTimeMs: junction.remainingTimeMs ?? session.defaultPlayerTimeMs ?? 0,
+          remainingTimeMs: getRemainingTime(junction.remainingTimeMs, session.defaultPlayerTimeMs),
           junctionId: junction.id
         }))
       };
@@ -153,7 +162,10 @@ export const turnTimerRouter = createTRPCRouter({
         });
       }
 
-      const currentRemainingTime = currentPlayerJunction.remainingTimeMs ?? session.defaultPlayerTimeMs ?? 0;
+      const currentRemainingTime = getRemainingTime(
+        currentPlayerJunction.remainingTimeMs,
+        session.defaultPlayerTimeMs
+      );
       const newRemainingTime = Math.max(0, currentRemainingTime - input.timeUsedMs);
 
       // Update current player's remaining time

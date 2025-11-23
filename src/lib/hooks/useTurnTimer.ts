@@ -160,8 +160,12 @@ export const useTurnTimer = ({
 
   // Calculate current player's remaining time
   const getCurrentPlayerRemainingTime = useCallback(() => {
-    if (!timerState.currentPlayerId || !timerState.turnStartedAt || !timerState.isActive) {
-      const currentPlayer = timerState.players.get(timerState.currentPlayerId ?? '');
+    if (!timerState.currentPlayerId) {
+      return 0;
+    }
+    
+    if (!timerState.turnStartedAt || !timerState.isActive) {
+      const currentPlayer = timerState.players.get(timerState.currentPlayerId);
       return currentPlayer?.remainingTimeMs ?? 0;
     }
 
