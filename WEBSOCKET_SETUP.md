@@ -111,7 +111,6 @@ Ensure these are set in production:
 **Hosting platforms:**
 
 ✅ **Works out-of-the-box:**
-- Vercel (with custom server route)
 - Railway
 - Render
 - Fly.io
@@ -121,39 +120,46 @@ Ensure these are set in production:
 ⚠️ **Requires configuration:**
 - Heroku (needs sticky sessions)
 - AWS Lambda (needs API Gateway WebSocket support)
-- Cloudflare Workers (limited WebSocket support)
 
-### Vercel Deployment
+❌ **Does NOT work:**
+- **Vercel** - Serverless functions don't support custom servers or persistent WebSocket connections
+- Cloudflare Workers (no persistent WebSocket support)
 
-For Vercel, you need to configure the custom server:
+### ⚠️ Important: Vercel Limitation
 
-1. **Update `vercel.json`** (create if it doesn't exist):
-   ```json
-   {
-     "version": 2,
-     "builds": [
-       {
-         "src": "server.js",
-         "use": "@vercel/node"
-       }
-     ],
-     "routes": [
-       {
-         "src": "/socket.io/(.*)",
-         "dest": "server.js"
-       },
-       {
-         "src": "/(.*)",
-         "dest": "server.js"
-       }
-     ]
-   }
-   ```
+**The custom server + WebSocket approach does NOT work on Vercel's serverless platform.**
 
-2. **Deploy:**
+Vercel serverless functions are stateless and terminate after each request, so they cannot maintain persistent WebSocket connections.
+
+**See `VERCEL_DEPLOYMENT.md` for:**
+- Detailed explanation of the limitation
+- Alternative deployment options (Railway, Render, etc.)
+- Hybrid approaches (Vercel for app + Railway for WebSocket)
+- How to use hosted services like Pusher/Ably instead
+
+### Railway Deployment (Recommended)
+
+Railway is the easiest alternative that supports custom servers and WebSockets:
+
+1. **Install Railway CLI:**
    ```bash
-   vercel deploy
+   npm install -g @railway/cli
    ```
+
+2. **Login and initialize:**
+   ```bash
+   railway login
+   railway init
+   ```
+
+3. **Deploy:**
+   ```bash
+   railway up
+   ```
+
+4. **Configure environment variables** in Railway dashboard
+
+Your WebSocket connections will work immediately without any code changes.
 
 ### Docker Deployment
 
