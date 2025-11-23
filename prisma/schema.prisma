@@ -49,13 +49,14 @@ model GameGroup {
 }
 
 model PlayerGameSessionJunction {
-  id            String      @id @default(uuid())
-  playerId      String
-  gameSessionId String
-  position      Int?
-  score         String?
-  player        Player      @relation(fields: [playerId], references: [id])
-  gameSession   GameSession @relation(fields: [gameSessionId], references: [id])
+  id              String      @id @default(uuid())
+  playerId        String
+  gameSessionId   String
+  position        Int?
+  score           String?
+  remainingTimeMs Int?        // Remaining time in milliseconds for this player
+  player          Player      @relation(fields: [playerId], references: [id])
+  gameSession     GameSession @relation(fields: [gameSessionId], references: [id])
 
   @@unique([playerId, gameSessionId])
 }
@@ -79,6 +80,10 @@ model GameSession {
   updatedAt                     DateTime                        @updatedAt
   groupId                       String                          @default("game-night")
   description                   String?
+  turnBasedTimerEnabled         Boolean                         @default(false)
+  currentTurnPlayerId           String?
+  turnStartedAt                 DateTime?
+  defaultPlayerTimeMs           Int?                            // Default time per player (e.g., 30 minutes = 1800000ms)
   PlayerGameSessionJunction     PlayerGameSessionJunction[]
   GameSessionGameJunction       GameSessionGameJunction[]
   GameSessionRandomizationLog   GameSessionRandomizationLog[]
