@@ -30,7 +30,7 @@ export const useTurnTimer = ({
   initialTurnStartedAt,
   enabled
 }: UseTurnTimerProps) => {
-  const { socket, isConnected } = useSocket();
+  const { socket, isConnected, connect, disconnect } = useSocket();
   const [timerState, setTimerState] = useState<TurnTimerState>({
     currentPlayerId: initialCurrentPlayerId ?? null,
     players: new Map(initialPlayers.map(p => [p.playerId, p])),
@@ -40,6 +40,17 @@ export const useTurnTimer = ({
   
   const [currentTime, setCurrentTime] = useState(Date.now());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Connect to socket only when timer is enabled
+  useEffect(() => {
+    if (enabled) {
+      console.log('Timer enabled, connecting to socket...');
+      connect();
+    } else {
+      console.log('Timer disabled, disconnecting from socket...');
+      disconnect();
+    }
+  }, [enabled, connect, disconnect]);
 
   // Update current time every 100ms for smooth countdown
   useEffect(() => {
@@ -64,9 +75,11 @@ export const useTurnTimer = ({
   // Join session room when socket connects
   useEffect(() => {
     if (socket && isConnected && enabled) {
+      console.log('Joining session room:', sessionId);
       socket.emit('join-session', sessionId);
 
       return () => {
+        console.log('Leaving session room:', sessionId);
         socket.emit('leave-session', sessionId);
       };
     }

@@ -1,14 +1,18 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
+  connect: () => void;
+  disconnect: () => void;
 }
 
 const SocketContext = createContext<SocketContextType>({
   socket: null,
   isConnected: false,
+  connect: () => {},
+  disconnect: () => {},
 });
 
 export const useSocket = () => {
@@ -27,11 +31,26 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
-  useEffect(() => {
-    // Initialize Socket.io connection
+  const connect = useCallback(() => {
+    // Only connect if not already connected or connecting
+    if (socket?.connected) {
+      console.log('Socket already connected');
+      return;
+    }
+
+    if (socket && !socket.connected) {
+      // Reuse existing socket instance
+      console.log('Reconnecting existing socket');
+      socket.connect();
+      return;
+    }
+
+    // Create new socket instance
+    console.log('Creating new socket connection');
     const socketInstance = io({
       path: '/socket.io',
       transports: ['websocket', 'polling'],
+      autoConnect: false, // Don't auto-connect
     });
 
     socketInstance.on('connect', () => {
@@ -50,17 +69,28 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     });
 
     setSocket(socketInstance);
+    socketInstance.connect();
+  }, [socket]);
 
-    // Cleanup on unmount
+  const disconnect = useCallback(() => {
+    if (socket?.connected) {
+      console.log('Disconnecting socket');
+      socket.disconnect();
+    }
+  }, [socket]);
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      if (socketInstance) {
-        socketInstance.disconnect();
+      if (socket) {
+        socket.disconnect();
+        socket.removeAllListeners();
       }
     };
-  }, []);
+  }, [socket]);
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected }}>
+    <SocketContext.Provider value={{ socket, isConnected, connect, disconnect }}>
       {children}
     </SocketContext.Provider>
   );
