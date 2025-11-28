@@ -4,7 +4,8 @@ import {
   PlayIcon,
   PuzzlePieceIcon,
   Square3Stack3DIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  InformationCircleIcon
 } from "@heroicons/react/24/outline";
 import React from "react";
 import Link from "next/link";
@@ -70,6 +71,14 @@ const actions = (groupName: string) => {
       icon: ArrowDownTrayIcon,
       iconForeground: ICON_COLORS.sky.foreground,
       iconBackground: ICON_COLORS.sky.background
+    },
+    {
+      title: "How the app works",
+      message: "Learn how to use the app",
+      href: "/" + groupName + "/tutorial",
+      icon: InformationCircleIcon,
+      iconForeground: ICON_COLORS.blue.foreground,
+      iconBackground: ICON_COLORS.blue.background
     }
   ];
 };

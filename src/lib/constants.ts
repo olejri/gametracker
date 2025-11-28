@@ -28,6 +28,10 @@ export const ICON_COLORS = {
     foreground: "text-indigo-700",
     background: "bg-indigo-50",
   },
+  blue: {
+    foreground: "text-blue-700",
+    background: "bg-blue-50",
+  },
 } as const;
 
 // Common border radius values
