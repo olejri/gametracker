@@ -1,10 +1,11 @@
-import { adminProcedure, createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
+import { adminProcedure, createTRPCRouter, groupAdminProcedure, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import {
   checkIfGameGroupExists,
   filterUserForClient,
   getPlayerByClerkId,
+  getProfileImageUrl,
 } from "npm/server/helpers/filterUserForClient";
 import { TRPCError } from "@trpc/server";
 import type { Game } from "npm/components/Types";
@@ -39,6 +40,58 @@ export const playerRouter = createTRPCRouter({
           inviteStatus: "ACCEPTED"
         }
       });
+      return {
+        data: player
+      };
+    }),
+
+  createFakePlayer: groupAdminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1, "Name is required"),
+        nickname: z.string().min(1, "Nickname is required"),
+        email: z.string().optional(),
+        groupId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      // Check if nickname is already taken
+      const existingPlayer = await ctx.prisma.player.findFirst({
+        where: {
+          nickname: input.nickname
+        }
+      });
+
+      if (existingPlayer) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Nickname already taken"
+        });
+      }
+
+      // Create fake player without clerkId
+      const player = await ctx.prisma.player.create({
+        data: {
+          name: input.name,
+          nickname: input.nickname,
+          email: input.email || null,
+          clerkId: null // Explicitly set to null - this is a fake player
+        }
+      });
+      
+      // Check if group exists
+      const group = await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      
+      // Add to group with ACCEPTED status
+      await ctx.prisma.playerGameGroupJunction.create({
+        data: {
+          playerId: player.id,
+          groupId: group.id,
+          role: "MEMBER",
+          gameGroupIsActive: true,
+          inviteStatus: "ACCEPTED"
+        }
+      });
+      
       return {
         data: player
       };
@@ -92,10 +145,9 @@ export const playerRouter = createTRPCRouter({
 
       return {
         data: players.map((player) => {
-          const user = users.find((user) => user.id === player.clerkId);
           return {
             ...player,
-            profileImageUrl: user?.profileImageUrl ?? ""
+            profileImageUrl: getProfileImageUrl(player.clerkId, users)
           };
         })
       };

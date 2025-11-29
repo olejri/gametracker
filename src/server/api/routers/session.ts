@@ -5,7 +5,7 @@ import { type Game, type GameSessionWithPlayers, type Player } from "npm/compone
 import { FindGameSessionStatus } from "npm/components/HelperFunctions";
 import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
-import { checkIfGameGroupExists, filterUserForClient, getPlayerById } from "npm/server/helpers/filterUserForClient";
+import { checkIfGameGroupExists, filterUserForClient, getPlayerById, getProfileImageUrl } from "npm/server/helpers/filterUserForClient";
 
 export const sessionRouter = createTRPCRouter({
   getAllCompletedSessionsAsc: publicProcedure
@@ -79,7 +79,7 @@ export const sessionRouter = createTRPCRouter({
             position: playerGameSession.position ?? 0,
             playerId: playerGameSession.playerId,
             junctionId: playerMap.get(playerGameSession.playerId)?.id ?? "",
-            profileImageUrl: usersWithImages.find((user) => user.id === playerMap.get(playerGameSession.playerId)?.clerkId)?.profileImageUrl ?? ""
+            profileImageUrl: getProfileImageUrl(playerMap.get(playerGameSession.playerId)?.clerkId, usersWithImages)
           }));
           // Map over each gameSessionGame to extract game information
           const expansions = session.GameSessionGameJunction.map((gameSessionGame) => ({
@@ -175,7 +175,7 @@ export const sessionRouter = createTRPCRouter({
             position: playerGameSession.position ?? 0,
             playerId: playerGameSession.playerId,
             junctionId: playerMap.get(playerGameSession.playerId)?.id ?? "",
-            profileImageUrl: usersWithImages.find((user) => user.id === playerMap.get(playerGameSession.playerId)?.clerkId)?.profileImageUrl ?? ""
+            profileImageUrl: getProfileImageUrl(playerMap.get(playerGameSession.playerId)?.clerkId, usersWithImages)
           }));
           // Map over each gameSessionGame to extract game information
           const expansions = session.GameSessionGameJunction.map((gameSessionGame) => ({
@@ -270,7 +270,7 @@ export const sessionRouter = createTRPCRouter({
             position: playerGameSession.position ?? 0,
             playerId: playerGameSession.playerId,
             junctionId: playerMap.get(playerGameSession.playerId)?.id ?? "",
-            profileImageUrl: usersWithImages.find((user) => user.id === playerMap.get(playerGameSession.playerId)?.clerkId)?.profileImageUrl ?? ""
+            profileImageUrl: getProfileImageUrl(playerMap.get(playerGameSession.playerId)?.clerkId, usersWithImages)
           }));
           // Map over each gameSessionGame to extract game information
           const expansions = session.GameSessionGameJunction.map((gameSessionGame) => ({
@@ -372,7 +372,7 @@ export const sessionRouter = createTRPCRouter({
         position: playerGameSession.position ?? 0,
         junctionId: playerGameSession.id,
         playerId: playerGameSession.playerId,
-        profileImageUrl: users.find((user) => user.id === playerMap.get(playerGameSession.playerId)?.clerkId)?.profileImageUrl ?? ""
+        profileImageUrl: getProfileImageUrl(playerMap.get(playerGameSession.playerId)?.clerkId, users)
       }));
 
       const gameMap = new Map<string, Game>();
