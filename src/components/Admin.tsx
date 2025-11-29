@@ -519,7 +519,7 @@ const AdminView = (props: {
                     createFakePlayer.mutate({
                       name: fakeName,
                       nickname: fakeNickname,
-                      email: fakeEmail || undefined,
+                      email: fakeEmail.trim() || undefined,
                       groupId: gameGroup
                     });
                   }}
