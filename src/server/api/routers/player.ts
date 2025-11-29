@@ -2,6 +2,7 @@ import { adminProcedure, createTRPCRouter, groupAdminProcedure, privateProcedure
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import {
+  BOT_AVATAR_URL,
   checkIfGameGroupExists,
   filterUserForClient,
   getPlayerByClerkId,
@@ -147,7 +148,7 @@ export const playerRouter = createTRPCRouter({
           const user = users.find((user) => user.id === player.clerkId);
           return {
             ...player,
-            profileImageUrl: user?.profileImageUrl ?? ""
+            profileImageUrl: player.clerkId ? (user?.profileImageUrl ?? BOT_AVATAR_URL) : BOT_AVATAR_URL
           };
         })
       };

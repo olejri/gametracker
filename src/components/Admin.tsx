@@ -2,13 +2,14 @@ import React from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage, LoadingSpinner } from "npm/components/loading";
 import { UserPlusIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
-import { useRouter } from "next/router";
 import { Button } from "npm/components/ui";
 
 const AdminView = (props: {
   gameGroup: string
 }) => {
   const { gameGroup } = props;
+  const ctx = api.useContext();
+  
   const { data, isLoading, isError, error } = api.user.getPendingPlayers.useQuery({ gameGroup });
   const {
     data: emailInvites,
@@ -21,6 +22,16 @@ const AdminView = (props: {
   const { data: gamesInGroup, isLoading: allPlayersIsloading, isError: allPlayersIsError, error: allPlayersError } = api.group.getAllPlayersInGroup.useQuery({ gameGroup });
   const { data: allGameGroups, isLoading: allGameGroupsIsLoading } = api.group.getAllGameGroups.useQuery();
 
+  // Helper to invalidate all admin-related queries
+  const invalidateAdminQueries = async () => {
+    await Promise.all([
+      ctx.user.getPendingPlayers.invalidate({ gameGroup }),
+      ctx.user.getPendingEmailInvites.invalidate(),
+      ctx.group.getAllPlayersInGroup.invalidate({ gameGroup }),
+      ctx.group.getAllGameGroups.invalidate(),
+    ]);
+  };
+
   const mutation = api.user.sendInvite.useMutation(
     {
       onSuccess: () => {
@@ -32,26 +43,26 @@ const AdminView = (props: {
     }
   );
   const addPlayer = api.player.addPlayer.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       setName("");
       setNickname("");
       setEmail("");
+      await invalidateAdminQueries();
     },
     onError: (error) => {
       console.log(error);
     }
   });
 
-  const router = useRouter();
   const acceptPlayer = api.user.acceptInvite.useMutation({
-    onSuccess: () => {
-      void router.reload();
+    onSuccess: async () => {
+      await invalidateAdminQueries();
     }
   });
 
   const promoteToAdmin = api.user.promoteToAdmin.useMutation({
-    onSuccess: () => {
-      void router.reload();
+    onSuccess: async () => {
+      await invalidateAdminQueries();
     },
     onError: (error) => {
       console.log(error);
@@ -59,8 +70,8 @@ const AdminView = (props: {
   });
 
   const removeUser = api.user.removeUserFromGroup.useMutation({
-    onSuccess: () => {
-      void router.reload();
+    onSuccess: async () => {
+      await invalidateAdminQueries();
     },
     onError: (error) => {
       console.log(error);
@@ -68,8 +79,8 @@ const AdminView = (props: {
   });
 
   const declineInvite = api.user.declineInvite.useMutation({
-    onSuccess: () => {
-      void router.reload();
+    onSuccess: async () => {
+      await invalidateAdminQueries();
     },
     onError: (error) => {
       console.log(error);
@@ -77,8 +88,8 @@ const AdminView = (props: {
   });
 
   const toggleHidden = api.group.toggleGroupHidden.useMutation({
-    onSuccess: () => {
-      void router.reload();
+    onSuccess: async () => {
+      await invalidateAdminQueries();
     },
     onError: (error) => {
       console.log(error);
@@ -86,11 +97,11 @@ const AdminView = (props: {
   });
 
   const createFakePlayer = api.player.createFakePlayer.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       setFakeName("");
       setFakeNickname("");
       setFakeEmail("");
-      void router.reload();
+      await invalidateAdminQueries();
     },
     onError: (error) => {
       console.log(error);

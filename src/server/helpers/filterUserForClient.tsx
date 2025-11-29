@@ -2,6 +2,9 @@ import type { User } from "@clerk/nextjs/dist/api";
 import { type Prisma, type PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 
+// Default avatar for fake players (players without Clerk account)
+export const BOT_AVATAR_URL = "/bot-avatar.svg";
+
 export const filterUserForClient = (user: User) => {
   return {
     id: user.id,
