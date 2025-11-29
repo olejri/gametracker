@@ -85,9 +85,26 @@ const AdminView = (props: {
     }
   });
 
+  const createFakePlayer = api.player.createFakePlayer.useMutation({
+    onSuccess: () => {
+      setFakeName("");
+      setFakeNickname("");
+      setFakeEmail("");
+      void router.reload();
+    },
+    onError: (error) => {
+      console.log(error);
+    }
+  });
+
   const [email, setEmail] = React.useState("");
   const [name, setName] = React.useState("");
   const [nickname, setNickname] = React.useState("");
+  
+  // State for fake player form
+  const [fakeName, setFakeName] = React.useState("");
+  const [fakeNickname, setFakeNickname] = React.useState("");
+  const [fakeEmail, setFakeEmail] = React.useState("");
 
   // Combine all users into a single list with status information
   const allUsers = React.useMemo(() => {
@@ -179,10 +196,15 @@ const AdminView = (props: {
             className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow dark:divide-gray-700 dark:bg-gray-800"
           >
             <div className="flex flex-1 flex-col p-8">
-              <div className="flex justify-center mb-2">
+              <div className="flex justify-center mb-2 gap-1 flex-wrap">
                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${user.statusColor}`}>
                   {user.status}
                 </span>
+                {!user.clerkId && user.inviteStatus === "ACCEPTED" && (
+                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-800">
+                    Fake Player
+                  </span>
+                )}
               </div>
               <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{user.nickname || user.name}</h3>
               <dl className="mt-1 flex flex-grow flex-col justify-between">
@@ -422,6 +444,94 @@ const AdminView = (props: {
         </div>
 
 
+      </div>
+
+      {/* Create Fake Player Section */}
+      <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
+        <div className="px-4 py-5 sm:p-6">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Create Fake Player
+          </label>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Create a player without a Clerk account. Useful for tracking historical game sessions with players who have left the group.
+          </p>
+          <div className="mt-2 overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="isolate -space-y-px rounded-md shadow-sm">
+                <div className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="fakeName" className="block text-xs font-medium text-gray-900 dark:text-white">
+                    Name *
+                  </label>
+                  <input
+                    onChange={(e) => {
+                      setFakeName(e.target.value);
+                    }}
+                    value={fakeName}
+                    type="text"
+                    name="fakeName"
+                    id="fakeName"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                    placeholder="Full name"
+                  />
+                </div>
+                <div className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="fakeNickname" className="block text-xs font-medium text-gray-900 dark:text-white">
+                    Nickname *
+                  </label>
+                  <input
+                    onChange={(e) => {
+                      setFakeNickname(e.target.value);
+                    }}
+                    value={fakeNickname}
+                    type="text"
+                    name="fakeNickname"
+                    id="fakeNickname"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                    placeholder="Nickname"
+                  />
+                </div>
+                <div className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  <label htmlFor="fakeEmail" className="block text-xs font-medium text-gray-900 dark:text-white">
+                    Email (optional)
+                  </label>
+                  <input
+                    onChange={(e) => {
+                      setFakeEmail(e.target.value);
+                    }}
+                    value={fakeEmail}
+                    type="email"
+                    name="fakeEmail"
+                    id="fakeEmail"
+                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                    placeholder="Email address (optional)"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-4 py-4 sm:px-6 dark:bg-gray-700">
+              {createFakePlayer.isLoading ? (
+                <LoadingSpinner size={30} />
+              ) : (
+                <Button
+                  disabled={createFakePlayer.isLoading || fakeName.length === 0 || fakeNickname.length === 0}
+                  variant="primary"
+                  onClick={() => {
+                    createFakePlayer.mutate({
+                      name: fakeName,
+                      nickname: fakeNickname,
+                      email: fakeEmail || undefined,
+                      groupId: gameGroup
+                    });
+                  }}
+                >
+                  Create Fake Player
+                </Button>
+              )}
+              {createFakePlayer.isError &&
+                <span className="text-red-500 p-2">{createFakePlayer.error?.message}</span>}
+            </div>
+          </div>
+        </div>
       </div>
     </div>);
 };
