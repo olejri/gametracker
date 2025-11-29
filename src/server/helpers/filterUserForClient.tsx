@@ -16,6 +16,17 @@ export const filterUserForClient = (user: User) => {
   };
 };
 
+// Helper to get profile image URL, using bot avatar for fake players (no clerkId)
+export const getProfileImageUrl = (
+  clerkId: string | null | undefined,
+  usersWithImages: ReturnType<typeof filterUserForClient>[]
+): string => {
+  if (!clerkId) {
+    return BOT_AVATAR_URL;
+  }
+  return usersWithImages.find((user) => user.id === clerkId)?.profileImageUrl ?? BOT_AVATAR_URL;
+};
+
 export async function getPlayerByClerkId(prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined>, userId: string) {
   const player = await prisma.player.findUnique({
     where: {

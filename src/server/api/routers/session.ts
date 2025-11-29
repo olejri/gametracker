@@ -5,18 +5,7 @@ import { type Game, type GameSessionWithPlayers, type Player } from "npm/compone
 import { FindGameSessionStatus } from "npm/components/HelperFunctions";
 import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
-import { BOT_AVATAR_URL, checkIfGameGroupExists, filterUserForClient, getPlayerById } from "npm/server/helpers/filterUserForClient";
-
-// Helper to get profile image URL, using bot avatar for fake players
-const getProfileImageUrl = (
-  clerkId: string | null | undefined,
-  usersWithImages: ReturnType<typeof filterUserForClient>[]
-): string => {
-  if (!clerkId) {
-    return BOT_AVATAR_URL;
-  }
-  return usersWithImages.find((user) => user.id === clerkId)?.profileImageUrl ?? BOT_AVATAR_URL;
-};
+import { checkIfGameGroupExists, filterUserForClient, getPlayerById, getProfileImageUrl } from "npm/server/helpers/filterUserForClient";
 
 export const sessionRouter = createTRPCRouter({
   getAllCompletedSessionsAsc: publicProcedure
