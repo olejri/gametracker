@@ -10,6 +10,7 @@ import dayjs from "dayjs";
 import { Button } from "npm/components/ui";
 import { StatusBadge } from "npm/components/ui";
 import { formatDate, transformDate } from "npm/lib/utils";
+import { TurnTimer } from "npm/components/TurnTimer";
 
 const GameSession = (props: GameSessionProps) => {
   const {
@@ -432,6 +433,16 @@ const GameSession = (props: GameSessionProps) => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      ) : null}
+      {game.status === GameSessionStatus.Ongoing ? (
+        <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
+              Turn-Based Timer
+            </h3>
+            <TurnTimer sessionId={game.sessionId} enabled={game.status === GameSessionStatus.Ongoing} />
           </div>
         </div>
       ) : null}

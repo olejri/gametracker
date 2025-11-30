@@ -17,33 +17,36 @@ import NotChosenGameGroup from "npm/components/NotChosenGameGroup";
 import MainComponent from "npm/components/MainLayout";
 import LandingPage from "npm/components/LandingPage";
 import { ThemeProvider } from "npm/context/ThemeContext";
+import { SocketProvider } from "npm/context/SocketContext";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
 
   return (
     <ThemeProvider>
-      <ClerkProvider {...pageProps} >
-        <SignedIn>
-          <GameGroupContextProvider>
-            <HasChosenGameGroup>
-              <MainComponent >
-                <Head>
-                  <title>Game Tracker</title>
-                  <meta name="description" content="Game Tracker" />
-                  <link rel="icon" href="/favicon.ico" />
-                </Head>
-                <Component {...pageProps} />
-              </MainComponent>
-            </HasChosenGameGroup>
-            <NotChosenGameGroup>
-              <JoinGameGroupView />
-            </NotChosenGameGroup>
-          </GameGroupContextProvider>
-        </SignedIn>
-        <SignedOut>
-          <LandingPage />
-        </SignedOut>
-      </ClerkProvider>
+      <SocketProvider>
+        <ClerkProvider {...pageProps} >
+          <SignedIn>
+            <GameGroupContextProvider>
+              <HasChosenGameGroup>
+                <MainComponent >
+                  <Head>
+                    <title>Game Tracker</title>
+                    <meta name="description" content="Game Tracker" />
+                    <link rel="icon" href="/favicon.ico" />
+                  </Head>
+                  <Component {...pageProps} />
+                </MainComponent>
+              </HasChosenGameGroup>
+              <NotChosenGameGroup>
+                <JoinGameGroupView />
+              </NotChosenGameGroup>
+            </GameGroupContextProvider>
+          </SignedIn>
+          <SignedOut>
+            <LandingPage />
+          </SignedOut>
+        </ClerkProvider>
+      </SocketProvider>
     </ThemeProvider>
   );
 };
