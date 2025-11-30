@@ -274,14 +274,17 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      // Update player nickname to "Removed" and mark as inactive
-      // This preserves game history while indicating the player is no longer active
+      // Prefix nickname with "R:" to indicate removed status
+      // This maintains the player record for game session history while showing they are no longer active
+      // The prefix check prevents nested "R:R:..." patterns if a player is re-added and removed again
+      const originalNickname = player.nickname ?? player.name;
+      const newNickname = originalNickname.startsWith("R:") ? originalNickname : `R:${originalNickname}`;
       await ctx.prisma.player.update({
         where: { id: player.id },
-        data: { nickname: "Removed" }
+        data: { nickname: newNickname }
       });
 
-      // Set player as inactive in the group
+      // Set player as removed from the group
       return ctx.prisma.playerGameGroupJunction.update({
         where: {
           groupId_playerId: {
@@ -291,6 +294,58 @@ export const userRouter = createTRPCRouter({
         },
         data: {
           inviteStatus: "REMOVED",
+          gameGroupIsActive: false
+        }
+      });
+    }),
+
+  setPlayerInactive: groupAdminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        playerId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      const player = await getPlayerById(ctx.prisma, input.playerId);
+      const currentUser = await getPlayerByClerkId(ctx.prisma, ctx.userId);
+
+      // Prevent admin from marking themselves inactive
+      if (player.id === currentUser.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot mark yourself as inactive"
+        });
+      }
+
+      // Check if player is in the group
+      const existingJunction = await ctx.prisma.playerGameGroupJunction.findUnique({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        }
+      });
+
+      if (!existingJunction) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Player is not a member of this group"
+        });
+      }
+
+      // Set player as inactive in the group (does not change nickname)
+      // Inactive players don't appear in the start game list but remain in admin view
+      return ctx.prisma.playerGameGroupJunction.update({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        },
+        data: {
+          inviteStatus: "INACTIVE",
           gameGroupIsActive: false
         }
       });
