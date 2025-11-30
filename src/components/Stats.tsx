@@ -126,7 +126,7 @@ const GameHighScoresTable: React.FC<{
   highScores: Array<{ gameName: string; highScore: number; playerName: string; isActivePlayer?: boolean }>;
 }> = ({ highScores }) => {
   // Filter to only show high scores from active players
-  const displayHighScores = highScores.filter((score) => score.isActivePlayer !== false);
+  const displayHighScores = highScores.filter((score) => score.isActivePlayer === true);
 
   return (
     <div className="mt-10 bg-white rounded-xl shadow p-4 dark:bg-gray-800">
@@ -274,7 +274,7 @@ const BestGamePerPlayerTable: React.FC<{
   }>;
 }> = ({ bestGames }) => {
   // Filter to only show active players
-  const displayBestGames = bestGames.filter((game) => game.isActivePlayer !== false);
+  const displayBestGames = bestGames.filter((game) => game.isActivePlayer === true);
 
   return (
     <div className="mt-10 bg-white rounded-xl shadow p-4 dark:bg-gray-800">
