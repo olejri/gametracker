@@ -78,6 +78,15 @@ const AdminView = (props: {
     }
   });
 
+  const setInactive = api.user.setPlayerInactive.useMutation({
+    onSuccess: async () => {
+      await invalidateAdminQueries();
+    },
+    onError: (error) => {
+      console.log(error);
+    }
+  });
+
   const declineInvite = api.user.declineInvite.useMutation({
     onSuccess: async () => {
       await invalidateAdminQueries();
@@ -127,7 +136,7 @@ const AdminView = (props: {
       clerkId: string | null;
       role: string;
       inviteStatus: string;
-      status: "Admin" | "Member" | "Invited" | "Want to join" | "Inactive";
+      status: "Admin" | "Member" | "Invited" | "Want to join" | "Inactive" | "Removed";
       statusColor: string;
     }> = [];
 
@@ -156,6 +165,18 @@ const AdminView = (props: {
           inviteStatus: game.inviteStatus,
           status: "Inactive",
           statusColor: "bg-gray-100 text-gray-800"
+        });
+      } else if (game.inviteStatus === "REMOVED") {
+        users.push({
+          id: game.Player.id,
+          nickname: game.Player.nickname,
+          name: game.Player.name,
+          email: game.Player.email,
+          clerkId: game.Player.clerkId,
+          role: game.role,
+          inviteStatus: game.inviteStatus,
+          status: "Removed",
+          statusColor: "bg-orange-100 text-orange-800"
         });
       }
     });
@@ -276,7 +297,7 @@ const AdminView = (props: {
                     </div>
                   </>
                 )}
-                {/* Show promote/remove for accepted members */}
+                {/* Show promote/remove/inactive for accepted members */}
                 {user.inviteStatus === "ACCEPTED" && (
                   <>
                     {user.role !== "ADMIN" && (
@@ -293,6 +314,27 @@ const AdminView = (props: {
                         >
                           <ShieldCheckIcon className="h-5 w-5 text-green-600" aria-hidden="true" />
                           Promote to Admin
+                        </button>
+                      </div>
+                    )}
+                    {currentPlayer?.id !== user.id && (
+                      <div className="-ml-px flex w-0 flex-1">
+                        <button
+                          className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-700`}
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to mark ${user.nickname || user.name} as inactive? They won't appear in the start game list.`)) {
+                              setInactive.mutate({
+                                playerId: user.id,
+                                groupId: gameGroup
+                              });
+                            }
+                          }}
+                          disabled={setInactive.isLoading}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-gray-500">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                          </svg>
+                          Inactive
                         </button>
                       </div>
                     )}
@@ -329,6 +371,12 @@ const AdminView = (props: {
                 {user.inviteStatus === "INACTIVE" && (
                   <div className="flex w-full justify-center py-4">
                     <span className="text-sm text-gray-500 dark:text-gray-400">Inactive player</span>
+                  </div>
+                )}
+                {/* For removed users, show status */}
+                {user.inviteStatus === "REMOVED" && (
+                  <div className="flex w-full justify-center py-4">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Removed player</span>
                   </div>
                 )}
               </div>
