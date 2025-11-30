@@ -274,8 +274,9 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      // Update player nickname to "R:{original_nickname}" to indicate they are inactive
-      // This preserves game history while indicating the player is no longer active
+      // Prefix nickname with "R:" to indicate inactive status
+      // This maintains the player record for game session history while showing they are no longer active
+      // The prefix check prevents nested "R:R:..." patterns if a player is re-added and removed again
       const originalNickname = player.nickname ?? player.name;
       const newNickname = originalNickname.startsWith("R:") ? originalNickname : `R:${originalNickname}`;
       await ctx.prisma.player.update({
