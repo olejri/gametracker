@@ -274,11 +274,13 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      // Update player nickname to "Removed" and mark as inactive
+      // Update player nickname to "R:{original_nickname}" to indicate they are inactive
       // This preserves game history while indicating the player is no longer active
+      const originalNickname = player.nickname ?? player.name;
+      const newNickname = originalNickname.startsWith("R:") ? originalNickname : `R:${originalNickname}`;
       await ctx.prisma.player.update({
         where: { id: player.id },
-        data: { nickname: "Removed" }
+        data: { nickname: newNickname }
       });
 
       // Set player as inactive in the group
@@ -290,7 +292,7 @@ export const userRouter = createTRPCRouter({
           }
         },
         data: {
-          inviteStatus: "REMOVED",
+          inviteStatus: "INACTIVE",
           gameGroupIsActive: false
         }
       });

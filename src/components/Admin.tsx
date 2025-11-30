@@ -127,7 +127,7 @@ const AdminView = (props: {
       clerkId: string | null;
       role: string;
       inviteStatus: string;
-      status: "Admin" | "Member" | "Invited" | "Want to join";
+      status: "Admin" | "Member" | "Invited" | "Want to join" | "Inactive";
       statusColor: string;
     }> = [];
 
@@ -144,6 +144,18 @@ const AdminView = (props: {
           inviteStatus: game.inviteStatus,
           status: game.role === "ADMIN" ? "Admin" : "Member",
           statusColor: game.role === "ADMIN" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
+        });
+      } else if (game.inviteStatus === "INACTIVE") {
+        users.push({
+          id: game.Player.id,
+          nickname: game.Player.nickname,
+          name: game.Player.name,
+          email: game.Player.email,
+          clerkId: game.Player.clerkId,
+          role: game.role,
+          inviteStatus: game.inviteStatus,
+          status: "Inactive",
+          statusColor: "bg-gray-100 text-gray-800"
         });
       }
     });
@@ -311,6 +323,12 @@ const AdminView = (props: {
                 {user.inviteStatus === "INVITED" && (
                   <div className="flex w-full justify-center py-4">
                     <span className="text-sm text-gray-500 dark:text-gray-400">Awaiting acceptance</span>
+                  </div>
+                )}
+                {/* For inactive users, show status */}
+                {user.inviteStatus === "INACTIVE" && (
+                  <div className="flex w-full justify-center py-4">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Inactive player</span>
                   </div>
                 )}
               </div>
