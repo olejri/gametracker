@@ -117,7 +117,11 @@ export const playerRouter = createTRPCRouter({
           id: input.groupId
         },
         include: {
-          PlayerGameGroupJunction: true
+          PlayerGameGroupJunction: {
+            where: {
+              inviteStatus: "ACCEPTED"
+            }
+          }
         }
       });
 
