@@ -96,6 +96,15 @@ const AdminView = (props: {
     }
   });
 
+  const setActive = api.user.setPlayerActive.useMutation({
+    onSuccess: async () => {
+      await invalidateAdminQueries();
+    },
+    onError: (error) => {
+      console.log(error);
+    }
+  });
+
   const toggleHidden = api.group.toggleGroupHidden.useMutation({
     onSuccess: async () => {
       await invalidateAdminQueries();
@@ -367,16 +376,48 @@ const AdminView = (props: {
                     <span className="text-sm text-gray-500 dark:text-gray-400">Awaiting acceptance</span>
                   </div>
                 )}
-                {/* For inactive users, show status */}
+                {/* For inactive users, show reactivate button */}
                 {user.inviteStatus === "INACTIVE" && (
-                  <div className="flex w-full justify-center py-4">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Inactive player</span>
+                  <div className="flex w-full">
+                    <button
+                      className={`relative inline-flex w-full flex-1 items-center justify-center gap-x-3 rounded-b-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-green-50 dark:text-white dark:hover:bg-green-900/20`}
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to reactivate ${user.nickname || user.name}?`)) {
+                          setActive.mutate({
+                            playerId: user.id,
+                            groupId: gameGroup
+                          });
+                        }
+                      }}
+                      disabled={setActive.isLoading}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-600">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                      </svg>
+                      Reactivate
+                    </button>
                   </div>
                 )}
-                {/* For removed users, show status */}
+                {/* For removed users, show reactivate button */}
                 {user.inviteStatus === "REMOVED" && (
-                  <div className="flex w-full justify-center py-4">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Removed player</span>
+                  <div className="flex w-full">
+                    <button
+                      className={`relative inline-flex w-full flex-1 items-center justify-center gap-x-3 rounded-b-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-green-50 dark:text-white dark:hover:bg-green-900/20`}
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to reactivate ${user.nickname || user.name}? This will restore them as an active member.`)) {
+                          setActive.mutate({
+                            playerId: user.id,
+                            groupId: gameGroup
+                          });
+                        }
+                      }}
+                      disabled={setActive.isLoading}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-600">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                      </svg>
+                      Reactivate
+                    </button>
                   </div>
                 )}
               </div>
