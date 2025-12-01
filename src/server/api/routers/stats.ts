@@ -2,6 +2,29 @@ import { createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
 import { getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
 import { type Game, type GameStatsResult } from "npm/components/Types";
 import { z } from "zod";
+import { type PrismaClient } from "@prisma/client";
+
+// Helper function to get active player nicknames in a group
+async function getActivePlayerNicknames(prisma: PrismaClient, groupId: string): Promise<Set<string>> {
+  const activeJunctions = await prisma.playerGameGroupJunction.findMany({
+    where: {
+      groupId,
+      inviteStatus: "ACCEPTED"
+    },
+    include: {
+      Player: true
+    }
+  });
+
+  const activeNicknames = new Set<string>();
+  for (const junction of activeJunctions) {
+    const nickname = junction.Player.nickname ?? junction.Player.name;
+    if (nickname) {
+      activeNicknames.add(nickname);
+    }
+  }
+  return activeNicknames;
+}
 
 export const statsRouter = createTRPCRouter({
   // ────────────────────────────────────────────────────────────────
@@ -128,6 +151,10 @@ export const statsRouter = createTRPCRouter({
 
       const players = Array.from(matrix.keys());
 
+      // Get active players in the group
+      const activePlayerNicknames = await getActivePlayerNicknames(ctx.prisma, groupId);
+      const activePlayers = players.filter((p) => activePlayerNicknames.has(p));
+
       const allBaseIds = new Set<string>();
       for (const m of matrix.values()) for (const id of m.keys()) allBaseIds.add(id);
 
@@ -152,7 +179,7 @@ export const statsRouter = createTRPCRouter({
         });
 
       const games = gamesMeta.map((g) => g.name);
-      return { players, games, data };
+      return { players, games, data, activePlayers };
     }),
 
   // ────────────────────────────────────────────────────────────────
@@ -198,6 +225,10 @@ export const statsRouter = createTRPCRouter({
 
       const players = Array.from(matrix.keys()).sort();
 
+      // Get active players in the group
+      const activePlayerNicknames = await getActivePlayerNicknames(ctx.prisma, groupId);
+      const activePlayers = players.filter((p) => activePlayerNicknames.has(p));
+
       const data: Array<{ position: number } & Record<string, number>> = [];
       for (let pos = 1; pos <= maxPosition; pos++) {
         const row: { position: number } & Record<string, number> = { position: pos };
@@ -208,7 +239,7 @@ export const statsRouter = createTRPCRouter({
         data.push(row);
       }
 
-      return { players, positions: Array.from({ length: maxPosition }, (_, i) => i + 1), data };
+      return { players, positions: Array.from({ length: maxPosition }, (_, i) => i + 1), data, activePlayers };
     }),
 
   // ────────────────────────────────────────────────────────────────
@@ -230,7 +261,10 @@ export const statsRouter = createTRPCRouter({
       const allGames = await ctx.prisma.game.findMany();
       const gameMap = new Map(allGames.map((g) => [g.id, g]));
 
-      const gameHighScores = new Map<string, { gameName: string; highScore: number; playerName: string }>();
+      // Get active players in the group
+      const activePlayerNicknames = await getActivePlayerNicknames(ctx.prisma, groupId);
+
+      const gameHighScores = new Map<string, { gameName: string; highScore: number; playerName: string; isActivePlayer: boolean }>();
 
       for (const session of sessions) {
         const baseGame = session.gameId ? [gameMap.get(session.gameId) ?? null] : [];
@@ -263,6 +297,7 @@ export const statsRouter = createTRPCRouter({
                 gameName: game.name,
                 highScore: scoreNum,
                 playerName,
+                isActivePlayer: activePlayerNicknames.has(playerName),
               });
             }
           }
@@ -363,6 +398,9 @@ export const statsRouter = createTRPCRouter({
       }
 
       // --- Calculate best game for each player using Bayesian Average ---
+      // Get active players in the group
+      const activePlayerNicknames = await getActivePlayerNicknames(ctx.prisma, groupId);
+
       const result: Array<{
         playerName: string;
         bestGame: string;
@@ -370,6 +408,7 @@ export const statsRouter = createTRPCRouter({
         gamesPlayed: number;
         avgPosition: number;
         bayesianScore: number; // The new confidence score
+        isActivePlayer: boolean;
       }> = [];
 
       // Bayesian average parameters:
@@ -418,6 +457,7 @@ export const statsRouter = createTRPCRouter({
             gamesPlayed: bestGamesPlayed,
             avgPosition: bestAvgPosition,
             bayesianScore: bestBayesianScore,
+            isActivePlayer: activePlayerNicknames.has(playerName),
           });
         }
       }

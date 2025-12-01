@@ -7,6 +7,7 @@ interface PlayerGameMatrix {
   data: Array<{ game: string; gameCount: number } & Record<string, number>>;
   players: string[];
   games: string[];
+  activePlayers?: string[];
 }
 
 const StatCard = ({
@@ -32,10 +33,15 @@ function clamp01(n: number) {
 const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
                                                          data,
                                                          players,
-                                                         games,
+                                                         activePlayers,
                                                        }) => {
+  // Filter to only show active players in the display
+  const displayPlayers = activePlayers && activePlayers.length > 0 
+    ? players.filter((p) => activePlayers.includes(p))
+    : players;
+
   const rows = data.map((row) => {
-    const cells = players.map((p) => {
+    const cells = displayPlayers.map((p) => {
       const v = row[p];
       const rate = typeof v === "number" ? clamp01(v) : 0;
       return rate;
@@ -56,7 +62,7 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
         <div
           className="grid border-b border-gray-200 dark:border-gray-700"
           style={{
-            gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${players.length}, minmax(90px, 1fr))`,
+            gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${displayPlayers.length}, minmax(90px, 1fr))`,
           }}
         >
           <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
@@ -65,7 +71,7 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
           <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center dark:text-gray-400">
             Games
           </div>
-          {players.map((p) => (
+          {displayPlayers.map((p) => (
             <div
               key={p}
               className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center dark:text-gray-400"
@@ -81,7 +87,7 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
               key={game}
               className="grid"
               style={{
-                gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${players.length}, minmax(90px, 1fr))`,
+                gridTemplateColumns: `minmax(180px, 1fr) 100px repeat(${displayPlayers.length}, minmax(90px, 1fr))`,
               }}
             >
               <div className="px-3 py-2 text-sm font-medium text-gray-800 dark:text-white">
@@ -91,7 +97,7 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
                 {gameCount}
               </div>
               {cells.map((rate, idx) => {
-                const playerName = players[idx] ?? "Unknown";
+                const playerName = displayPlayers[idx] ?? "Unknown";
                 const pct = Math.round(rate * 100);
                 const hue = 210 - Math.round(rate * 90);
                 const light = 92 - Math.round(rate * 40);
@@ -117,8 +123,11 @@ const PlayerGameHeatmap: React.FC<PlayerGameMatrix> = ({
 };
 
 const GameHighScoresTable: React.FC<{
-  highScores: Array<{ gameName: string; highScore: number; playerName: string }>;
+  highScores: Array<{ gameName: string; highScore: number; playerName: string; isActivePlayer?: boolean }>;
 }> = ({ highScores }) => {
+  // Filter to only show high scores from active players
+  const displayHighScores = highScores.filter((score) => score.isActivePlayer === true);
+
   return (
     <div className="mt-10 bg-white rounded-xl shadow p-4 dark:bg-gray-800">
       <h2 className="text-xl font-semibold text-center mb-4 dark:text-white">
@@ -140,7 +149,7 @@ const GameHighScoresTable: React.FC<{
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-            {highScores.map((game, index) => (
+            {displayHighScores.map((game, index) => (
               <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                   {game.gameName}
@@ -153,7 +162,7 @@ const GameHighScoresTable: React.FC<{
                 </td>
               </tr>
             ))}
-            {highScores.length === 0 && (
+            {displayHighScores.length === 0 && (
               <tr>
                 <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                   No high scores available yet. Scores must be numeric values.
@@ -171,15 +180,21 @@ const PlayerPositionHeatmap: React.FC<{
   data: Array<{ position: number } & Record<string, number>>;
   players: string[];
   positions: number[];
-}> = ({ data, players, positions }) => {
+  activePlayers?: string[];
+}> = ({ data, players, activePlayers }) => {
+  // Filter to only show active players in the display
+  const displayPlayers = activePlayers && activePlayers.length > 0 
+    ? players.filter((p) => activePlayers.includes(p))
+    : players;
+
   const totalPerPlayer: Record<string, number> = {};
   for (const row of data) {
-    for (const player of players) {
+    for (const player of displayPlayers) {
       totalPerPlayer[player] = (totalPerPlayer[player] ?? 0) + (row[player] ?? 0);
     }
   }
 
-  const maxVal = Math.max(...data.flatMap((row) => players.map((p) => row[p] ?? 0)));
+  const maxVal = Math.max(...data.flatMap((row) => displayPlayers.map((p) => row[p] ?? 0)));
 
   return (
     <div className="mt-10 bg-white rounded-xl shadow p-4 dark:bg-gray-800">
@@ -190,13 +205,13 @@ const PlayerPositionHeatmap: React.FC<{
         <div
           className="grid border-b border-gray-200 dark:border-gray-700"
           style={{
-            gridTemplateColumns: `100px repeat(${players.length}, minmax(90px, 1fr))`,
+            gridTemplateColumns: `100px repeat(${displayPlayers.length}, minmax(90px, 1fr))`,
           }}
         >
           <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
             Position
           </div>
-          {players.map((p) => (
+          {displayPlayers.map((p) => (
             <div
               key={p}
               className="px-3 py-2 text-xs font-semibold uppercase text-gray-500 text-center dark:text-gray-400"
@@ -212,13 +227,13 @@ const PlayerPositionHeatmap: React.FC<{
               key={position}
               className="grid"
               style={{
-                gridTemplateColumns: `100px repeat(${players.length}, minmax(90px, 1fr))`,
+                gridTemplateColumns: `100px repeat(${displayPlayers.length}, minmax(90px, 1fr))`,
               }}
             >
               <div className="px-3 py-2 text-sm font-medium text-gray-800 dark:text-white">
                 {position}
               </div>
-              {players.map((p) => {
+              {displayPlayers.map((p) => {
                 const count = rest[p] ?? 0;
                 const total = totalPerPlayer[p] ?? 1;
                 const percentage = total > 0 ? (count / total) * 100 : 0;
@@ -255,8 +270,12 @@ const BestGamePerPlayerTable: React.FC<{
     gamesPlayed: number;
     avgPosition: number;
     bayesianScore: number;
+    isActivePlayer?: boolean;
   }>;
 }> = ({ bestGames }) => {
+  // Filter to only show active players
+  const displayBestGames = bestGames.filter((game) => game.isActivePlayer === true);
+
   return (
     <div className="mt-10 bg-white rounded-xl shadow p-4 dark:bg-gray-800">
       <h2 className="text-xl font-semibold text-center mb-4 dark:text-white">
@@ -292,7 +311,7 @@ const BestGamePerPlayerTable: React.FC<{
           </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-          {bestGames.map((item, index) => (
+          {displayBestGames.map((item, index) => (
             <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                 {item.playerName}
@@ -324,7 +343,7 @@ const BestGamePerPlayerTable: React.FC<{
               </td>
             </tr>
           ))}
-          {bestGames.length === 0 && (
+          {displayBestGames.length === 0 && (
             <tr>
               <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                 No data available yet. Play some games to see best game statistics!
@@ -391,6 +410,9 @@ const Stats: React.FC<DashboardProps> = (props) => {
     return <div className="text-center text-gray-500">No stats available.</div>;
   }
 
+  // Get the set of active player nicknames for filtering display
+  const activePlayerSet = new Set(matrixData.activePlayers ?? []);
+
   const getWinsPerPlayer = (): Map<string, number> => {
     const wins = new Map<string, number>();
     sessions.forEach((session) => {
@@ -422,9 +444,18 @@ const Stats: React.FC<DashboardProps> = (props) => {
     return rates;
   };
 
-  const mostActive = Array.from(getGamesPlayedPerPlayer().entries()).sort(
-    (a, b) => b[1] - a[1]
-  )[0];
+  // Filter to only show active players in "Most Active Player" stat
+  const activeGamesPlayed = Array.from(getGamesPlayedPerPlayer().entries())
+    .filter(([player]) => activePlayerSet.size === 0 || activePlayerSet.has(player));
+  const mostActive = activeGamesPlayed.sort((a, b) => b[1] - a[1])[0];
+
+  // Filter to count only active unique players
+  const uniqueActivePlayers = new Set(
+    sessions.flatMap((s) => s.players.map((p) => p.nickname))
+  );
+  const displayUniquePlayerCount = activePlayerSet.size > 0
+    ? [...uniqueActivePlayers].filter((p) => activePlayerSet.has(p)).length
+    : uniqueActivePlayers.size;
 
   return (
     <div className="px-4 sm:px-6 lg:px-14">
@@ -434,9 +465,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
         <StatCard title="Total Sessions" value={sessions.length} />
         <StatCard
           title="Unique Players"
-          value={
-            new Set(sessions.flatMap((s) => s.players.map((p) => p.nickname))).size
-          }
+          value={displayUniquePlayerCount}
         />
         {mostActive && (
           <StatCard
@@ -452,6 +481,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
           data={matrixData.data}
           players={matrixData.players}
           games={matrixData.games}
+          activePlayers={matrixData.activePlayers}
         />
       )}
 
@@ -460,6 +490,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
           data={positionMatrix.data}
           players={positionMatrix.players}
           positions={positionMatrix.positions}
+          activePlayers={positionMatrix.activePlayers}
         />
       )}
 

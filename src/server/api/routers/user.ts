@@ -394,5 +394,69 @@ export const userRouter = createTRPCRouter({
           }
         }
       });
+    }),
+
+  setPlayerActive: groupAdminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        playerId: z.string()
+      })
+    ).mutation(async ({ ctx, input }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      const player = await getPlayerById(ctx.prisma, input.playerId);
+
+      // Check if player is in the group
+      const existingJunction = await ctx.prisma.playerGameGroupJunction.findUnique({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        }
+      });
+
+      if (!existingJunction) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Player is not a member of this group"
+        });
+      }
+
+      if (existingJunction.inviteStatus === "ACCEPTED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Player is already active"
+        });
+      }
+
+      // If player was REMOVED, they may have "R:" prefix in nickname - remove it
+      if (existingJunction.inviteStatus === "REMOVED") {
+        // Only modify nickname if it exists and starts with "R:"
+        if (player.nickname && player.nickname.startsWith("R:")) {
+          const newNickname = player.nickname.substring(2).trim();
+          // Only update if we have a non-empty result
+          if (newNickname.length > 0) {
+            await ctx.prisma.player.update({
+              where: { id: player.id },
+              data: { nickname: newNickname }
+            });
+          }
+        }
+      }
+
+      // Set player as active in the group
+      return ctx.prisma.playerGameGroupJunction.update({
+        where: {
+          groupId_playerId: {
+            groupId: input.groupId,
+            playerId: player.id
+          }
+        },
+        data: {
+          inviteStatus: "ACCEPTED",
+          gameGroupIsActive: false // Don't auto-activate this group for the player
+        }
+      });
     })
 });
