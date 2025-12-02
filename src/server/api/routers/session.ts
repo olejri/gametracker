@@ -1049,7 +1049,7 @@ export const sessionRouter = createTRPCRouter({
   unlockGameSession: groupAdminProcedure
     .input(z.object({
       gameSessionId: z.string().min(1),
-      groupId: z.string().min(1)  // Required by groupAdminProcedure
+      groupId: z.string().min(1)  // Required by groupAdminProcedure to verify admin permissions for this specific group
     }))
     .mutation(async ({ ctx, input }) => {
       // First verify the session belongs to this group
