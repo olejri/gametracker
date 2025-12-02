@@ -133,7 +133,6 @@ const PlayerView = (props: {
               <label className="dark:text-gray-300 text-xs">Team</label>
               {!updatePlayerTeam.isLoading ? (
                 <select
-                  disabled={updatePlayerTeam.isLoading}
                   value={currentTeam?.id ?? teams[0]?.id ?? ""}
                   onChange={(e) => {
                     if (e.target.value && gameSessionId) {
