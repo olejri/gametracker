@@ -11,6 +11,16 @@ import { Button } from "npm/components/ui";
 import { StatusBadge } from "npm/components/ui";
 import { formatDate, transformDate } from "npm/lib/utils";
 
+// Predefined team colors for adding new teams
+const TEAM_COLORS = [
+  { name: "Green", color: "#22C55E" },
+  { name: "Yellow", color: "#EAB308" },
+  { name: "Purple", color: "#A855F7" },
+  { name: "Orange", color: "#F97316" },
+  { name: "Pink", color: "#EC4899" },
+  { name: "Cyan", color: "#06B6D4" },
+];
+
 const GameSession = (props: GameSessionProps) => {
   const {
     data: game,
@@ -90,6 +100,36 @@ const GameSession = (props: GameSessionProps) => {
     onSuccess: (data) => {
       setStartingPlayer(data.startingPlayer);
       void ctx.session.getRandomizationHistory.invalidate();
+    }
+  });
+
+  const toggleTeamGame = api.session.toggleTeamGame.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    }
+  });
+
+  const addTeam = api.session.addTeam.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    }
+  });
+
+  const removeTeam = api.session.removeTeam.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    }
+  });
+
+  const updatePlayerTeam = api.session.updatePlayerTeam.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    }
+  });
+
+  const removePlayerFromTeam = api.session.removePlayerFromTeam.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
     }
   });
 
@@ -322,7 +362,172 @@ const GameSession = (props: GameSessionProps) => {
           </div>
         </div>
       </div>
-      <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+      {/* Team Game Section - Only shown for Ongoing games */}
+      {game.status === GameSessionStatus.Ongoing && (
+        <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
+          <div className="px-4 py-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                Team Game Mode
+              </h3>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={game.isTeamGame}
+                  onChange={(e) => {
+                    toggleTeamGame.mutate({
+                      gameSessionId: game.sessionId,
+                      isTeamGame: e.target.checked
+                    });
+                  }}
+                  className="sr-only peer"
+                  disabled={toggleTeamGame.isLoading}
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                  {game.isTeamGame ? "Enabled" : "Disabled"}
+                </span>
+              </label>
+            </div>
+            
+            {game.isTeamGame && (
+              <div className="space-y-4">
+                {/* Teams Display */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {game.teams.map((team) => {
+                    const teamPlayers = game.players.filter((p) => 
+                      team.playerIds.includes(p.playerId)
+                    );
+                    return (
+                      <div
+                        key={team.id}
+                        className="rounded-lg border-2 p-4"
+                        style={{ borderColor: team.color }}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 
+                            className="font-semibold text-lg"
+                            style={{ color: team.color }}
+                          >
+                            {team.name} Team
+                          </h4>
+                          {game.teams.length > 2 && (
+                            <button
+                              onClick={() => removeTeam.mutate({ teamId: team.id })}
+                              className="text-red-500 hover:text-red-700 text-sm"
+                              disabled={removeTeam.isLoading}
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          {teamPlayers.length === 0 ? (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                              No players assigned
+                            </p>
+                          ) : (
+                            teamPlayers.map((player) => (
+                              <div
+                                key={player.playerId}
+                                className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded px-3 py-2"
+                              >
+                                <span className="text-sm text-gray-900 dark:text-white">
+                                  {player.nickname}
+                                </span>
+                                <button
+                                  onClick={() => removePlayerFromTeam.mutate({
+                                    gameSessionId: game.sessionId,
+                                    playerId: player.playerId
+                                  })}
+                                  className="text-xs text-gray-500 hover:text-red-500"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Add Team Button */}
+                {game.teams.length < game.players.length && (
+                  <div className="flex flex-wrap gap-2">
+                    {TEAM_COLORS.filter(tc => 
+                      !game.teams.some(t => t.name === tc.name)
+                    ).slice(0, 1).map((teamColor) => (
+                      <Button
+                        key={teamColor.name}
+                        variant="primary"
+                        onClick={() => addTeam.mutate({
+                          gameSessionId: game.sessionId,
+                          name: teamColor.name,
+                          color: teamColor.color
+                        })}
+                        disabled={addTeam.isLoading}
+                      >
+                        + Add {teamColor.name} Team
+                      </Button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Assign Players to Teams */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                    Assign Players to Teams
+                  </h4>
+                  <div className="space-y-2">
+                    {game.players.map((player) => {
+                      const currentTeam = game.teams.find((t) =>
+                        t.playerIds.includes(player.playerId)
+                      );
+                      return (
+                        <div
+                          key={player.playerId}
+                          className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-lg px-4 py-2"
+                        >
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            {player.nickname}
+                          </span>
+                          <div className="flex gap-2">
+                            {game.teams.map((team) => (
+                              <button
+                                key={team.id}
+                                onClick={() => updatePlayerTeam.mutate({
+                                  gameSessionId: game.sessionId,
+                                  playerId: player.playerId,
+                                  teamId: team.id
+                                })}
+                                disabled={updatePlayerTeam.isLoading}
+                                className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+                                  currentTeam?.id === team.id
+                                    ? "ring-2 ring-offset-2 ring-gray-400 dark:ring-offset-gray-800"
+                                    : "opacity-60 hover:opacity-100"
+                                }`}
+                                style={{
+                                  backgroundColor: team.color,
+                                  color: "white"
+                                }}
+                              >
+                                {team.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {sortPlayers(game.players).map((player, index) => (

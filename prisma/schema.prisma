@@ -79,9 +79,33 @@ model GameSession {
   updatedAt                     DateTime                        @updatedAt
   groupId                       String                          @default("game-night")
   description                   String?
+  isTeamGame                    Boolean                         @default(false)
   PlayerGameSessionJunction     PlayerGameSessionJunction[]
   GameSessionGameJunction       GameSessionGameJunction[]
   GameSessionRandomizationLog   GameSessionRandomizationLog[]
+  GameSessionTeam               GameSessionTeam[]
+}
+
+model GameSessionTeam {
+  id            String      @id @default(uuid())
+  gameSessionId String
+  name          String
+  color         String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  gameSession   GameSession @relation(fields: [gameSessionId], references: [id])
+  TeamPlayerJunction TeamPlayerJunction[]
+}
+
+model TeamPlayerJunction {
+  id              String          @id @default(uuid())
+  teamId          String
+  playerId        String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  team            GameSessionTeam @relation(fields: [teamId], references: [id])
+
+  @@unique([teamId, playerId])
 }
 
 model PlayerGameJunction {

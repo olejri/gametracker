@@ -37,7 +37,7 @@ export const statsRouter = createTRPCRouter({
 
       const allGameSession = await ctx.prisma.gameSession.findMany({
         include: { PlayerGameSessionJunction: true },
-        where: { groupId: input.groupName },
+        where: { groupId: input.groupName, isTeamGame: false },
       });
 
       const gameInfo = await ctx.prisma.game.findMany({});
@@ -99,7 +99,7 @@ export const statsRouter = createTRPCRouter({
       const { groupId } = input;
 
       const sessions = await ctx.prisma.gameSession.findMany({
-        where: { groupId, status: "COMPLETED" },
+        where: { groupId, status: "COMPLETED", isTeamGame: false },
         include: {
           PlayerGameSessionJunction: { include: { player: true } },
           GameSessionGameJunction: { include: { game: true } },
@@ -191,7 +191,7 @@ export const statsRouter = createTRPCRouter({
       const { groupId } = input;
 
       const sessions = await ctx.prisma.gameSession.findMany({
-        where: { groupId, status: "COMPLETED" },
+        where: { groupId, status: "COMPLETED", isTeamGame: false },
         include: {
           PlayerGameSessionJunction: { include: { player: true } },
         },
@@ -251,7 +251,7 @@ export const statsRouter = createTRPCRouter({
       const { groupId } = input;
 
       const sessions = await ctx.prisma.gameSession.findMany({
-        where: { groupId, status: "COMPLETED" },
+        where: { groupId, status: "COMPLETED", isTeamGame: false },
         include: {
           PlayerGameSessionJunction: { include: { player: true } },
           GameSessionGameJunction: { include: { game: true } },
@@ -320,7 +320,7 @@ export const statsRouter = createTRPCRouter({
       const { groupId } = input;
 
       const sessions = await ctx.prisma.gameSession.findMany({
-        where: { groupId, status: "COMPLETED" },
+        where: { groupId, status: "COMPLETED", isTeamGame: false },
         include: {
           PlayerGameSessionJunction: { include: { player: true } },
           GameSessionGameJunction: { include: { game: true } },
