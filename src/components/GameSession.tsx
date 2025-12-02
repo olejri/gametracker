@@ -28,6 +28,7 @@ const GameSession = (props: GameSessionProps) => {
     isLoading: sessionIsLoading,
     error
   } = api.session.getGameASession.useQuery({ data: { id: props.gameId } });
+  const { data: userRole } = api.group.getActiveGameGroup.useQuery();
   const ctx = api.useContext();
   const [haveError, setHaveError] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -118,6 +119,12 @@ const GameSession = (props: GameSessionProps) => {
   });
 
   const removeTeam = api.session.removeTeam.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    }
+  });
+
+  const unlockGameSession = api.session.unlockGameSession.useMutation({
     onSuccess: () => {
       void ctx.session.getGameASession.invalidate();
     }
@@ -271,9 +278,35 @@ const GameSession = (props: GameSessionProps) => {
         <div className="grid grid-cols-2">
           <div className="px-4 py-5 sm:p-6">
             <Image src={game.image_url} alt="My Image" width={300} height={300} className="rounded-lg mt-4" />
-            <StatusBadge color="green">
-              {game.status}
-            </StatusBadge>
+            <div className="flex items-center gap-2 mt-2">
+              <StatusBadge color="green">
+                {game.status}
+              </StatusBadge>
+              {/* Unlock button for admins when game is Completed */}
+              {game.status === "Completed" && userRole?.role === "ADMIN" && (
+                unlockGameSession.isLoading ? (
+                  <LoadingSpinner size={20} />
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (confirm("Are you sure you want to unlock this game session? It will change the status from Completed to Ongoing so you can edit it.")) {
+                        unlockGameSession.mutate({
+                          gameSessionId: game.sessionId,
+                          groupId: props.groupName
+                        });
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 rounded-md bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/40"
+                    title="Unlock to edit"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    Unlock
+                  </button>
+                )
+              )}
+            </div>
           </div>
           <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">

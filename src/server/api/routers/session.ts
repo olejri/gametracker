@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
+import { createTRPCRouter, privateProcedure, publicProcedure, groupAdminProcedure } from "npm/server/api/trpc";
 import { type Game, type GameSessionWithPlayers, type GameSessionTeam, type Player } from "npm/components/Types";
 import { FindGameSessionStatus } from "npm/components/HelperFunctions";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -1042,6 +1042,48 @@ export const sessionRouter = createTRPCRouter({
       });
 
       return { success: true };
-    })
+    }),
 
+  // Unlock a completed game session (admin only)
+  // Changes status from COMPLETED to ONGOING so it can be edited
+  unlockGameSession: groupAdminProcedure
+    .input(z.object({
+      gameSessionId: z.string().min(1),
+      groupId: z.string().min(1)  // Required by groupAdminProcedure
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // First verify the session belongs to this group
+      const session = await ctx.prisma.gameSession.findUnique({
+        where: { id: input.gameSessionId }
+      });
+
+      if (!session) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game session not found"
+        });
+      }
+
+      if (session.groupId !== input.groupId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You can only unlock game sessions in your group"
+        });
+      }
+
+      if (session.status !== "COMPLETED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only completed game sessions can be unlocked"
+        });
+      }
+
+      // Update status to ONGOING
+      await ctx.prisma.gameSession.update({
+        where: { id: input.gameSessionId },
+        data: { status: "ONGOING" }
+      });
+
+      return { success: true };
+    })
 });
