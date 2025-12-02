@@ -878,19 +878,19 @@ export const sessionRouter = createTRPCRouter({
           data: { gameSessionId: input.gameSessionId, name: "Blue", color: "#3B82F6" }
         });
 
-        // Auto-assign players alternately to Red and Blue teams
+        // Auto-assign players alternately to Red and Blue teams using batch insert
         const playerIds = session.PlayerGameSessionJunction.map(p => p.playerId);
-        for (let i = 0; i < playerIds.length; i++) {
-          const playerId = playerIds[i];
-          if (playerId) {
-            const teamId = i % 2 === 0 ? redTeam.id : blueTeam.id;
-            await ctx.prisma.teamPlayerJunction.create({
-              data: {
-                teamId: teamId,
-                playerId: playerId
-              }
-            });
-          }
+        const teamAssignments = playerIds
+          .filter((playerId): playerId is string => !!playerId)
+          .map((playerId, i) => ({
+            teamId: i % 2 === 0 ? redTeam.id : blueTeam.id,
+            playerId: playerId
+          }));
+        
+        if (teamAssignments.length > 0) {
+          await ctx.prisma.teamPlayerJunction.createMany({
+            data: teamAssignments
+          });
         }
       }
 
