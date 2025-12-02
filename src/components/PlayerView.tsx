@@ -1,4 +1,4 @@
-import type { PlayerNicknameAndScore } from "npm/components/Types";
+import type { PlayerNicknameAndScore, GameSessionTeam } from "npm/components/Types";
 import Image from "next/image";
 import React from "react";
 import { api } from "npm/utils/api";
@@ -10,8 +10,11 @@ const PlayerView = (props: {
   isInReadOnlyMode: boolean
   numberOfPlayers: number
   isRolling?: boolean
+  isTeamGame?: boolean
+  teams?: GameSessionTeam[]
+  gameSessionId?: string
 }) => {
-  const { isInReadOnlyMode, numberOfPlayers, isRolling } = props;
+  const { isInReadOnlyMode, numberOfPlayers, isRolling, isTeamGame, teams, gameSessionId } = props;
   const [player, setPlayer] = React.useState<PlayerNicknameAndScore>(props.player);
   const [isUpdatingPos, setIsUpdatingPos] = React.useState(false);
   const [isUpdatingScore, setIsUpdatingScore] = React.useState(false);
@@ -34,12 +37,25 @@ const PlayerView = (props: {
       setIsUpdatingPos(true);
     }
   });
+  const updatePlayerTeam = api.session.updatePlayerTeam.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    }
+  });
+
+  // Find the current team for this player
+  const currentTeam = teams?.find((t) => t.playerIds.includes(player.playerId));
+  const teamBorderColor = isTeamGame && currentTeam ? currentTeam.color : undefined;
 
 
   return (
     <div
       key={player.playerId}
-      className={`relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500 ${isRolling ? 'player-rolling-animation' : ''}`}
+      className={`relative flex items-center space-x-3 rounded-lg bg-white px-6 py-5 shadow-sm hover:border-gray-400 dark:bg-gray-800 dark:hover:border-gray-500 ${isRolling ? 'player-rolling-animation' : ''}`}
+      style={{
+        border: teamBorderColor ? `3px solid ${teamBorderColor}` : '1px solid',
+        borderColor: teamBorderColor || undefined
+      }}
     >
       <div className="flex-shrink-0">
         <Image
@@ -114,6 +130,36 @@ const PlayerView = (props: {
             )}
           </div>
         </div>
+        {/* Team Selector - Only shown when team game mode is active */}
+        {isTeamGame && teams && teams.length > 0 && !isInReadOnlyMode && gameSessionId && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400">Team:</span>
+            <div className="flex gap-1">
+              {teams.map((team) => (
+                <button
+                  key={team.id}
+                  onClick={() => updatePlayerTeam.mutate({
+                    gameSessionId: gameSessionId,
+                    playerId: player.playerId,
+                    teamId: team.id
+                  })}
+                  disabled={updatePlayerTeam.isLoading}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                    currentTeam?.id === team.id
+                      ? "ring-2 ring-offset-1 ring-gray-400 dark:ring-offset-gray-800"
+                      : "opacity-60 hover:opacity-100"
+                  }`}
+                  style={{
+                    backgroundColor: team.color,
+                    color: "white"
+                  }}
+                >
+                  {team.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       <div>
       </div>
