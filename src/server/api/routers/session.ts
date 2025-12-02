@@ -869,13 +869,29 @@ export const sessionRouter = createTRPCRouter({
       }
 
       // If enabling team game mode and there are no teams, create default Red and Blue teams
+      // and auto-assign all players to teams alternately
       if (input.isTeamGame && session.GameSessionTeam.length === 0) {
-        await ctx.prisma.gameSessionTeam.createMany({
-          data: [
-            { gameSessionId: input.gameSessionId, name: "Red", color: "#EF4444" },
-            { gameSessionId: input.gameSessionId, name: "Blue", color: "#3B82F6" }
-          ]
+        const redTeam = await ctx.prisma.gameSessionTeam.create({
+          data: { gameSessionId: input.gameSessionId, name: "Red", color: "#EF4444" }
         });
+        const blueTeam = await ctx.prisma.gameSessionTeam.create({
+          data: { gameSessionId: input.gameSessionId, name: "Blue", color: "#3B82F6" }
+        });
+
+        // Auto-assign players alternately to Red and Blue teams
+        const playerIds = session.PlayerGameSessionJunction.map(p => p.playerId);
+        for (let i = 0; i < playerIds.length; i++) {
+          const playerId = playerIds[i];
+          if (playerId) {
+            const teamId = i % 2 === 0 ? redTeam.id : blueTeam.id;
+            await ctx.prisma.teamPlayerJunction.create({
+              data: {
+                teamId: teamId,
+                playerId: playerId
+              }
+            });
+          }
+        }
       }
 
       // If disabling team game mode, remove all teams and player assignments

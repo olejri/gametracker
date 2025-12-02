@@ -128,34 +128,36 @@ const PlayerView = (props: {
             )}
           </div>
         </div>
-        {/* Team Selector - Only shown when team game mode is active */}
+        {/* Team Selector Dropdown - Only shown when team game mode is active */}
         {shouldShowTeamSelector && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Team:</span>
-            <div className="flex gap-1">
-              {teams.map((team) => (
-                <button
-                  key={team.id}
-                  onClick={() => updatePlayerTeam.mutate({
+          <div className="mt-3 grid grid-cols-1">
+            <label className="dark:text-gray-300 text-xs">Team</label>
+            <select
+              disabled={updatePlayerTeam.isLoading}
+              value={currentTeam?.id ?? ""}
+              onChange={(e) => {
+                if (e.target.value && gameSessionId) {
+                  updatePlayerTeam.mutate({
                     gameSessionId: gameSessionId,
                     playerId: player.playerId,
-                    teamId: team.id
-                  })}
-                  disabled={updatePlayerTeam.isLoading}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                    currentTeam?.id === team.id
-                      ? "ring-2 ring-offset-1 ring-gray-400 dark:ring-offset-gray-800"
-                      : "opacity-60 hover:opacity-100"
-                  }`}
-                  style={{
-                    backgroundColor: team.color,
-                    color: "white"
-                  }}
-                >
+                    teamId: e.target.value
+                  });
+                }
+              }}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent appearance-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-gray-600 dark:[&>option]:bg-gray-700 dark:[&>option]:text-white"
+              style={{
+                WebkitAppearance: "none",
+                MozAppearance: "none",
+                appearance: "none",
+                backgroundImage: "none",
+              }}
+            >
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
                   {team.name}
-                </button>
+                </option>
               ))}
-            </div>
+            </select>
           </div>
         )}
       </div>

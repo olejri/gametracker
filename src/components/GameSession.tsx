@@ -431,10 +431,6 @@ const GameSession = (props: GameSessionProps) => {
                     </>
                   )}
                 </div>
-                
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Assign players to teams using the team buttons in each player card below.
-                </p>
               </div>
             )}
           </div>
