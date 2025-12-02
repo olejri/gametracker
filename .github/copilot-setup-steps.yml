@@ -1,0 +1,18 @@
+# Copilot Setup Steps for GameTracker
+# This file configures the environment for GitHub Copilot coding agent
+
+steps:
+  # Install Node.js 22.x (as specified in package.json engines)
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: "22"
+      cache: "npm"
+
+  # Install project dependencies
+  - name: Install dependencies
+    run: npm ci
+
+  # Generate Prisma client (runs automatically via postinstall, but explicit for clarity)
+  - name: Generate Prisma client
+    run: npx prisma generate
