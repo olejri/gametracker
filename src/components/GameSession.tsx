@@ -37,6 +37,8 @@ const GameSession = (props: GameSessionProps) => {
   const [showHistory, setShowHistory] = useState(false);
   const [rollingPlayerIndex, setRollingPlayerIndex] = useState<number | null>(null);
   const [animationOnGoing, setAnimationOnGoing] = useState<boolean | null>(null);
+  const [isTeamTogglePending, setIsTeamTogglePending] = useState(false);
+  const [prevTeamGameValue, setPrevTeamGameValue] = useState<boolean | null>(null);
 
   const updateGameSession = api.session.updateGameSession.useMutation({
     onSuccess: () => {
@@ -223,6 +225,19 @@ const GameSession = (props: GameSessionProps) => {
     setDescription(game?.description ?? "");
   }, [game?.description]);
 
+  useEffect(() => {
+    if (!isTeamTogglePending) return;
+    if (prevTeamGameValue === null) return;
+    if (!game) return;
+
+    // When game.isTeamGame changes from the previous value → update done
+    if (game.isTeamGame !== prevTeamGameValue) {
+      setIsTeamTogglePending(false);
+      setPrevTeamGameValue(null);
+    }
+  }, [game?.isTeamGame, isTeamTogglePending, prevTeamGameValue, game]);
+
+
   if (sessionIsLoading || isUpdating) {
     return (
       <div className="flex grow">
@@ -323,7 +338,7 @@ const GameSession = (props: GameSessionProps) => {
                   <label htmlFor="date" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Date
                   </label>
-                  {!updateDate.isLoading  ?
+                  {!updateDate.isLoading ?
                     <input
                       onBlur={() => {
                         if(isInReadOnlyMode) return;
@@ -352,31 +367,40 @@ const GameSession = (props: GameSessionProps) => {
                     <label htmlFor="teamGame" className="block text-xs font-medium text-gray-900 dark:text-white">
                       Team Game
                     </label>
+
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        {game.isTeamGame ? "Enabled" : "Disabled"}
-                      </span>
-                      {!toggleTeamGame.isLoading ? (
+      <span className="text-sm text-gray-500 dark:text-gray-400">
+        {game.isTeamGame ? "Enabled" : "Disabled"}
+      </span>
+
+                      {isTeamTogglePending || toggleTeamGame.isLoading ? (
+                        <LoadingSpinner size={24} />
+                      ) : (
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
                             checked={game.isTeamGame}
                             onChange={(e) => {
+                              const checked = e.target.checked;
+
+                              // Start pending state
+                              setPrevTeamGameValue(game.isTeamGame);
+                              setIsTeamTogglePending(true);
+
                               toggleTeamGame.mutate({
                                 gameSessionId: game.sessionId,
-                                isTeamGame: e.target.checked
+                                isTeamGame: checked,
                               });
                             }}
                             className="sr-only peer"
                           />
                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
                         </label>
-                      ) : (
-                        <LoadingSpinner size={24} />
                       )}
                     </div>
                   </div>
                 )}
+
               </div>
             </div>
           </div>
