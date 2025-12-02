@@ -46,16 +46,14 @@ const PlayerView = (props: {
   // Find the current team for this player
   const currentTeam = teams?.find((t) => t.playerIds.includes(player.playerId));
   const teamBorderColor = isTeamGame && currentTeam ? currentTeam.color : undefined;
+  const shouldShowTeamSelector = isTeamGame && teams && teams.length > 0 && !isInReadOnlyMode && gameSessionId;
 
 
   return (
     <div
       key={player.playerId}
-      className={`relative flex items-center space-x-3 rounded-lg bg-white px-6 py-5 shadow-sm hover:border-gray-400 dark:bg-gray-800 dark:hover:border-gray-500 ${isRolling ? 'player-rolling-animation' : ''}`}
-      style={{
-        border: teamBorderColor ? `3px solid ${teamBorderColor}` : '1px solid',
-        borderColor: teamBorderColor || undefined
-      }}
+      className={`relative flex items-center space-x-3 rounded-lg bg-white px-6 py-5 shadow-sm hover:border-gray-400 dark:bg-gray-800 dark:hover:border-gray-500 ${isRolling ? 'player-rolling-animation' : ''} ${!teamBorderColor ? 'border border-gray-300 dark:border-gray-600' : ''}`}
+      style={teamBorderColor ? { border: `3px solid ${teamBorderColor}` } : undefined}
     >
       <div className="flex-shrink-0">
         <Image
@@ -131,7 +129,7 @@ const PlayerView = (props: {
           </div>
         </div>
         {/* Team Selector - Only shown when team game mode is active */}
-        {isTeamGame && teams && teams.length > 0 && !isInReadOnlyMode && gameSessionId && (
+        {shouldShowTeamSelector && (
           <div className="mt-3 flex items-center gap-2">
             <span className="text-xs text-gray-500 dark:text-gray-400">Team:</span>
             <div className="flex gap-1">
