@@ -66,10 +66,10 @@ const PlayerView = (props: {
         />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="grid grid-flow-row-dense grid-cols-3 gap-10">
+        <div className={`grid grid-flow-row-dense gap-4 ${shouldShowTeamSelector ? 'grid-cols-4' : 'grid-cols-3'}`}>
           <p className="text-sm font-medium text-gray-900 dark:text-white">{player.nickname}</p>
           <div className="grid grid-cols-1">
-            <label className="dark:text-gray-300">Score</label>
+            <label className="dark:text-gray-300 text-xs">Score</label>
             {!isUpdatingScore ? <input type="text" id={"score" + player.playerId}
                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-gray-600"
                    value={player.score}
@@ -88,7 +88,7 @@ const PlayerView = (props: {
             />: <LoadingSpinner />}
           </div>
           <div className="grid grid-cols-1">
-            <label className="dark:text-gray-300">Position</label>
+            <label className="dark:text-gray-300 text-xs">Position</label>
             {!isUpdatingPos ? (
               <select
                 disabled={isInReadOnlyMode}
@@ -127,39 +127,39 @@ const PlayerView = (props: {
               <LoadingSpinner />
             )}
           </div>
+          {/* Team Selector Dropdown - Only shown when team game mode is active */}
+          {shouldShowTeamSelector && (
+            <div className="grid grid-cols-1">
+              <label className="dark:text-gray-300 text-xs">Team</label>
+              <select
+                disabled={updatePlayerTeam.isLoading}
+                value={currentTeam?.id ?? teams[0]?.id ?? ""}
+                onChange={(e) => {
+                  if (e.target.value && gameSessionId) {
+                    updatePlayerTeam.mutate({
+                      gameSessionId: gameSessionId,
+                      playerId: player.playerId,
+                      teamId: e.target.value
+                    });
+                  }
+                }}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent appearance-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-gray-600 dark:[&>option]:bg-gray-700 dark:[&>option]:text-white"
+                style={{
+                  WebkitAppearance: "none",
+                  MozAppearance: "none",
+                  appearance: "none",
+                  backgroundImage: "none",
+                }}
+              >
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
-        {/* Team Selector Dropdown - Only shown when team game mode is active */}
-        {shouldShowTeamSelector && (
-          <div className="mt-3 grid grid-cols-1">
-            <label className="dark:text-gray-300 text-xs">Team</label>
-            <select
-              disabled={updatePlayerTeam.isLoading}
-              value={currentTeam?.id ?? teams[0]?.id ?? ""}
-              onChange={(e) => {
-                if (e.target.value && gameSessionId) {
-                  updatePlayerTeam.mutate({
-                    gameSessionId: gameSessionId,
-                    playerId: player.playerId,
-                    teamId: e.target.value
-                  });
-                }
-              }}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent appearance-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-gray-600 dark:[&>option]:bg-gray-700 dark:[&>option]:text-white"
-              style={{
-                WebkitAppearance: "none",
-                MozAppearance: "none",
-                appearance: "none",
-                backgroundImage: "none",
-              }}
-            >
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
       <div>
       </div>

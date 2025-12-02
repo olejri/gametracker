@@ -319,7 +319,7 @@ const GameSession = (props: GameSessionProps) => {
                   </div>
                 </div>}
                 <div
-                  className="relative rounded-b-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  className="relative rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
                   <label htmlFor="date" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Date
                   </label>
@@ -345,94 +345,99 @@ const GameSession = (props: GameSessionProps) => {
                       className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     />: <LoadingSpinner size={30} />}
                 </div>
+                {/* Team Game Mode Toggle - Only shown for Ongoing games */}
+                {game.status === GameSessionStatus.Ongoing && (
+                  <div
+                    className="relative rounded-b-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                    <label htmlFor="teamGame" className="block text-xs font-medium text-gray-900 dark:text-white">
+                      Team Game
+                    </label>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {game.isTeamGame ? "Enabled" : "Disabled"}
+                      </span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={game.isTeamGame}
+                          onChange={(e) => {
+                            toggleTeamGame.mutate({
+                              gameSessionId: game.sessionId,
+                              isTeamGame: e.target.checked
+                            });
+                          }}
+                          className="sr-only peer"
+                          disabled={toggleTeamGame.isLoading}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
-      {/* Team Game Section - Only shown for Ongoing games */}
-      {game.status === GameSessionStatus.Ongoing && (
+      {/* Team Management Section - Only shown when Team Game Mode is enabled */}
+      {game.status === GameSessionStatus.Ongoing && game.isTeamGame && (
         <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
-                Team Game Mode
+                Teams
               </h3>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={game.isTeamGame}
-                  onChange={(e) => {
-                    toggleTeamGame.mutate({
-                      gameSessionId: game.sessionId,
-                      isTeamGame: e.target.checked
-                    });
-                  }}
-                  className="sr-only peer"
-                  disabled={toggleTeamGame.isLoading}
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
-                <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                  {game.isTeamGame ? "Enabled" : "Disabled"}
-                </span>
-              </label>
             </div>
-            
-            {game.isTeamGame && (
-              <div className="space-y-4">
-                {/* Teams List with Add/Remove */}
-                <div className="flex flex-wrap items-center gap-3">
-                  {game.teams.map((team) => (
-                    <div
-                      key={team.id}
-                      className="flex items-center gap-2 rounded-lg px-3 py-2"
-                      style={{ 
-                        backgroundColor: team.color + '20',
-                        border: `2px solid ${team.color}`
-                      }}
+            <div className="flex flex-wrap items-center gap-3">
+              {game.teams.map((team) => (
+                <div
+                  key={team.id}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2"
+                  style={{ 
+                    backgroundColor: team.color + '20',
+                    border: `2px solid ${team.color}`
+                  }}
+                >
+                  <span 
+                    className="font-medium text-sm"
+                    style={{ color: team.color }}
+                  >
+                    {team.name} Team
+                  </span>
+                  {game.teams.length > 2 && (
+                    <button
+                      onClick={() => removeTeam.mutate({ teamId: team.id })}
+                      className="text-gray-500 hover:text-red-500 text-xs ml-1"
+                      disabled={removeTeam.isLoading}
                     >
-                      <span 
-                        className="font-medium text-sm"
-                        style={{ color: team.color }}
-                      >
-                        {team.name} Team
-                      </span>
-                      {game.teams.length > 2 && (
-                        <button
-                          onClick={() => removeTeam.mutate({ teamId: team.id })}
-                          className="text-gray-500 hover:text-red-500 text-xs ml-1"
-                          disabled={removeTeam.isLoading}
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  
-                  {/* Add Team Button */}
-                  {game.teams.length < game.players.length && (
-                    <>
-                      {TEAM_COLORS.filter(tc => 
-                        !game.teams.some(t => t.name === tc.name)
-                      ).slice(0, 1).map((teamColor) => (
-                        <Button
-                          key={teamColor.name}
-                          variant="primary"
-                          onClick={() => addTeam.mutate({
-                            gameSessionId: game.sessionId,
-                            name: teamColor.name,
-                            color: teamColor.color
-                          })}
-                          disabled={addTeam.isLoading}
-                        >
-                          + Add Team
-                        </Button>
-                      ))}
-                    </>
+                      ✕
+                    </button>
                   )}
                 </div>
-              </div>
-            )}
+              ))}
+              
+              {/* Add Team Button */}
+              {game.teams.length < game.players.length && (
+                <>
+                  {TEAM_COLORS.filter(tc => 
+                    !game.teams.some(t => t.name === tc.name)
+                  ).slice(0, 1).map((teamColor) => (
+                    <Button
+                      key={teamColor.name}
+                      variant="primary"
+                      onClick={() => addTeam.mutate({
+                        gameSessionId: game.sessionId,
+                        name: teamColor.name,
+                        color: teamColor.color
+                      })}
+                      disabled={addTeam.isLoading}
+                    >
+                      + Add Team
+                    </Button>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
