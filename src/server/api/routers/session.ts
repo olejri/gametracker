@@ -640,11 +640,10 @@ export const sessionRouter = createTRPCRouter({
       const teams = await ctx.prisma.gameSessionTeam.findMany({
         where: { gameSessionId: input.sessionId }
       });
-      for (const team of teams) {
-        await ctx.prisma.teamPlayerJunction.deleteMany({
-          where: { teamId: team.id }
-        });
-      }
+      // Delete all team player junctions in one operation
+      await ctx.prisma.teamPlayerJunction.deleteMany({
+        where: { teamId: { in: teams.map(t => t.id) } }
+      });
       // Delete teams
       await ctx.prisma.gameSessionTeam.deleteMany({
         where: { gameSessionId: input.sessionId }
@@ -881,12 +880,10 @@ export const sessionRouter = createTRPCRouter({
 
       // If disabling team game mode, remove all teams and player assignments
       if (!input.isTeamGame && session.GameSessionTeam.length > 0) {
-        // Delete all team player junctions first
-        for (const team of session.GameSessionTeam) {
-          await ctx.prisma.teamPlayerJunction.deleteMany({
-            where: { teamId: team.id }
-          });
-        }
+        // Delete all team player junctions in one operation
+        await ctx.prisma.teamPlayerJunction.deleteMany({
+          where: { teamId: { in: session.GameSessionTeam.map(t => t.id) } }
+        });
         // Delete all teams
         await ctx.prisma.gameSessionTeam.deleteMany({
           where: { gameSessionId: input.gameSessionId }
@@ -984,15 +981,13 @@ export const sessionRouter = createTRPCRouter({
         });
       }
 
-      // Remove player from any existing team in this session
-      for (const t of session.GameSessionTeam) {
-        await ctx.prisma.teamPlayerJunction.deleteMany({
-          where: {
-            teamId: t.id,
-            playerId: input.playerId
-          }
-        });
-      }
+      // Remove player from any existing team in this session (single operation)
+      await ctx.prisma.teamPlayerJunction.deleteMany({
+        where: {
+          teamId: { in: session.GameSessionTeam.map(t => t.id) },
+          playerId: input.playerId
+        }
+      });
 
       // Add player to the new team
       return ctx.prisma.teamPlayerJunction.create({
@@ -1022,15 +1017,13 @@ export const sessionRouter = createTRPCRouter({
         });
       }
 
-      // Remove player from all teams in this session
-      for (const team of session.GameSessionTeam) {
-        await ctx.prisma.teamPlayerJunction.deleteMany({
-          where: {
-            teamId: team.id,
-            playerId: input.playerId
-          }
-        });
-      }
+      // Remove player from all teams in this session (single operation)
+      await ctx.prisma.teamPlayerJunction.deleteMany({
+        where: {
+          teamId: { in: session.GameSessionTeam.map(t => t.id) },
+          playerId: input.playerId
+        }
+      });
 
       return { success: true };
     })
