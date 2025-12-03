@@ -1071,7 +1071,7 @@ export const sessionRouter = createTRPCRouter({
         });
       }
 
-      if (session.status !== "COMPLETED") {
+      if (session.status !== "Completed") {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Only completed game sessions can be unlocked"
@@ -1081,7 +1081,7 @@ export const sessionRouter = createTRPCRouter({
       // Update status to ONGOING
       await ctx.prisma.gameSession.update({
         where: { id: input.gameSessionId },
-        data: { status: "ONGOING" }
+        data: { status: "Ongoing" }
       });
 
       return { success: true };
