@@ -2,7 +2,29 @@ import { createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
 import { getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
 import { type Game, type GameStatsResult } from "npm/components/Types";
 import { z } from "zod";
-import { type PrismaClient } from "@prisma/client";
+import { type PrismaClient, type Game as PrismaGame, type Player, type PlayerGameSessionJunction, type GameSessionGameJunction } from "@prisma/client";
+
+// Type for session with player junction
+type SessionWithPlayerJunction = {
+  id: string;
+  gameId: string;
+  PlayerGameSessionJunction: PlayerGameSessionJunction[];
+};
+
+// Type for session with full relations
+type SessionWithRelations = {
+  id: string;
+  gameId: string;
+  PlayerGameSessionJunction: (PlayerGameSessionJunction & { player: Player })[];
+  GameSessionGameJunction: (GameSessionGameJunction & { game: PrismaGame })[];
+};
+
+// Type for session with player relations only
+type SessionWithPlayerRelations = {
+  id: string;
+  gameId: string;
+  PlayerGameSessionJunction: (PlayerGameSessionJunction & { player: Player })[];
+};
 
 // Helper function to get active player nicknames in a group
 async function getActivePlayerNicknames(prisma: PrismaClient, groupId: string): Promise<Set<string>> {
@@ -35,9 +57,9 @@ export const statsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const player = await getPlayerByClerkId(ctx.prisma, ctx.userId);
 
-      const allGameSession = await ctx.prisma.gameSession.findMany({
+      const allGameSession: SessionWithPlayerJunction[] = await ctx.prisma.gameSession.findMany({
         include: { PlayerGameSessionJunction: true },
-        where: { groupId: input.groupName },
+        where: { groupId: input.groupName, isTeamGame: false },
       });
 
       const gameInfo = await ctx.prisma.game.findMany({});
@@ -45,7 +67,7 @@ export const statsRouter = createTRPCRouter({
 
       const allGames = allGameSession.filter((session) =>
         session.PlayerGameSessionJunction.some(
-          (pgsj) => pgsj.playerId === player.id
+          (pgsj: PlayerGameSessionJunction) => pgsj.playerId === player.id
         )
       );
 
@@ -54,7 +76,7 @@ export const statsRouter = createTRPCRouter({
       for (const g of allGames) {
         const gameName = gameMap.get(g.gameId)?.name ?? "Unknown";
         const playerGameSession = g.PlayerGameSessionJunction.find(
-          (pgs) => pgs.playerId === player.id
+          (pgs: PlayerGameSessionJunction) => pgs.playerId === player.id
         );
         if (!playerGameSession) continue;
 
@@ -71,11 +93,12 @@ export const statsRouter = createTRPCRouter({
           result.push(gameStats);
         }
 
-        if (playerGameSession.position === 1)
+        const position = playerGameSession.position;
+        if (position === 1)
           gameStats.numberOfFirstPlaceWins++;
-        else if (playerGameSession.position === 2)
+        else if (position === 2)
           gameStats.numberOfSecondPlaceWins++;
-        else if (playerGameSession.position === 3)
+        else if (position === 3)
           gameStats.numberOfThirdPlaceWins++;
 
         gameStats.numberOfGamesPlayed++;
@@ -98,8 +121,8 @@ export const statsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { groupId } = input;
 
-      const sessions = await ctx.prisma.gameSession.findMany({
-        where: { groupId, status: "COMPLETED" },
+      const sessions: SessionWithRelations[] = await ctx.prisma.gameSession.findMany({
+        where: { groupId, status: "COMPLETED", isTeamGame: false },
         include: {
           PlayerGameSessionJunction: { include: { player: true } },
           GameSessionGameJunction: { include: { game: true } },
@@ -114,7 +137,7 @@ export const statsRouter = createTRPCRouter({
 
       for (const session of sessions) {
         const baseGame = session.gameId ? [gameMap.get(session.gameId) ?? null] : [];
-        const expansionGames = session.GameSessionGameJunction.map((g) => g.game);
+        const expansionGames: (PrismaGame | null)[] = session.GameSessionGameJunction.map((g) => g.game);
         const gamesInSession = [...baseGame, ...expansionGames];
 
         const baseIdsInSession = new Set<string>();
@@ -128,7 +151,7 @@ export const statsRouter = createTRPCRouter({
           gameCountsByBaseId.set(baseId, (gameCountsByBaseId.get(baseId) ?? 0) + 1);
 
           for (const pgs of session.PlayerGameSessionJunction) {
-            const nickname = pgs.player.nickname ?? pgs.player.name;
+            const nickname: string | null = pgs.player.nickname ?? pgs.player.name;
             if (!nickname) continue;
 
             let playerMap = matrix.get(nickname);
@@ -144,7 +167,8 @@ export const statsRouter = createTRPCRouter({
             }
 
             stats.total += 1;
-            if (pgs.position === 1) stats.wins += 1;
+            const position: number | null = pgs.position;
+            if (position === 1) stats.wins += 1;
           }
         }
       }
@@ -190,8 +214,8 @@ export const statsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { groupId } = input;
 
-      const sessions = await ctx.prisma.gameSession.findMany({
-        where: { groupId, status: "COMPLETED" },
+      const sessions: SessionWithPlayerRelations[] = await ctx.prisma.gameSession.findMany({
+        where: { groupId, status: "COMPLETED", isTeamGame: false },
         include: {
           PlayerGameSessionJunction: { include: { player: true } },
         },
@@ -199,7 +223,7 @@ export const statsRouter = createTRPCRouter({
 
       let maxPosition = 0;
       for (const session of sessions) {
-        const count = session.PlayerGameSessionJunction.length;
+        const count: number = session.PlayerGameSessionJunction.length;
         if (count > maxPosition) maxPosition = count;
       }
 
@@ -207,7 +231,7 @@ export const statsRouter = createTRPCRouter({
 
       for (const session of sessions) {
         for (const pgs of session.PlayerGameSessionJunction) {
-          const nickname = pgs.player.nickname ?? pgs.player.name;
+          const nickname: string | null = pgs.player.nickname ?? pgs.player.name;
           if (!nickname) continue;
 
           let posMap = matrix.get(nickname);
@@ -216,7 +240,7 @@ export const statsRouter = createTRPCRouter({
             matrix.set(nickname, posMap);
           }
 
-          const pos = pgs.position ?? 0;
+          const pos: number = pgs.position ?? 0;
           if (pos > 0) {
             posMap.set(pos, (posMap.get(pos) ?? 0) + 1);
           }
@@ -250,8 +274,8 @@ export const statsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { groupId } = input;
 
-      const sessions = await ctx.prisma.gameSession.findMany({
-        where: { groupId, status: "COMPLETED" },
+      const sessions: SessionWithRelations[] = await ctx.prisma.gameSession.findMany({
+        where: { groupId, status: "COMPLETED", isTeamGame: false },
         include: {
           PlayerGameSessionJunction: { include: { player: true } },
           GameSessionGameJunction: { include: { game: true } },
@@ -268,13 +292,13 @@ export const statsRouter = createTRPCRouter({
 
       for (const session of sessions) {
         const baseGame = session.gameId ? [gameMap.get(session.gameId) ?? null] : [];
-        const expansionGames = session.GameSessionGameJunction.map((g) => g.game);
+        const expansionGames: (PrismaGame | null)[] = session.GameSessionGameJunction.map((g) => g.game);
         const gamesInSession = [...baseGame, ...expansionGames];
 
         const baseIdsInSession = new Set<string>();
         for (const g of gamesInSession) {
           if (!g) continue;
-          const baseId = g.isExpansion && g.baseGameId ? g.baseGameId : g.id;
+          const baseId: string = g.isExpansion && g.baseGameId ? g.baseGameId : g.id;
           baseIdsInSession.add(baseId);
         }
 
@@ -283,13 +307,14 @@ export const statsRouter = createTRPCRouter({
           if (!game) continue;
 
           for (const pgs of session.PlayerGameSessionJunction) {
-            if (!pgs.score) continue;
+            const score: string | null = pgs.score;
+            if (!score) continue;
 
             // Try to parse the score as an integer
-            const scoreNum = parseInt(pgs.score, 10);
+            const scoreNum: number = parseInt(score, 10);
             if (isNaN(scoreNum)) continue;
 
-            const playerName = pgs.player.nickname ?? pgs.player.name;
+            const playerName: string = pgs.player.nickname ?? pgs.player.name ?? "";
             const existing = gameHighScores.get(baseId);
 
             if (!existing || scoreNum > existing.highScore) {
@@ -319,8 +344,8 @@ export const statsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { groupId } = input;
 
-      const sessions = await ctx.prisma.gameSession.findMany({
-        where: { groupId, status: "COMPLETED" },
+      const sessions: SessionWithRelations[] = await ctx.prisma.gameSession.findMany({
+        where: { groupId, status: "COMPLETED", isTeamGame: false },
         include: {
           PlayerGameSessionJunction: { include: { player: true } },
           GameSessionGameJunction: { include: { game: true } },
@@ -346,18 +371,18 @@ export const statsRouter = createTRPCRouter({
       for (const session of sessions) {
         // --- Find the single Base Game ID for this session ---
         const baseGame = session.gameId ? [gameMap.get(session.gameId) ?? null] : [];
-        const expansionGames = session.GameSessionGameJunction.map((g) => g.game);
+        const expansionGames: (PrismaGame | null)[] = session.GameSessionGameJunction.map((g) => g.game);
         const gamesInSession = [...baseGame, ...expansionGames];
 
         const baseIdsInSession = new Set<string>();
         for (const g of gamesInSession) {
           if (!g) continue;
-          const baseId = g.isExpansion && g.baseGameId ? g.baseGameId : g.id;
+          const baseId: string = g.isExpansion && g.baseGameId ? g.baseGameId : g.id;
           baseIdsInSession.add(baseId);
         }
 
         // --- Get Player Count & Validate ---
-        const numPlayers = session.PlayerGameSessionJunction.length;
+        const numPlayers: number = session.PlayerGameSessionJunction.length;
         if (numPlayers <= 1) {
           // Can't normalize rank for 1-player games, so we skip them
           continue;
@@ -365,29 +390,29 @@ export const statsRouter = createTRPCRouter({
 
         for (const baseId of baseIdsInSession) {
           for (const pgs of session.PlayerGameSessionJunction) {
-            const nickname = pgs.player.nickname ?? pgs.player.name;
+            const nickname: string | null = pgs.player.nickname ?? pgs.player.name;
             if (!nickname) continue;
 
             // Get or create stats object
-            let gameMap = playerGameStats.get(nickname);
-            if (!gameMap) {
-              gameMap = new Map();
-              playerGameStats.set(nickname, gameMap);
+            let playerStatsMap = playerGameStats.get(nickname);
+            if (!playerStatsMap) {
+              playerStatsMap = new Map();
+              playerGameStats.set(nickname, playerStatsMap);
             }
-            let stats = gameMap.get(baseId);
+            let stats = playerStatsMap.get(baseId);
             if (!stats) {
               stats = { normalizedScores: [], positions: [], gamesPlayed: 0 };
-              gameMap.set(baseId, stats);
+              playerStatsMap.set(baseId, stats);
             }
 
             // --- NEW NORMALIZED RANK LOGIC ---
-            const position = pgs.position;
+            const position: number | null = pgs.position;
             if (position && position > 0) {
               // (NumPlayers - Position) / (NumPlayers - 1)
-              const normalizedScore = (numPlayers - position) / (numPlayers - 1);
+              const normalizedScore: number = (numPlayers - position) / (numPlayers - 1);
 
               // Clamp between 0 and 1
-              const clampedScore = Math.max(0, Math.min(1, normalizedScore));
+              const clampedScore: number = Math.max(0, Math.min(1, normalizedScore));
 
               stats.normalizedScores.push(clampedScore);
               stats.positions.push(position);

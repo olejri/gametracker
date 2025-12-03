@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
-import { type Game, type GameSessionWithPlayers, type Player } from "npm/components/Types";
+import { createTRPCRouter, privateProcedure, publicProcedure, groupAdminProcedure } from "npm/server/api/trpc";
+import { type Game, type GameSessionWithPlayers, type GameSessionTeam, type Player } from "npm/components/Types";
 import { FindGameSessionStatus } from "npm/components/HelperFunctions";
 import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
@@ -55,7 +55,12 @@ export const sessionRouter = createTRPCRouter({
           },
           include: {
             PlayerGameSessionJunction: true,
-            GameSessionGameJunction: true
+            GameSessionGameJunction: true,
+            GameSessionTeam: {
+              include: {
+                TeamPlayerJunction: true
+              }
+            }
           },
           orderBy: {
             createdAt: "asc"
@@ -88,6 +93,13 @@ export const sessionRouter = createTRPCRouter({
             gameId: gameSessionGame.gameId
 
           }));
+          // Map teams to GameSessionTeam type
+          const teams: GameSessionTeam[] = session.GameSessionTeam.map((team) => ({
+            id: team.id,
+            name: team.name,
+            color: team.color,
+            playerIds: team.TeamPlayerJunction.map((tj) => tj.playerId)
+          }));
           const gameSessionWithoutPlayers: GameSessionWithPlayers = {
             gameName: gameMap.get(session.gameId)?.name ?? "",
             image_url: gameMap.get(session.gameId)?.image_url ?? "",
@@ -98,7 +110,9 @@ export const sessionRouter = createTRPCRouter({
             description: session.description ?? "",
             status: FindGameSessionStatus(session.status),
             baseGameId: session.gameId,
-            groupId: session.groupId
+            groupId: session.groupId,
+            isTeamGame: session.isTeamGame,
+            teams: teams
           };
           // Return a new object that includes players and their scores and positions
           return gameSessionWithoutPlayers;
@@ -151,7 +165,12 @@ export const sessionRouter = createTRPCRouter({
           },
           include: {
             PlayerGameSessionJunction: true,
-            GameSessionGameJunction: true
+            GameSessionGameJunction: true,
+            GameSessionTeam: {
+              include: {
+                TeamPlayerJunction: true
+              }
+            }
           },
           orderBy: {
             createdAt: "desc"
@@ -184,6 +203,13 @@ export const sessionRouter = createTRPCRouter({
             gameId: gameSessionGame.gameId
 
           }));
+          // Map teams to GameSessionTeam type
+          const teams: GameSessionTeam[] = session.GameSessionTeam.map((team) => ({
+            id: team.id,
+            name: team.name,
+            color: team.color,
+            playerIds: team.TeamPlayerJunction.map((tj) => tj.playerId)
+          }));
           const gameSessionWithoutPlayers: GameSessionWithPlayers = {
             gameName: gameMap.get(session.gameId)?.name ?? "",
             image_url: gameMap.get(session.gameId)?.image_url ?? "",
@@ -194,7 +220,9 @@ export const sessionRouter = createTRPCRouter({
             description: session.description ?? "",
             status: FindGameSessionStatus(session.status),
             baseGameId: session.gameId,
-            groupId: session.groupId
+            groupId: session.groupId,
+            isTeamGame: session.isTeamGame,
+            teams: teams
           };
           // Return a new object that includes players and their scores and positions
           return gameSessionWithoutPlayers;
@@ -245,7 +273,12 @@ export const sessionRouter = createTRPCRouter({
           },
           include: {
             PlayerGameSessionJunction: true,
-            GameSessionGameJunction: true
+            GameSessionGameJunction: true,
+            GameSessionTeam: {
+              include: {
+                TeamPlayerJunction: true
+              }
+            }
           },
           orderBy: {
             createdAt: "desc"
@@ -279,6 +312,13 @@ export const sessionRouter = createTRPCRouter({
             gameId: gameSessionGame.gameId
 
           }));
+          // Map teams to GameSessionTeam type
+          const teams: GameSessionTeam[] = session.GameSessionTeam.map((team) => ({
+            id: team.id,
+            name: team.name,
+            color: team.color,
+            playerIds: team.TeamPlayerJunction.map((tj) => tj.playerId)
+          }));
           const gameSessionWithoutPlayers: GameSessionWithPlayers = {
             gameName: gameMap.get(session.gameId)?.name ?? "",
             image_url: gameMap.get(session.gameId)?.image_url ?? "",
@@ -289,7 +329,9 @@ export const sessionRouter = createTRPCRouter({
             description: session.description ?? "",
             status: FindGameSessionStatus(session.status),
             baseGameId: session.gameId,
-            groupId: session.groupId
+            groupId: session.groupId,
+            isTeamGame: session.isTeamGame,
+            teams: teams
           };
           // Return a new object that includes players and their scores and positions
           return gameSessionWithoutPlayers;
@@ -310,7 +352,12 @@ export const sessionRouter = createTRPCRouter({
         },
         include: {
           PlayerGameSessionJunction: true,
-          GameSessionGameJunction: true
+          GameSessionGameJunction: true,
+          GameSessionTeam: {
+            include: {
+              TeamPlayerJunction: true
+            }
+          }
         }
       });
 
@@ -410,6 +457,14 @@ export const sessionRouter = createTRPCRouter({
 
       }));
 
+      // Map teams to GameSessionTeam type
+      const teams: GameSessionTeam[] = session.GameSessionTeam.map((team) => ({
+        id: team.id,
+        name: team.name,
+        color: team.color,
+        playerIds: team.TeamPlayerJunction.map((tj) => tj.playerId)
+      }));
+
       const gameSession: GameSessionWithPlayers = {
         gameName: gameMap.get(session.gameId)?.name ?? "",
         image_url: gameMap.get(session.gameId)?.image_url ?? "",
@@ -420,7 +475,9 @@ export const sessionRouter = createTRPCRouter({
         description: session.description ?? "",
         status: FindGameSessionStatus(session.status),
         baseGameId: session.gameId,
-        groupId: session.groupId
+        groupId: session.groupId,
+        isTeamGame: session.isTeamGame,
+        teams: teams
       };
       // Return a new object that includes players and their scores and positions
       return gameSession;
@@ -579,6 +636,18 @@ export const sessionRouter = createTRPCRouter({
         sessionId: z.string()
       })
     ).mutation(async ({ ctx, input }) => {
+      // Delete team player junctions first
+      const teams = await ctx.prisma.gameSessionTeam.findMany({
+        where: { gameSessionId: input.sessionId }
+      });
+      // Delete all team player junctions in one operation
+      await ctx.prisma.teamPlayerJunction.deleteMany({
+        where: { teamId: { in: teams.map(t => t.id) } }
+      });
+      // Delete teams
+      await ctx.prisma.gameSessionTeam.deleteMany({
+        where: { gameSessionId: input.sessionId }
+      });
       await ctx.prisma.playerGameSessionJunction.deleteMany({
         where: {
           gameSessionId: input.sessionId
@@ -778,6 +847,243 @@ export const sessionRouter = createTRPCRouter({
       });
 
       return logs;
-    })
+    }),
 
+  toggleTeamGame: privateProcedure
+    .input(
+      z.object({
+        gameSessionId: z.string().min(1),
+        isTeamGame: z.boolean()
+      }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await ctx.prisma.gameSession.findUnique({
+        where: { id: input.gameSessionId },
+        include: { PlayerGameSessionJunction: true, GameSessionTeam: true }
+      });
+
+      if (!session) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game session not found"
+        });
+      }
+
+      // If enabling team game mode and there are no teams, create default Red and Blue teams
+      // and auto-assign all players to teams alternately
+      if (input.isTeamGame && session.GameSessionTeam.length === 0) {
+        const redTeam = await ctx.prisma.gameSessionTeam.create({
+          data: { gameSessionId: input.gameSessionId, name: "Red", color: "#EF4444" }
+        });
+        const blueTeam = await ctx.prisma.gameSessionTeam.create({
+          data: { gameSessionId: input.gameSessionId, name: "Blue", color: "#3B82F6" }
+        });
+
+        // Auto-assign players alternately to Red and Blue teams using batch insert
+        const playerIds = session.PlayerGameSessionJunction.map(p => p.playerId);
+        const teamAssignments = playerIds
+          .filter((playerId): playerId is string => !!playerId)
+          .map((playerId, i) => ({
+            teamId: i % 2 === 0 ? redTeam.id : blueTeam.id,
+            playerId: playerId
+          }));
+        
+        if (teamAssignments.length > 0) {
+          await ctx.prisma.teamPlayerJunction.createMany({
+            data: teamAssignments
+          });
+        }
+      }
+
+      // If disabling team game mode, remove all teams and player assignments
+      if (!input.isTeamGame && session.GameSessionTeam.length > 0) {
+        // Delete all team player junctions in one operation
+        await ctx.prisma.teamPlayerJunction.deleteMany({
+          where: { teamId: { in: session.GameSessionTeam.map(t => t.id) } }
+        });
+        // Delete all teams
+        await ctx.prisma.gameSessionTeam.deleteMany({
+          where: { gameSessionId: input.gameSessionId }
+        });
+      }
+
+      return ctx.prisma.gameSession.update({
+        where: { id: input.gameSessionId },
+        data: { isTeamGame: input.isTeamGame }
+      });
+    }),
+
+  addTeam: privateProcedure
+    .input(
+      z.object({
+        gameSessionId: z.string().min(1),
+        name: z.string().min(1),
+        color: z.string().min(1)
+      }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await ctx.prisma.gameSession.findUnique({
+        where: { id: input.gameSessionId },
+        include: { 
+          PlayerGameSessionJunction: true,
+          GameSessionTeam: true
+        }
+      });
+
+      if (!session) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game session not found"
+        });
+      }
+
+      // Check if number of teams would exceed number of players
+      if (session.GameSessionTeam.length >= session.PlayerGameSessionJunction.length) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot have more teams than players"
+        });
+      }
+
+      return ctx.prisma.gameSessionTeam.create({
+        data: {
+          gameSessionId: input.gameSessionId,
+          name: input.name,
+          color: input.color
+        }
+      });
+    }),
+
+  removeTeam: privateProcedure
+    .input(
+      z.object({
+        teamId: z.string().min(1)
+      }))
+    .mutation(async ({ ctx, input }) => {
+      // First delete all player assignments to this team
+      await ctx.prisma.teamPlayerJunction.deleteMany({
+        where: { teamId: input.teamId }
+      });
+
+      return ctx.prisma.gameSessionTeam.delete({
+        where: { id: input.teamId }
+      });
+    }),
+
+  updatePlayerTeam: privateProcedure
+    .input(
+      z.object({
+        gameSessionId: z.string().min(1),
+        playerId: z.string().min(1),
+        teamId: z.string().min(1)
+      }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await ctx.prisma.gameSession.findUnique({
+        where: { id: input.gameSessionId },
+        include: { GameSessionTeam: true }
+      });
+
+      if (!session) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game session not found"
+        });
+      }
+
+      // Validate that the team belongs to this session
+      const team = session.GameSessionTeam.find(t => t.id === input.teamId);
+      if (!team) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Team does not belong to this game session"
+        });
+      }
+
+      // Remove player from any existing team in this session (single operation)
+      await ctx.prisma.teamPlayerJunction.deleteMany({
+        where: {
+          teamId: { in: session.GameSessionTeam.map(t => t.id) },
+          playerId: input.playerId
+        }
+      });
+
+      // Add player to the new team
+      return ctx.prisma.teamPlayerJunction.create({
+        data: {
+          teamId: input.teamId,
+          playerId: input.playerId
+        }
+      });
+    }),
+
+  removePlayerFromTeam: privateProcedure
+    .input(
+      z.object({
+        gameSessionId: z.string().min(1),
+        playerId: z.string().min(1)
+      }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await ctx.prisma.gameSession.findUnique({
+        where: { id: input.gameSessionId },
+        include: { GameSessionTeam: true }
+      });
+
+      if (!session) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game session not found"
+        });
+      }
+
+      // Remove player from all teams in this session (single operation)
+      await ctx.prisma.teamPlayerJunction.deleteMany({
+        where: {
+          teamId: { in: session.GameSessionTeam.map(t => t.id) },
+          playerId: input.playerId
+        }
+      });
+
+      return { success: true };
+    }),
+
+  // Unlock a completed game session (admin only)
+  // Changes status from COMPLETED to ONGOING so it can be edited
+  unlockGameSession: groupAdminProcedure
+    .input(z.object({
+      gameSessionId: z.string().min(1),
+      groupId: z.string().min(1)  // Required by groupAdminProcedure to verify admin permissions for this specific group
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // First verify the session belongs to this group
+      const session = await ctx.prisma.gameSession.findUnique({
+        where: { id: input.gameSessionId }
+      });
+
+      if (!session) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game session not found"
+        });
+      }
+
+      if (session.groupId !== input.groupId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You can only unlock game sessions in your group"
+        });
+      }
+
+      if (session.status !== "Completed") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only completed game sessions can be unlocked"
+        });
+      }
+
+      // Update status to ONGOING
+      await ctx.prisma.gameSession.update({
+        where: { id: input.gameSessionId },
+        data: { status: "Ongoing" }
+      });
+
+      return { success: true };
+    })
 });

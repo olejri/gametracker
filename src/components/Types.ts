@@ -133,6 +133,13 @@ export type Expansions = {
     image_url: string,
 }
 
+export type GameSessionTeam = {
+    id: string
+    name: string
+    color: string
+    playerIds: string[]
+}
+
 export type GameSessionWithPlayers = {
     sessionId: string
     baseGameId: string
@@ -144,6 +151,8 @@ export type GameSessionWithPlayers = {
     createdAt: Date
     status: GameSessionStatus
     groupId: string
+    isTeamGame: boolean
+    teams: GameSessionTeam[]
 }
 
 export enum GameSessionStatus {

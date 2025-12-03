@@ -11,6 +11,16 @@ import { Button } from "npm/components/ui";
 import { StatusBadge } from "npm/components/ui";
 import { formatDate, transformDate } from "npm/lib/utils";
 
+// Predefined team colors for adding new teams
+const TEAM_COLORS = [
+  { name: "Green", color: "#22C55E" },
+  { name: "Yellow", color: "#EAB308" },
+  { name: "Purple", color: "#A855F7" },
+  { name: "Orange", color: "#F97316" },
+  { name: "Pink", color: "#EC4899" },
+  { name: "Cyan", color: "#06B6D4" },
+];
+
 const GameSession = (props: GameSessionProps) => {
   const {
     data: game,
@@ -18,6 +28,7 @@ const GameSession = (props: GameSessionProps) => {
     isLoading: sessionIsLoading,
     error
   } = api.session.getGameASession.useQuery({ data: { id: props.gameId } });
+  const { data: userRole } = api.group.getActiveGameGroup.useQuery();
   const ctx = api.useContext();
   const [haveError, setHaveError] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -27,6 +38,8 @@ const GameSession = (props: GameSessionProps) => {
   const [showHistory, setShowHistory] = useState(false);
   const [rollingPlayerIndex, setRollingPlayerIndex] = useState<number | null>(null);
   const [animationOnGoing, setAnimationOnGoing] = useState<boolean | null>(null);
+  const [isTeamTogglePending, setIsTeamTogglePending] = useState(false);
+  const [prevTeamGameValue, setPrevTeamGameValue] = useState<boolean | null>(null);
 
   const updateGameSession = api.session.updateGameSession.useMutation({
     onSuccess: () => {
@@ -90,6 +103,30 @@ const GameSession = (props: GameSessionProps) => {
     onSuccess: (data) => {
       setStartingPlayer(data.startingPlayer);
       void ctx.session.getRandomizationHistory.invalidate();
+    }
+  });
+
+  const toggleTeamGame = api.session.toggleTeamGame.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    }
+  });
+
+  const addTeam = api.session.addTeam.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    }
+  });
+
+  const removeTeam = api.session.removeTeam.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    }
+  });
+
+  const unlockGameSession = api.session.unlockGameSession.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
     }
   });
 
@@ -195,6 +232,19 @@ const GameSession = (props: GameSessionProps) => {
     setDescription(game?.description ?? "");
   }, [game?.description]);
 
+  useEffect(() => {
+    if (!isTeamTogglePending) return;
+    if (prevTeamGameValue === null) return;
+    if (!game) return;
+
+    // When game.isTeamGame changes from the previous value → update done
+    if (game.isTeamGame !== prevTeamGameValue) {
+      setIsTeamTogglePending(false);
+      setPrevTeamGameValue(null);
+    }
+  }, [game?.isTeamGame, isTeamTogglePending, prevTeamGameValue, game]);
+
+
   if (sessionIsLoading || isUpdating) {
     return (
       <div className="flex grow">
@@ -228,9 +278,35 @@ const GameSession = (props: GameSessionProps) => {
         <div className="grid grid-cols-2">
           <div className="px-4 py-5 sm:p-6">
             <Image src={game.image_url} alt="My Image" width={300} height={300} className="rounded-lg mt-4" />
-            <StatusBadge color="green">
-              {game.status}
-            </StatusBadge>
+            <div className="flex items-center gap-2 mt-2">
+              <StatusBadge color="green">
+                {game.status}
+              </StatusBadge>
+              {/* Unlock button for admins when game is Completed */}
+              {game.status === "Completed" && userRole?.role === "ADMIN" && (
+                unlockGameSession.isLoading ? (
+                  <LoadingSpinner size={20} />
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (confirm("Are you sure you want to unlock this game session? It will change the status from Completed to Ongoing so you can edit it.")) {
+                        unlockGameSession.mutate({
+                          gameSessionId: game.sessionId,
+                          groupId: props.groupName
+                        });
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 rounded-md bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/40"
+                    title="Unlock to edit"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    Unlock
+                  </button>
+                )
+              )}
+            </div>
           </div>
           <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
@@ -291,11 +367,11 @@ const GameSession = (props: GameSessionProps) => {
                   </div>
                 </div>}
                 <div
-                  className="relative rounded-b-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                  className="relative rounded-b-none px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
                   <label htmlFor="date" className="block text-xs font-medium text-gray-900 dark:text-white">
                     Date
                   </label>
-                  {!updateDate.isLoading  ?
+                  {!updateDate.isLoading ?
                     <input
                       onBlur={() => {
                         if(isInReadOnlyMode) return;
@@ -317,12 +393,115 @@ const GameSession = (props: GameSessionProps) => {
                       className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     />: <LoadingSpinner size={30} />}
                 </div>
+                {/* Team Game Mode Toggle - Only shown for Ongoing games */}
+                {game.status === GameSessionStatus.Ongoing && (
+                  <div
+                    className="relative rounded-b-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
+                    <label htmlFor="teamGame" className="block text-xs font-medium text-gray-900 dark:text-white">
+                      Team Game
+                    </label>
+
+                    <div className="flex items-center justify-between py-1">
+      <span className="text-sm text-gray-500 dark:text-gray-400">
+        {game.isTeamGame ? "Enabled" : "Disabled"}
+      </span>
+
+                      {isTeamTogglePending || toggleTeamGame.isLoading ? (
+                        <LoadingSpinner size={24} />
+                      ) : (
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={game.isTeamGame}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+
+                              // Start pending state
+                              setPrevTeamGameValue(game.isTeamGame);
+                              setIsTeamTogglePending(true);
+
+                              toggleTeamGame.mutate({
+                                gameSessionId: game.sessionId,
+                                isTeamGame: checked,
+                              });
+                            }}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+      {/* Team Management Section - Only shown when Team Game Mode is enabled */}
+      {game.status === GameSessionStatus.Ongoing && game.isTeamGame && (
+        <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
+          <div className="px-4 py-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                Teams
+              </h3>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              {game.teams.map((team) => (
+                <div
+                  key={team.id}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2"
+                  style={{ 
+                    backgroundColor: team.color + '20',
+                    border: `2px solid ${team.color}`
+                  }}
+                >
+                  <span 
+                    className="font-medium text-sm"
+                    style={{ color: team.color }}
+                  >
+                    {team.name} Team
+                  </span>
+                  {game.teams.length > 2 && (
+                    <button
+                      onClick={() => removeTeam.mutate({ teamId: team.id })}
+                      className="text-gray-500 hover:text-red-500 text-xs ml-1"
+                      disabled={removeTeam.isLoading}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              
+              {/* Add Team Button */}
+              {game.teams.length < game.players.length && (
+                <>
+                  {TEAM_COLORS.filter(tc => 
+                    !game.teams.some(t => t.name === tc.name)
+                  ).slice(0, 1).map((teamColor) => (
+                    <Button
+                      key={teamColor.name}
+                      variant="primary"
+                      onClick={() => addTeam.mutate({
+                        gameSessionId: game.sessionId,
+                        name: teamColor.name,
+                        color: teamColor.color
+                      })}
+                      disabled={addTeam.isLoading}
+                    >
+                      + Add Team
+                    </Button>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {sortPlayers(game.players).map((player, index) => (
@@ -333,6 +512,9 @@ const GameSession = (props: GameSessionProps) => {
                 isInReadOnlyMode={isInReadOnlyMode}
                 numberOfPlayers={game.players.length + 1}
                 isRolling={rollingPlayerIndex === index}
+                isTeamGame={game.isTeamGame}
+                teams={game.teams}
+                gameSessionId={game.sessionId}
               ></PlayerView>
             ))}
           </div>
