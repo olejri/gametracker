@@ -24,6 +24,7 @@ const History = ({ groupName }: DashboardProps) => {
   const [playerFilter, setPlayerFilter] = useState("");
   const [gameQuery, setGameQuery] = useState("");
   const [playerQuery, setPlayerQuery] = useState("");
+  const [teamGamesOnly, setTeamGamesOnly] = useState(false);
 
   const sessions = data ?? [];
 
@@ -68,9 +69,10 @@ const History = ({ groupName }: DashboardProps) => {
       const gameMatches = !gameFilter || session.gameName === gameFilter;
       const playerMatches =
         !playerFilter || session.players.some((p) => p.playerId === playerFilter);
-      return gameMatches && playerMatches;
+      const teamGameMatches = !teamGamesOnly || session.isTeamGame;
+      return gameMatches && playerMatches && teamGameMatches;
     });
-  }, [sessions, gameFilter, playerFilter]);
+  }, [sessions, gameFilter, playerFilter, teamGamesOnly]);
 
   const content = useMemo(() => {
     if (isLoading) {
@@ -118,11 +120,19 @@ const History = ({ groupName }: DashboardProps) => {
                 const playersSorted = sortPlayers(game.players);
 
                 return (
-                  <tr key={game.sessionId}>
+                  <tr 
+                    key={game.sessionId}
+                    className={classNames(
+                      game.isTeamGame && "bg-blue-50 dark:bg-blue-900/20"
+                    )}
+                  >
                     <td
                       className={classNames(
                         rowHasBorder && tdBorder,
-                        "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8 dark:text-white",
+                        "w-6 py-4 pl-4 pr-3 text-sm font-medium sm:pl-6 lg:pl-8",
+                        game.isTeamGame 
+                          ? "text-blue-600 dark:text-blue-400 border-l-4 border-l-blue-500" 
+                          : "text-gray-900 dark:text-white",
                       )}
                     >
                       <Link href={href} className="block h-full w-full">
@@ -210,9 +220,10 @@ const History = ({ groupName }: DashboardProps) => {
       <div className="mt-8 flow-root">
         {/* Filter Controls */}
         {sessions.length > 0 && (
-          <div className="relative z-20 mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Game Filter */}
-            <Combobox
+          <div className="relative z-20 mb-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* Game Filter */}
+              <Combobox
               as="div"
               value={gameFilter}
               onChange={(value: string) => {
@@ -353,6 +364,23 @@ const History = ({ groupName }: DashboardProps) => {
                 )}
               </div>
             </Combobox>
+            </div>
+            {/* Team Games Only Filter */}
+            <div className="mt-4 flex items-center">
+              <input
+                id="team-games-only"
+                type="checkbox"
+                checked={teamGamesOnly}
+                onChange={(e) => setTeamGamesOnly(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600 dark:bg-gray-800"
+              />
+              <label
+                htmlFor="team-games-only"
+                className="ml-2 block text-sm font-medium text-gray-900 dark:text-white"
+              >
+                Show team games only
+              </label>
+            </div>
           </div>
         )}
         {content}
