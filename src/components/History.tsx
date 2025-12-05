@@ -118,15 +118,28 @@ const History = ({ groupName }: DashboardProps) => {
                 const playersSorted = sortPlayers(game.players);
 
                 return (
-                  <tr key={game.sessionId}>
+                  <tr 
+                    key={game.sessionId}
+                    className={classNames(
+                      game.isTeamGame && "bg-blue-50 dark:bg-blue-900/20"
+                    )}
+                  >
                     <td
                       className={classNames(
                         rowHasBorder && tdBorder,
                         "w-6 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8 dark:text-white",
+                        game.isTeamGame && "border-l-4 border-l-blue-500",
                       )}
                     >
                       <Link href={href} className="block h-full w-full">
-                        {game.gameName}
+                        <span className="flex items-center gap-2">
+                          {game.gameName}
+                          {game.isTeamGame && (
+                            <span className="inline-flex items-center rounded-md bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                              Team
+                            </span>
+                          )}
+                        </span>
                       </Link>
                     </td>
 
