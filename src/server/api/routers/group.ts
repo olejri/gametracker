@@ -244,5 +244,77 @@ export const groupRouter = createTRPCRouter({
       });
 
       return { hidden: updated.hidden };
+    }),
+
+  createGameGroup: privateProcedure
+    .input(z.object({ 
+      name: z.string().min(1, "Group name is required")
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId);
+
+      // Use transaction to ensure atomicity
+      const result = await ctx.prisma.$transaction(async (tx) => {
+        // Check if player has groups left
+        const currentPlayer = await tx.player.findUnique({
+          where: { id: player.id },
+          select: { gameGroupsLeft: true }
+        });
+
+        if (!currentPlayer || currentPlayer.gameGroupsLeft <= 0) {
+          throw new Error("You have already created your maximum allowed game groups");
+        }
+
+        // Generate unique group ID with sanitized name
+        const sanitizedName = input.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .substring(0, 30);
+        const randomSuffix = Math.floor(10000 + Math.random() * 90000);
+        const groupId = `${sanitizedName}-${randomSuffix}`;
+
+        // Create the game group
+        const newGroup = await tx.gameGroup.create({
+          data: {
+            id: groupId,
+            name: input.name,
+            hidden: false
+          }
+        });
+
+        // Add player as admin of the group
+        await tx.playerGameGroupJunction.create({
+          data: {
+            playerId: player.id,
+            groupId: newGroup.id,
+            role: "ADMIN",
+            inviteStatus: "ACCEPTED",
+            gameGroupIsActive: true
+          }
+        });
+
+        // Deactivate all other groups for this player
+        await tx.playerGameGroupJunction.updateMany({
+          where: {
+            playerId: player.id,
+            groupId: { not: newGroup.id }
+          },
+          data: { gameGroupIsActive: false }
+        });
+
+        // Decrement gameGroupsLeft
+        await tx.player.update({
+          where: { id: player.id },
+          data: { gameGroupsLeft: { decrement: 1 } }
+        });
+
+        return newGroup;
+      });
+
+      return { 
+        data: result,
+        message: "Game group created successfully"
+      };
     })
 });
