@@ -1,10 +1,14 @@
 import type { PlayerNicknameAndScore, GameSessionTeam } from "npm/components/Types";
 import Image from "next/image";
-import React from "react";
+import React, { forwardRef, useImperativeHandle, useState, useEffect } from "react";
 import { api } from "npm/utils/api";
 import { LoadingSpinner } from "npm/components/loading";
 
-const PlayerView = (props: {
+export interface PlayerViewRef {
+  flushPendingUpdates: () => Promise<void>;
+}
+
+const PlayerView = forwardRef<PlayerViewRef, {
   player: PlayerNicknameAndScore,
   updatePlayer: (player: PlayerNicknameAndScore) => void,
   isInReadOnlyMode: boolean
@@ -13,15 +17,30 @@ const PlayerView = (props: {
   isTeamGame?: boolean
   teams?: GameSessionTeam[]
   gameSessionId?: string
-}) => {
-  const { isInReadOnlyMode, numberOfPlayers, isRolling, isTeamGame, teams, gameSessionId } = props;
-  const [player, setPlayer] = React.useState<PlayerNicknameAndScore>(props.player);
-  const [isUpdatingPos, setIsUpdatingPos] = React.useState(false);
-  const [isUpdatingScore, setIsUpdatingScore] = React.useState(false);
+  onDragStart?: (playerId: string) => void
+  onDragOver?: (playerId: string) => void
+  onDrop?: (targetPlayerId: string) => void
+  isDragging?: boolean
+  isDragOver?: boolean
+}>((props, ref) => {
+  const { isInReadOnlyMode, numberOfPlayers, isRolling, isTeamGame, teams, gameSessionId, onDragStart, onDragOver, onDrop, isDragging, isDragOver } = props;
+  const [player, setPlayer] = useState<PlayerNicknameAndScore>(props.player);
+  const [isUpdatingPos, setIsUpdatingPos] = useState(false);
+  const [isUpdatingScore, setIsUpdatingScore] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const lastSavedScore = React.useRef(props.player.score);
   const ctx = api.useContext();
+
+  // Sync position when props change (from drag-and-drop or external updates)
+  useEffect(() => {
+    setPlayer(props.player);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.player.position, props.player.playerId]);
+
   const mutateScore = api.session.updatePlayerScoreJunction.useMutation({
     onSuccess: () => {
       setIsUpdatingScore(false);
+      lastSavedScore.current = player.score;
       void ctx.session.getGameASession.invalidate();
     },
     onMutate: () => {
@@ -43,16 +62,95 @@ const PlayerView = (props: {
     }
   });
 
+  useEffect(() => {
+    if (isInReadOnlyMode || isUpdatingScore) return;
+    
+    const timeoutId = setTimeout(() => {
+      if (player.score !== lastSavedScore.current) {
+        mutateScore.mutate(player);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.score, isInReadOnlyMode, isUpdatingScore]);
+
+  useImperativeHandle(ref, () => ({
+    flushPendingUpdates: async () => {
+      if (!isInReadOnlyMode && player.score !== props.player.score) {
+        await mutateScore.mutateAsync(player);
+      }
+    }
+  }));
+
   // Find the current team for this player
   const currentTeam = teams?.find((t) => t.playerIds.includes(player.playerId));
   const teamBorderColor = isTeamGame && currentTeam ? currentTeam.color : undefined;
   const shouldShowTeamSelector = isTeamGame && teams && teams.length > 0 && !isInReadOnlyMode && gameSessionId;
 
-
   return (
     <div
       key={player.playerId}
-      className={`relative flex items-center space-x-3 rounded-lg bg-white px-6 py-5 shadow-sm hover:border-gray-400 dark:bg-gray-800 dark:hover:border-gray-500 ${isRolling ? 'player-rolling-animation' : ''} ${!teamBorderColor ? 'border border-gray-300 dark:border-gray-600' : ''}`}
+      draggable={!isInReadOnlyMode && !isInputFocused}
+      onDragStart={(e) => {
+        if (!isInReadOnlyMode && onDragStart) {
+          e.dataTransfer.effectAllowed = 'move';
+          onDragStart(player.playerId);
+        }
+      }}
+      onDragOver={(e) => {
+        if (!isInReadOnlyMode && onDragOver) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          onDragOver(player.playerId);
+        }
+      }}
+      onDrop={(e) => {
+        if (!isInReadOnlyMode && onDrop) {
+          e.preventDefault();
+          onDrop(player.playerId);
+        }
+      }}
+      onDragEnd={(e) => {
+        e.preventDefault();
+      }}
+      onTouchStart={() => {
+        if (!isInReadOnlyMode && onDragStart) {
+          onDragStart(player.playerId);
+        }
+      }}
+      onTouchMove={(e) => {
+        if (!isInReadOnlyMode && onDragOver) {
+          const touch = e.touches[0];
+          if (touch) {
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const playerCard = element?.closest('[data-player-id]');
+            if (playerCard) {
+              const targetPlayerId = playerCard.getAttribute('data-player-id');
+              if (targetPlayerId) {
+                onDragOver(targetPlayerId);
+              }
+            }
+          }
+        }
+      }}
+      onTouchEnd={(e) => {
+        if (!isInReadOnlyMode && onDrop) {
+          const touch = e.changedTouches[0];
+          if (touch) {
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const playerCard = element?.closest('[data-player-id]');
+            if (playerCard) {
+              const targetPlayerId = playerCard.getAttribute('data-player-id');
+              if (targetPlayerId) {
+                onDrop(targetPlayerId);
+              }
+            }
+          }
+        }
+      }}
+      data-player-id={player.playerId}
+      className={`relative flex items-center space-x-3 rounded-lg bg-white px-6 py-5 shadow-sm hover:border-gray-400 dark:bg-gray-800 dark:hover:border-gray-500 transition-all duration-150 ease-in-out ${isRolling ? 'player-rolling-animation' : ''} ${!teamBorderColor ? 'border border-gray-300 dark:border-gray-600' : ''} ${isDragging ? 'opacity-50 scale-95 cursor-move shadow-lg' : ''} ${isDragOver ? 'ring-2 ring-indigo-500 dark:ring-indigo-400 scale-105' : ''} ${!isInReadOnlyMode && !isInputFocused ? 'cursor-move active:scale-95' : ''}`}
       style={teamBorderColor ? { border: `3px solid ${teamBorderColor}` } : undefined}
     >
       <div className="flex-shrink-0">
@@ -75,16 +173,14 @@ const PlayerView = (props: {
                    value={player.score}
                    readOnly={isInReadOnlyMode}
                    required
+                   onFocus={() => setIsInputFocused(true)}
+                   onBlur={() => setIsInputFocused(false)}
                    onChange={(e) => {
                       setPlayer({
                         ...player,
                         score: e.target.value,
                       });
                    }}
-                   onBlur={() => {
-                     if(isInReadOnlyMode) return;
-                     mutateScore.mutate(player);}
-                   }
             />: <LoadingSpinner />}
           </div>
           <div className="grid grid-cols-1">
@@ -101,16 +197,21 @@ const PlayerView = (props: {
                   appearance: "none",
                   backgroundImage: "none",
                 }}
-                defaultValue={player.position}
+                value={player.position}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
                 onChange={(e) => {
+                  const newPosition = +e.target.value;
                   setPlayer({
                     ...player,
-                    position: +e.target.value,
+                    position: newPosition,
                   });
-                }}
-                onBlur={() => {
-                  if (isInReadOnlyMode) return;
-                  mutatePos.mutate(player);
+                  if (!isInReadOnlyMode) {
+                    mutatePos.mutate({
+                      ...player,
+                      position: newPosition,
+                    });
+                  }
                 }}
               >
                 {Array.from(Array(numberOfPlayers).keys()).map((i) => {
@@ -168,6 +269,8 @@ const PlayerView = (props: {
       </div>
     </div>
   );
-};
+});
+
+PlayerView.displayName = 'PlayerView';
 
 export default PlayerView;

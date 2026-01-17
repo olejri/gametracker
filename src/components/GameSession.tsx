@@ -3,8 +3,8 @@ import { sortPlayers } from "npm/components/HelperFunctions";
 import { api } from "npm/utils/api";
 import Image from "next/image";
 import { LoadingPage, LoadingSpinner } from "npm/components/loading";
-import { useEffect, useState } from "react";
-import PlayerView from "npm/components/PlayerView";
+import { useEffect, useState, useRef, createRef } from "react";
+import PlayerView, { type PlayerViewRef } from "npm/components/PlayerView";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
 import { Button } from "npm/components/ui";
@@ -40,6 +40,9 @@ const GameSession = (props: GameSessionProps) => {
   const [animationOnGoing, setAnimationOnGoing] = useState<boolean | null>(null);
   const [isTeamTogglePending, setIsTeamTogglePending] = useState(false);
   const [prevTeamGameValue, setPrevTeamGameValue] = useState<boolean | null>(null);
+  const playerViewRefs = useRef<Record<string, React.RefObject<PlayerViewRef>>>({});
+  const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
+  const [dragOverPlayerId, setDragOverPlayerId] = useState<string | null>(null);
 
   const updateGameSession = api.session.updateGameSession.useMutation({
     onSuccess: () => {
@@ -119,6 +122,12 @@ const GameSession = (props: GameSessionProps) => {
   });
 
   const removeTeam = api.session.removeTeam.useMutation({
+    onSuccess: () => {
+      void ctx.session.getGameASession.invalidate();
+    }
+  });
+
+  const updatePlayerPosition = api.session.updatePlayerPosJunction.useMutation({
     onSuccess: () => {
       void ctx.session.getGameASession.invalidate();
     }
@@ -220,6 +229,64 @@ const GameSession = (props: GameSessionProps) => {
     { enabled: !!game?.sessionId }
   );
 
+  const handleDragStart = (playerId: string) => {
+    setDraggedPlayerId(playerId);
+  };
+
+  const handleDragOver = (playerId: string) => {
+    setDragOverPlayerId(playerId);
+  };
+
+  const handleDrop = (targetPlayerId: string) => {
+    if (!draggedPlayerId || draggedPlayerId === targetPlayerId || !game) {
+      setDraggedPlayerId(null);
+      setDragOverPlayerId(null);
+      return;
+    }
+
+    const draggedPlayer = game.players.find(p => p.playerId === draggedPlayerId);
+    const targetPlayer = game.players.find(p => p.playerId === targetPlayerId);
+
+    if (draggedPlayer && targetPlayer) {
+      // Swap positions
+      const draggedPos = draggedPlayer.position;
+      const targetPos = targetPlayer.position;
+
+      // Optimistically update the UI immediately
+      ctx.session.getGameASession.setData(
+        { data: { id: game.sessionId } },
+        (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            players: oldData.players.map((p) => {
+              if (p.playerId === draggedPlayerId) {
+                return { ...p, position: targetPos };
+              }
+              if (p.playerId === targetPlayerId) {
+                return { ...p, position: draggedPos };
+              }
+              return p;
+            }),
+          };
+        }
+      );
+
+      // Update server in background
+      updatePlayerPosition.mutate({
+        junctionId: draggedPlayer.junctionId,
+        position: targetPos
+      });
+
+      updatePlayerPosition.mutate({
+        junctionId: targetPlayer.junctionId,
+        position: draggedPos
+      });
+    }
+
+    setDraggedPlayerId(null);
+    setDragOverPlayerId(null);
+  };
 
   const [description, setDescription] = useState<string>(game?.description ?? "");
   const [dateText, setDateText] = useState<string>("");
@@ -504,19 +571,30 @@ const GameSession = (props: GameSessionProps) => {
       <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {sortPlayers(game.players).map((player, index) => (
-              <PlayerView
-                key={player.playerId}
-                player={player}
-                updatePlayer={updatePlayer}
-                isInReadOnlyMode={isInReadOnlyMode}
-                numberOfPlayers={game.players.length + 1}
-                isRolling={rollingPlayerIndex === index}
-                isTeamGame={game.isTeamGame}
-                teams={game.teams}
-                gameSessionId={game.sessionId}
-              ></PlayerView>
-            ))}
+            {sortPlayers(game.players).map((player, index) => {
+              if (!playerViewRefs.current[player.playerId]) {
+                playerViewRefs.current[player.playerId] = createRef<PlayerViewRef>();
+              }
+              return (
+                <PlayerView
+                  key={player.playerId}
+                  ref={playerViewRefs.current[player.playerId]}
+                  player={player}
+                  updatePlayer={updatePlayer}
+                  isInReadOnlyMode={isInReadOnlyMode}
+                  numberOfPlayers={game.players.length + 1}
+                  isRolling={rollingPlayerIndex === index}
+                  isTeamGame={game.isTeamGame}
+                  teams={game.teams}
+                  gameSessionId={game.sessionId}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  isDragging={draggedPlayerId === player.playerId}
+                  isDragOver={dragOverPlayerId === player.playerId}
+                />
+              );
+            })}
           </div>
         </div>
       </div>
@@ -623,17 +701,25 @@ const GameSession = (props: GameSessionProps) => {
             <Button
               variant="primary"
               onClick={() => {
-                setHaveError(false);
-                finishGameSession.mutate({
-                  sessionId: game.sessionId,
-                  players: game.players.map((player) => {
-                    return {
-                      playerId: player.playerId,
-                      score: player.score,
-                      position: player.position
-                    };
-                  })
-                });
+                void (async () => {
+                  setHaveError(false);
+                  // Flush all pending score updates before finishing
+                  const flushPromises = Object.values(playerViewRefs.current)
+                    .map(ref => ref.current?.flushPendingUpdates())
+                    .filter(Boolean);
+                  await Promise.all(flushPromises);
+                  
+                  finishGameSession.mutate({
+                    sessionId: game.sessionId,
+                    players: game.players.map((player) => {
+                      return {
+                        playerId: player.playerId,
+                        score: player.score,
+                        position: player.position
+                      };
+                    })
+                  });
+                })();
               }}>
               Finish session
             </Button>
