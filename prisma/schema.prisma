@@ -73,41 +73,45 @@ model GameSessionGameJunction {
 }
 
 model GameSession {
-  id                            String                          @id @default(uuid())
-  gameId                        String
-  result                        String?
-  status                        String
-  createdAt                     DateTime                        @default(now())
-  updatedAt                     DateTime                        @updatedAt
-  groupId                       String                          @default("game-night")
-  description                   String?
-  isTeamGame                    Boolean                         @default(false)
-  PlayerGameSessionJunction     PlayerGameSessionJunction[]
-  GameSessionGameJunction       GameSessionGameJunction[]
-  GameSessionRandomizationLog   GameSessionRandomizationLog[]
-  GameSessionTeam               GameSessionTeam[]
+  id                          String                        @id @default(uuid())
+  gameId                      String
+  result                      String?
+  status                      String
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+  groupId                     String                        @default("game-night")
+  description                 String?
+  isTeamGame                  Boolean                       @default(false)
+  PlayerGameSessionJunction   PlayerGameSessionJunction[]
+  GameSessionGameJunction     GameSessionGameJunction[]
+  GameSessionRandomizationLog GameSessionRandomizationLog[]
+  GameSessionTeam             GameSessionTeam[]
 }
 
 model GameSessionTeam {
-  id            String      @id @default(uuid())
-  gameSessionId String
-  name          String
-  color         String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  gameSession   GameSession @relation(fields: [gameSessionId], references: [id])
+  id                 String               @id @default(uuid())
+  gameSessionId      String
+  name               String
+  color              String
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @default(now()) @updatedAt
+  gameSession        GameSession          @relation(fields: [gameSessionId], references: [id])
   TeamPlayerJunction TeamPlayerJunction[]
+
+  @@index([gameSessionId])
 }
 
 model TeamPlayerJunction {
-  id              String          @id @default(uuid())
-  teamId          String
-  playerId        String
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  team            GameSessionTeam @relation(fields: [teamId], references: [id])
+  id        String          @id @default(uuid())
+  teamId    String
+  playerId  String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @default(now()) @updatedAt
+  team      GameSessionTeam @relation(fields: [teamId], references: [id])
 
   @@unique([teamId, playerId])
+  @@index([playerId])
+  @@index([teamId])
 }
 
 model PlayerGameJunction {
@@ -140,20 +144,23 @@ model PlayerGameGroupJunction {
 model GameSessionRandomizationLog {
   id            String      @id @default(uuid())
   gameSessionId String
-  type          String
+  type          String      @db.VarChar(255)
   data          Json
   createdAt     DateTime    @default(now())
-
   GameSession   GameSession @relation(fields: [gameSessionId], references: [id])
+
+  @@index([gameSessionId], map: "idx_log_gamesession")
 }
 
 model EmailInvite {
-  id             String    @id @default(uuid())
-  clerkInviteId  String    @unique
-  emailAddress   String
-  groupId        String
-  status         String    @default("pending")
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  GameGroup      GameGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  id            String    @id @default(uuid())
+  clerkInviteId String    @unique
+  emailAddress  String
+  groupId       String
+  status        String    @default("pending")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  GameGroup     GameGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId], map: "groupId")
 }
