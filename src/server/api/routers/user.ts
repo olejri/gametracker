@@ -123,12 +123,15 @@ export const userRouter = createTRPCRouter({
       return enrichedPlayers;
     }),
 
-  sendInvite: adminProcedure
+  sendInvite: groupAdminProcedure
     .input(
         z.object({
           emailAddress: z.string(),
+          groupId: z.string(),
         })
-    ).mutation(async ({ input }) => {
+    ).mutation(async ({ input, ctx }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      
       const apiKey = process.env.CLERK_SECRET_KEY;
       const apiUrl = 'https://api.clerk.dev/v1/invitations';
 
@@ -159,14 +162,51 @@ export const userRouter = createTRPCRouter({
           message: `Failed to send invite: ${res.statusText}`
         });
       }
+      
+      // Get the invite ID from the response
+      const inviteData = await res.json() as { id: string };
+      
+      // Create EmailInvite record to track group association
+      await ctx.prisma.emailInvite.create({
+        data: {
+          clerkInviteId: inviteData.id,
+          emailAddress: input.emailAddress,
+          groupId: input.groupId,
+          status: "pending"
+        }
+      });
+      
       //return tRPC success
       return {
         data: true
       }
     }),
 
-  getPendingEmailInvites: adminProcedure
-    .query(async () => {
+  getPendingEmailInvites: privateProcedure
+    .input(
+      z.object({
+        gameGroup: z.string()
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.gameGroup);
+      
+      // Get email invites for this specific group
+      const emailInvites = await ctx.prisma.emailInvite.findMany({
+        where: {
+          groupId: input.gameGroup,
+          status: "pending"
+        }
+      });
+      
+      // If no invites, return empty array
+      if (emailInvites.length === 0) {
+        return {
+          data: []
+        };
+      }
+      
+      // Fetch current status from Clerk for these invites
       const apiKey = process.env.CLERK_SECRET_KEY;
       const apiUrl = 'https://api.clerk.dev/v1/invitations';
 
@@ -184,10 +224,17 @@ export const userRouter = createTRPCRouter({
           message: `Failed to get pending invites: ${res.statusText}`
         });
       }
-      const result = await res.json() as ClerkInvite[];
-      //only pending
+      
+      const clerkInvites = await res.json() as ClerkInvite[];
+      const clerkInviteMap = new Map(clerkInvites.map(inv => [inv.id, inv]));
+      
+      // Filter to only invites that are still pending in Clerk and match our group
+      const pendingInvites = emailInvites
+        .map(emailInv => clerkInviteMap.get(emailInv.clerkInviteId))
+        .filter((invite): invite is ClerkInvite => invite !== undefined && invite.status === "pending");
+      
       return {
-        data: result.filter((invite) => invite.status === "pending")
+        data: pendingInvites
       };
     }),
 

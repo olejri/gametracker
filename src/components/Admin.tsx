@@ -16,7 +16,7 @@ const AdminView = (props: {
     isLoading: emailIsLoading,
     isError: emailIsError,
     error: emailError
-  } = api.user.getPendingEmailInvites.useQuery();
+  } = api.user.getPendingEmailInvites.useQuery({ gameGroup });
 
   const { data: currentPlayer, isLoading: currentPlayerIsLoading } = api.player.getLogInPlayer.useQuery();
   const { data: gamesInGroup, isLoading: allPlayersIsloading, isError: allPlayersIsError, error: allPlayersError } = api.group.getAllPlayersInGroup.useQuery({ gameGroup });
@@ -26,7 +26,7 @@ const AdminView = (props: {
   const invalidateAdminQueries = async () => {
     await Promise.all([
       ctx.user.getPendingPlayers.invalidate({ gameGroup }),
-      ctx.user.getPendingEmailInvites.invalidate(),
+      ctx.user.getPendingEmailInvites.invalidate({ gameGroup }),
       ctx.group.getAllPlayersInGroup.invalidate({ gameGroup }),
       ctx.group.getAllGameGroups.invalidate(),
     ]);
@@ -34,25 +34,15 @@ const AdminView = (props: {
 
   const mutation = api.user.sendInvite.useMutation(
     {
-      onSuccess: () => {
+      onSuccess: async () => {
         setEmail("");
+        await invalidateAdminQueries();
       },
       onError: (error) => {
         console.log(error);
       }
     }
   );
-  const addPlayer = api.player.addPlayer.useMutation({
-    onSuccess: async () => {
-      setName("");
-      setNickname("");
-      setEmail("");
-      await invalidateAdminQueries();
-    },
-    onError: (error) => {
-      console.log(error);
-    }
-  });
 
   const acceptPlayer = api.user.acceptInvite.useMutation({
     onSuccess: async () => {
@@ -127,8 +117,6 @@ const AdminView = (props: {
   });
 
   const [email, setEmail] = React.useState("");
-  const [name, setName] = React.useState("");
-  const [nickname, setNickname] = React.useState("");
   
   // State for fake player form
   const [fakeName, setFakeName] = React.useState("");
@@ -477,43 +465,12 @@ const AdminView = (props: {
           <label
             className={"text-sm font-medium text-gray-700 dark:text-gray-300"}
           >Invite users</label>
-          <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Send an email invitation to join this group. The user will need to sign up and then request to join the group.
+          </p>
+          <div className="mt-2 overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
               <div className="isolate -space-y-px rounded-md shadow-sm">
-                <div
-                  className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
-                  <label htmlFor="name" className="block text-xs font-medium text-gray-900 dark:text-white">
-                    Name
-                  </label>
-                  <input
-                    onChange={(e) => {
-                      setName(e.target.value);
-                    }}
-                    value={name}
-                    type="text"
-                    name="name"
-                    id="name"
-                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
-                    placeholder="Full name"
-                  />
-                </div>
-                <div
-                  className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
-                  <label htmlFor="nickname" className="block text-xs font-medium text-gray-900 dark:text-white">
-                    Nickname
-                  </label>
-                  <input
-                    onChange={(e) => {
-                      setNickname(e.target.value);
-                    }}
-                    value={nickname}
-                    type="text"
-                    name="nickname"
-                    id="nickname"
-                    className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
-                    placeholder="Nickname"
-                  />
-                </div>
                 <div
                   className="relative rounded-md px-3 pt-2.5 pb-1.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600 dark:ring-gray-600">
                   <label htmlFor="email" className="block text-xs font-medium text-gray-900 dark:text-white">
@@ -524,7 +481,7 @@ const AdminView = (props: {
                       setEmail(e.target.value);
                     }}
                     value={email}
-                    type="text"
+                    type="email"
                     name="email"
                     id="email"
                     className="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
@@ -538,30 +495,23 @@ const AdminView = (props: {
                 <LoadingSpinner size={30} />
               ) : (
                 <Button
-                  disabled={mutation.isLoading || email.length === 0 || name.length === 0 || nickname.length === 0}
+                  disabled={mutation.isLoading || email.length === 0}
                   variant="primary"
                   onClick={() => {
                     mutation.mutate({
-                      emailAddress: email
-                    });
-                    addPlayer.mutate({
-                      name: name,
-                      nickname: nickname,
-                      email: email,
+                      emailAddress: email,
                       groupId: gameGroup
                     });
                   }}
                 >
-                  Invite User
+                  Send Invite
                 </Button>
               )}
-              {(mutation.isError || addPlayer.isError) &&
+              {mutation.isError &&
                 <span className="text-red-500 p-2">{mutation.error?.message}</span>}
             </div>
           </div>
         </div>
-
-
       </div>
 
       {/* Create Fake Player Section */}

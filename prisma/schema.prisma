@@ -47,6 +47,7 @@ model GameGroup {
   name                    String                    @default("Game Night")
   hidden                  Boolean                   @default(false)
   PlayerGameGroupJunction PlayerGameGroupJunction[]
+  EmailInvite             EmailInvite[]
 }
 
 model PlayerGameSessionJunction {
@@ -144,4 +145,15 @@ model GameSessionRandomizationLog {
   createdAt     DateTime    @default(now())
 
   GameSession   GameSession @relation(fields: [gameSessionId], references: [id])
+}
+
+model EmailInvite {
+  id             String    @id @default(uuid())
+  clerkInviteId  String    @unique
+  emailAddress   String
+  groupId        String
+  status         String    @default("pending")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  GameGroup      GameGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }
