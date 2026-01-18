@@ -2,14 +2,12 @@ import { adminProcedure, createTRPCRouter, groupAdminProcedure, privateProcedure
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import {
-  checkIfGameGroupExists,
-  filterUserForClient,
+  checkIfGameGroupExists, filterUserForClient,
   getPlayerByClerkId,
   getProfileImageUrl,
 } from "npm/server/helpers/filterUserForClient";
 import { TRPCError } from "@trpc/server";
-import type { Game } from "npm/components/Types";
-import { getAchievements } from "npm/server/helpers/achievementHelper";
+import { getPlayerAchievements, updatePlayerAchievements } from "npm/server/services/achievementService";
 
 export const playerRouter = createTRPCRouter({
   addPlayer: privateProcedure
@@ -329,58 +327,26 @@ export const playerRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      //check if game group exists
       await checkIfGameGroupExists(ctx.prisma, input.gameGroup);
-      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId)
-      const gameMap = new Map<string, Game>();
-      const gameInfo = await ctx.prisma.game.findMany();
-      gameInfo.forEach((game) => {
-        gameMap.set(game.id, game);
-      });
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId);
+      
+      await updatePlayerAchievements(ctx.prisma, player.id, input.gameGroup);
+      
+      return await getPlayerAchievements(ctx.prisma, player.id, input.gameGroup);
+    }),
 
-
-      const numberOfFirstPlacePrGame = new Map<string, number>();
-      const sessions = await ctx.prisma.gameSession.findMany({
-        where: {
-          groupId: input.gameGroup
-        },
-        include: {
-          PlayerGameSessionJunction: true
-        },
-        orderBy: {
-          createdAt: "desc"
-        }
-      });
-
-      //loop through all sessions and count the number of first place wins per game
-      sessions.forEach((session) => {
-        const firstPlacePlayer = session.PlayerGameSessionJunction.find((playerSession) => playerSession.position === 1 && playerSession.playerId === player.id);
-        if (firstPlacePlayer) {
-          const gameId = gameMap.get(session.gameId)?.name ?? "Unknown";
-          const numberOfWins = numberOfFirstPlacePrGame.get(gameId) ?? 0;
-          numberOfFirstPlacePrGame.set(gameId, numberOfWins + 1);
-        }
-      });
-      let maxWins = 0;
-      let gameWithMaxWins = "";
-
-      for (const [gameName, numberOfWins] of numberOfFirstPlacePrGame) {
-        if (numberOfWins > maxWins) {
-          maxWins = numberOfWins;
-          gameWithMaxWins = gameName;
-        }
-      }
-
-      const { ach1,
-        ach2,
-        ach3,
-        ach4,
-        ach5,
-        ach6,
-        ach7,
-        ach8 } = getAchievements(maxWins, gameWithMaxWins, numberOfFirstPlacePrGame.size);
-
-
-      return [ach1, ach2, ach3, ach4, ach5, ach6, ach7, ach8];
+  updateAchievementsAfterSession: privateProcedure
+    .input(
+      z.object({
+        groupId: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.groupId);
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId);
+      
+      const newlyUnlocked = await updatePlayerAchievements(ctx.prisma, player.id, input.groupId);
+      
+      return { newlyUnlocked };
     })
 });

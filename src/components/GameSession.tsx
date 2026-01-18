@@ -10,6 +10,7 @@ import dayjs from "dayjs";
 import { Button } from "npm/components/ui";
 import { StatusBadge } from "npm/components/ui";
 import { formatDate, transformDate } from "npm/lib/utils";
+import { useToast } from "npm/context/ToastContext";
 
 // Predefined team colors for adding new teams
 const TEAM_COLORS = [
@@ -30,6 +31,7 @@ const GameSession = (props: GameSessionProps) => {
   } = api.session.getGameASession.useQuery({ data: { id: props.gameId } });
   const { data: userRole } = api.group.getActiveGameGroup.useQuery();
   const ctx = api.useContext();
+  const { showAchievementToast } = useToast();
   const [haveError, setHaveError] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const path = useRouter();
@@ -71,10 +73,21 @@ const GameSession = (props: GameSessionProps) => {
     }
   });
 
+  const updateAchievements = api.player.updateAchievementsAfterSession.useMutation({
+    onSuccess: (data) => {
+      data.newlyUnlocked.forEach((achievement) => {
+        showAchievementToast(achievement.name, achievement.tier, achievement.points);
+      });
+    }
+  });
+
   const finishGameSession = api.session.finishGameSession.useMutation({
     onSuccess: () => {
       setHaveError(false);
       void ctx.session.getGameASession.invalidate();
+      if (game?.groupId) {
+        updateAchievements.mutate({ groupId: game.groupId });
+      }
     },
     onError: () => {
       setHaveError(true);

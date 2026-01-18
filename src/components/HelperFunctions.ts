@@ -1,8 +1,6 @@
 import type {
   AtlasGame,
-  Category,
   Game,
-  Mechanic,
   PlayerNicknameAndScore
 } from "npm/components/Types";
 import { GameSessionStatus } from "npm/components/Types";

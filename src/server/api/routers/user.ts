@@ -1,4 +1,4 @@
-import { adminProcedure, createTRPCRouter, groupAdminProcedure, privateProcedure } from "npm/server/api/trpc";
+import { createTRPCRouter, groupAdminProcedure, privateProcedure } from "npm/server/api/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as process from "process";

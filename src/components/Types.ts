@@ -180,13 +180,20 @@ export type OpenWithGameId = {
 }
 
 export type AchievementTypeCounter = {
+    id: string,
+    achievementId: string,
+    key: string,
     name: string,
-    achievementNumber: number,
     goal: number,
-    score: number,
+    progress: number,
     fulfilled: boolean,
     description: string,
-    gameName?: string,
+    category: string,
+    tier: string,
+    points: number,
+    iconType: string,
+    unlockedAt: Date | null,
+    metadata: Record<string, unknown> | null,
 }
 
 export type ClerkInvite = {

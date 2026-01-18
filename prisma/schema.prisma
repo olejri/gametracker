@@ -38,6 +38,7 @@ model Player {
   PlayerGameSessionJunction PlayerGameSessionJunction[]
   PlayerGameJunction        PlayerGameJunction[]
   PlayerGameGroupJunction   PlayerGameGroupJunction[]
+  PlayerAchievement         PlayerAchievement[]
 }
 
 model GameGroup {
@@ -163,4 +164,37 @@ model EmailInvite {
   GameGroup     GameGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@index([groupId], map: "groupId")
+}
+
+model Achievement {
+  id                String              @id @default(uuid())
+  key               String              @unique
+  name              String
+  description       String              @db.Text
+  category          String
+  tier              String
+  goal              Int
+  iconType          String              @default("sparkles")
+  points            Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  PlayerAchievement PlayerAchievement[]
+}
+
+model PlayerAchievement {
+  id            String       @id @default(uuid())
+  playerId      String
+  achievementId String
+  progress      Int          @default(0)
+  unlockedAt    DateTime?
+  groupId       String
+  metadata      Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  player        Player       @relation(fields: [playerId], references: [id])
+  achievement   Achievement  @relation(fields: [achievementId], references: [id])
+
+  @@unique([playerId, achievementId, groupId])
+  @@index([playerId, groupId])
+  @@index([achievementId])
 }

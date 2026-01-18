@@ -2,7 +2,6 @@ import React, { Fragment, useState } from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import {
-  Bars3Icon,
   ChartPieIcon,
   SparklesIcon,
   Square3Stack3DIcon,
