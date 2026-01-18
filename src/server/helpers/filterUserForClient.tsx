@@ -1,4 +1,4 @@
-import type { User } from "@clerk/nextjs/dist/api";
+import type { User } from "@clerk/nextjs/server";
 import { type Prisma, type PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 
