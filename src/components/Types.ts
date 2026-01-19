@@ -190,6 +190,8 @@ export type AchievementTypeCounter = {
     description: string,
     category: string,
     tier: string,
+    tierOrder: number,
+    groupKey: string,
     points: number,
     iconType: string,
     unlockedAt: Date | null,

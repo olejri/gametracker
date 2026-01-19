@@ -173,12 +173,17 @@ model Achievement {
   description       String              @db.Text
   category          String
   tier              String
+  tierOrder         Int                 @default(0)
+  groupKey          String
   goal              Int
   iconType          String              @default("sparkles")
   points            Int                 @default(0)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   PlayerAchievement PlayerAchievement[]
+
+  @@unique([groupKey, tier])
+  @@index([groupKey])
 }
 
 model PlayerAchievement {

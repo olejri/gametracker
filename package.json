@@ -11,7 +11,8 @@
     "vercel-build": "prisma migrate deploy && prisma generate && next build",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "seed-local": "tsx scripts/seed-local-data.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^4.11.3",
@@ -54,6 +55,7 @@
     "prettier-plugin-tailwindcss": "^0.2.1",
     "prisma": "^4.13.0",
     "tailwindcss": "^3.2.0",
+    "tsx": "^4.7.0",
     "typescript": "^4.9.5"
   },
   "ct3aMetadata": {

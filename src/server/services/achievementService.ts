@@ -169,6 +169,8 @@ export async function getPlayerAchievements(
     description: pa.achievement.description,
     category: pa.achievement.category,
     tier: pa.achievement.tier,
+    tierOrder: pa.achievement.tierOrder,
+    groupKey: pa.achievement.groupKey,
     goal: pa.achievement.goal,
     progress: pa.progress,
     fulfilled: pa.unlockedAt !== null,
