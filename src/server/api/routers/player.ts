@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   checkIfGameGroupExists, filterUserForClient,
   getPlayerByClerkId,
+  getPlayerById,
   getProfileImageUrl,
 } from "npm/server/helpers/filterUserForClient";
 import { TRPCError } from "@trpc/server";
@@ -247,16 +248,21 @@ export const playerRouter = createTRPCRouter({
   updateNickname: privateProcedure
     .input(
       z.object({
-        playerId: z.string(),
+        playerId: z.string().optional(),
         nickname: z.string()
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Get player by ID or by clerkId from context
+      const player = input.playerId 
+        ? await getPlayerById(ctx.prisma, input.playerId)
+        : await getPlayerByClerkId(ctx.prisma, ctx.userId);
+
       // Check if nickname is already taken by another player
       const existingPlayer = await ctx.prisma.player.findFirst({
         where: {
           nickname: input.nickname,
-          id: { not: input.playerId }
+          id: { not: player.id }
         }
       });
 
@@ -269,7 +275,7 @@ export const playerRouter = createTRPCRouter({
 
       return await ctx.prisma.player.update({
         where: {
-          id: input.playerId
+          id: player.id
         },
         data: {
           nickname: input.nickname

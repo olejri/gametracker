@@ -15,7 +15,12 @@ const JoinGameGroupView = () => {
   const { data: pending, isLoading: pendingIsLoading, isError, error } = api.group.getAllPendingGameGroups.useQuery();
   const { data: currentPlayer, isLoading: playerLoading } = api.user.getPlayer.useQuery(
     { clerkId: user?.id ?? "" },
-    { enabled: !!user?.id }
+    { 
+      enabled: !!user?.id,
+      refetchOnMount: true,
+      refetchOnWindowFocus: true,
+      staleTime: 0
+    }
   );
   const ctx = api.useContext();
 
@@ -85,9 +90,9 @@ const JoinGameGroupView = () => {
   };
 
   const handleNicknameSubmit = () => {
-    if (nickname.trim() && currentPlayer?.data?.id) {
+    if (nickname.trim()) {
       updateNickname.mutate({
-        playerId: currentPlayer.data.id,
+        playerId: currentPlayer?.data?.id,
         nickname: nickname.trim()
       });
     }
@@ -310,6 +315,7 @@ const JoinGameGroupView = () => {
                           handleNicknameSubmit();
                         }
                       }}
+                      autoFocus
                     />
                   </div>
                 </div>

@@ -89,6 +89,57 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
+  // Auto-create player record if it doesn't exist
+  let player = await ctx.prisma.player.findUnique({
+    where: { clerkId: ctx.userId }
+  });
+
+  if (!player) {
+    // Get user info from Clerk to populate initial data
+    const { clerkClient } = await import("@clerk/nextjs/server");
+    const clerkUser = await clerkClient.users.getUser(ctx.userId);
+    const primaryEmail = clerkUser.emailAddresses.find(
+      e => e.id === clerkUser.primaryEmailAddressId
+    );
+
+    player = await ctx.prisma.player.create({
+      data: {
+        clerkId: ctx.userId,
+        name: clerkUser.firstName || clerkUser.username || "User",
+        email: primaryEmail?.emailAddress || null,
+        nickname: null
+      }
+    });
+
+    // Check if this user was invited via email and auto-add them to the group
+    if (primaryEmail?.emailAddress) {
+      const emailInvite = await ctx.prisma.emailInvite.findFirst({
+        where: {
+          emailAddress: primaryEmail.emailAddress,
+          status: "pending"
+        }
+      });
+
+      if (emailInvite) {
+        // Add player to the group they were invited to
+        await ctx.prisma.playerGameGroupJunction.create({
+          data: {
+            playerId: player.id,
+            groupId: emailInvite.groupId,
+            inviteStatus: "PENDING",
+            role: "MEMBER"
+          }
+        });
+
+        // Mark the email invite as accepted
+        await ctx.prisma.emailInvite.update({
+          where: { id: emailInvite.id },
+          data: { status: "accepted" }
+        });
+      }
+    }
+  }
+
   return next({
     ctx: {
       userId: ctx.userId,
