@@ -1,4 +1,5 @@
 import { type PrismaClient, Prisma } from "@prisma/client";
+import { executeAchievementRule } from "./achievementRuleEngine";
 
 export type UnlockedAchievement = {
   id: string;
@@ -16,66 +17,35 @@ export async function updatePlayerAchievements(
 ): Promise<UnlockedAchievement[]> {
   const newlyUnlocked: UnlockedAchievement[] = [];
 
-  const sessions = await prisma.gameSession.findMany({
-    where: {
-      groupId,
-      status: "COMPLETED",
-    },
-    include: {
-      PlayerGameSessionJunction: true,
-    },
-  });
+  // Get all achievements
+  const achievements = await prisma.achievement.findMany();
 
-  const gameMap = new Map<string, string>();
-  const gameInfo = await prisma.game.findMany();
-  gameInfo.forEach((game) => {
-    gameMap.set(game.id, game.name);
-  });
-
-  const numberOfFirstPlacePerGame = new Map<string, number>();
-
-  sessions.forEach((session) => {
-    const firstPlacePlayer = session.PlayerGameSessionJunction.find(
-      (playerSession) =>
-        playerSession.position === 1 && playerSession.playerId === playerId
-    );
-    if (firstPlacePlayer) {
-      const gameName = gameMap.get(session.gameId) ?? "Unknown";
-      const numberOfWins = numberOfFirstPlacePerGame.get(gameName) ?? 0;
-      numberOfFirstPlacePerGame.set(gameName, numberOfWins + 1);
-    }
-  });
-
-  let maxWinsForSingleGame = 0;
-  let gameWithMostWins = "";
-  for (const [gameName, numberOfWins] of numberOfFirstPlacePerGame.entries()) {
-    if (numberOfWins > maxWinsForSingleGame) {
-      maxWinsForSingleGame = numberOfWins;
-      gameWithMostWins = gameName;
-    }
-  }
-
-  const numberOfDifferentGamesWon = numberOfFirstPlacePerGame.size;
-  const gamesWonList = Array.from(numberOfFirstPlacePerGame.keys());
-
-  const achievements = await prisma.achievement.findMany({
-    where: {
-      category: {
-        in: ["specialist", "generalist"],
-      },
-    },
-  });
+  // Get all rules
+  const rules = await prisma.achievementRule.findMany();
+  const rulesByGroupKey = new Map(rules.map(rule => [rule.groupKey, rule]));
 
   for (const achievement of achievements) {
+    const rule = rulesByGroupKey.get(achievement.groupKey);
+    
+    if (!rule) {
+      continue;
+    }
+
     let currentProgress = 0;
     let metadata: Record<string, unknown> | undefined = undefined;
 
-    if (achievement.category === "specialist") {
-      currentProgress = maxWinsForSingleGame;
-      metadata = gameWithMostWins ? { gameName: gameWithMostWins } : undefined;
-    } else if (achievement.category === "generalist") {
-      currentProgress = numberOfDifferentGamesWon;
-      metadata = gamesWonList.length > 0 ? { games: gamesWonList } : undefined;
+    try {
+      const result = await executeAchievementRule(
+        prisma,
+        achievement.groupKey,
+        playerId,
+        groupId
+      );
+      currentProgress = result.progress;
+      metadata = result.metadata;
+    } catch (error) {
+      console.error(`Error executing rule for achievement ${achievement.key}:`, error);
+      continue;
     }
 
     const existingPlayerAchievement = await prisma.playerAchievement.findUnique({

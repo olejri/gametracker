@@ -290,15 +290,6 @@ const MyAchievements = ({ groupName }: { groupName: string }) => {
                             </p>
                           </div>
                         )}
-
-                        {selectedAchievement.unlockedAt && (
-                          <div className="mt-4 rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
-                            <p className="text-xs font-medium text-green-600 dark:text-green-400">Unlocked</p>
-                            <p className="mt-1 text-sm font-medium text-green-900 dark:text-green-300">
-                              {formatDate(new Date(selectedAchievement.unlockedAt))}
-                            </p>
-                          </div>
-                        )}
                       </>
                     );
                   })()}

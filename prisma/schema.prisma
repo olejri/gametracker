@@ -173,31 +173,46 @@ model Achievement {
   description       String              @db.Text
   category          String
   tier              String
-  tierOrder         Int                 @default(0)
-  groupKey          String
   goal              Int
   iconType          String              @default("sparkles")
   points            Int                 @default(0)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
+  tierOrder         Int                 @default(0)
+  groupKey          String
   PlayerAchievement PlayerAchievement[]
 
   @@unique([groupKey, tier])
   @@index([groupKey])
+  @@index([category])
+}
+
+model AchievementRule {
+  id             String   @id @default(uuid())
+  groupKey       String   @unique
+  ruleType       String
+  filters        Json?
+  aggregation    String
+  targetField    String?
+  metadataConfig Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([groupKey])
 }
 
 model PlayerAchievement {
-  id            String       @id @default(uuid())
+  id            String      @id @default(uuid())
   playerId      String
   achievementId String
-  progress      Int          @default(0)
+  progress      Int         @default(0)
   unlockedAt    DateTime?
   groupId       String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   metadata      Json?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  player        Player       @relation(fields: [playerId], references: [id])
-  achievement   Achievement  @relation(fields: [achievementId], references: [id])
+  player        Player      @relation(fields: [playerId], references: [id])
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
 
   @@unique([playerId, achievementId, groupId])
   @@index([playerId, groupId])
