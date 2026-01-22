@@ -326,13 +326,26 @@ export const playerRouter = createTRPCRouter({
       };
     }),
 
-  calculateAchievements: privateProcedure
+  getAchievements: privateProcedure
     .input(
       z.object({
         gameGroup: z.string()
       })
     )
     .query(async ({ ctx, input }) => {
+      await checkIfGameGroupExists(ctx.prisma, input.gameGroup);
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId);
+      
+      return await getPlayerAchievements(ctx.prisma, player.id, input.gameGroup);
+    }),
+
+  calculateAchievements: privateProcedure
+    .input(
+      z.object({
+        gameGroup: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
       await checkIfGameGroupExists(ctx.prisma, input.gameGroup);
       const player = await getPlayerByClerkId(ctx.prisma, ctx.userId);
       

@@ -50,7 +50,7 @@ const MyAchievements = ({ groupName }: { groupName: string }) => {
     isLoading,
     isError,
     error,
-  } = api.player.calculateAchievements.useQuery({ gameGroup: groupName });
+  } = api.player.getAchievements.useQuery({ gameGroup: groupName });
 
   if (isLoading) return <LoadingPage />;
   if (isError) return <div className="px-4 py-2 text-sm text-red-600 dark:text-red-400">Something went wrong: {error?.message}</div>;
