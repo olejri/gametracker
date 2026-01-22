@@ -1,7 +1,7 @@
 import React, { useState, Fragment } from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
-import { SparklesIcon, TrophyIcon, StarIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { SparklesIcon, TrophyIcon, StarIcon, XMarkIcon, PuzzlePieceIcon } from "@heroicons/react/24/outline";
 import Badge from "npm/components/Badge";
 import { classNames, formatDate } from "npm/lib/utils";
 import { Dialog, Transition } from "@headlessui/react";
@@ -28,6 +28,8 @@ const getIcon = (iconType: string) => {
       return TrophyIcon;
     case "star":
       return StarIcon;
+    case "puzzle":
+      return PuzzlePieceIcon;
     default:
       return SparklesIcon;
   }
@@ -287,6 +289,16 @@ const MyAchievements = ({ groupName }: { groupName: string }) => {
                             <p className="mt-1 text-sm text-gray-900 dark:text-white">
                               {(selectedAchievement.metadata as { games: string[] }).games.slice(0, 10).join(', ')}
                               {(selectedAchievement.metadata as { games: string[] }).games.length > 10 && ` +${(selectedAchievement.metadata as { games: string[] }).games.length - 10} more`}
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedAchievement.metadata && selectedAchievement.category === 'mechanic_explorer' && (selectedAchievement.metadata as { mechanics?: string[] }).mechanics && (
+                          <div className="mt-4 rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Unique Mechanics Won</p>
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {(selectedAchievement.metadata as { mechanics: string[] }).mechanics.slice(0, 15).join(', ')}
+                              {(selectedAchievement.metadata as { mechanics: string[] }).mechanics.length > 15 && ` +${(selectedAchievement.metadata as { mechanics: string[] }).mechanics.length - 15} more`}
                             </p>
                           </div>
                         )}
