@@ -24,8 +24,20 @@ export async function updatePlayerAchievements(
   const rules = await prisma.achievementRule.findMany();
   const rulesByGroupKey = new Map(rules.map(rule => [rule.groupKey, rule]));
 
+  // Group achievements by groupKey to avoid duplicate rule executions
+  const achievementsByGroupKey = new Map<string, typeof achievements>();
   for (const achievement of achievements) {
-    const rule = rulesByGroupKey.get(achievement.groupKey);
+    const existing = achievementsByGroupKey.get(achievement.groupKey);
+    if (existing) {
+      existing.push(achievement);
+    } else {
+      achievementsByGroupKey.set(achievement.groupKey, [achievement]);
+    }
+  }
+
+  // Execute each rule once per groupKey and apply to all achievements in that group
+  for (const [groupKey, groupAchievements] of achievementsByGroupKey.entries()) {
+    const rule = rulesByGroupKey.get(groupKey);
     
     if (!rule) {
       continue;
@@ -37,73 +49,76 @@ export async function updatePlayerAchievements(
     try {
       const result = await executeAchievementRule(
         prisma,
-        achievement.groupKey,
+        groupKey,
         playerId,
         groupId
       );
       currentProgress = result.progress;
       metadata = result.metadata;
     } catch (error) {
-      console.error(`Error executing rule for achievement ${achievement.key}:`, error);
+      console.error(`Error executing rule for groupKey ${groupKey}:`, error);
       continue;
     }
 
-    const existingPlayerAchievement = await prisma.playerAchievement.findUnique({
-      where: {
-        playerId_achievementId_groupId: {
-          playerId,
-          achievementId: achievement.id,
-          groupId,
-        },
-      },
-    });
-
-    const isUnlocked = currentProgress >= achievement.goal;
-    const wasAlreadyUnlocked = existingPlayerAchievement?.unlockedAt !== null;
-
-    if (existingPlayerAchievement) {
-      await prisma.playerAchievement.update({
+    // Apply the same progress to all achievements in this group (all tiers)
+    for (const achievement of groupAchievements) {
+      const existingPlayerAchievement = await prisma.playerAchievement.findUnique({
         where: {
-          id: existingPlayerAchievement.id,
-        },
-        data: {
-          progress: currentProgress,
-          metadata: metadata as Prisma.InputJsonValue,
-          unlockedAt: isUnlocked && !wasAlreadyUnlocked ? new Date() : existingPlayerAchievement.unlockedAt,
-        },
-      });
-
-      if (isUnlocked && !wasAlreadyUnlocked) {
-        newlyUnlocked.push({
-          id: achievement.id,
-          key: achievement.key,
-          name: achievement.name,
-          description: achievement.description,
-          tier: achievement.tier,
-          points: achievement.points,
-        });
-      }
-    } else {
-      await prisma.playerAchievement.create({
-        data: {
-          playerId,
-          achievementId: achievement.id,
-          groupId,
-          progress: currentProgress,
-          metadata: metadata as Prisma.InputJsonValue,
-          unlockedAt: isUnlocked ? new Date() : null,
+          playerId_achievementId_groupId: {
+            playerId,
+            achievementId: achievement.id,
+            groupId,
+          },
         },
       });
 
-      if (isUnlocked) {
-        newlyUnlocked.push({
-          id: achievement.id,
-          key: achievement.key,
-          name: achievement.name,
-          description: achievement.description,
-          tier: achievement.tier,
-          points: achievement.points,
+      const isUnlocked = currentProgress >= achievement.goal;
+      const wasAlreadyUnlocked = existingPlayerAchievement?.unlockedAt !== null;
+
+      if (existingPlayerAchievement) {
+        await prisma.playerAchievement.update({
+          where: {
+            id: existingPlayerAchievement.id,
+          },
+          data: {
+            progress: currentProgress,
+            metadata: metadata as Prisma.InputJsonValue,
+            unlockedAt: isUnlocked && !wasAlreadyUnlocked ? new Date() : existingPlayerAchievement.unlockedAt,
+          },
         });
+
+        if (isUnlocked && !wasAlreadyUnlocked) {
+          newlyUnlocked.push({
+            id: achievement.id,
+            key: achievement.key,
+            name: achievement.name,
+            description: achievement.description,
+            tier: achievement.tier,
+            points: achievement.points,
+          });
+        }
+      } else {
+        await prisma.playerAchievement.create({
+          data: {
+            playerId,
+            achievementId: achievement.id,
+            groupId,
+            progress: currentProgress,
+            metadata: metadata as Prisma.InputJsonValue,
+            unlockedAt: isUnlocked ? new Date() : null,
+          },
+        });
+
+        if (isUnlocked) {
+          newlyUnlocked.push({
+            id: achievement.id,
+            key: achievement.key,
+            name: achievement.name,
+            description: achievement.description,
+            tier: achievement.tier,
+            points: achievement.points,
+          });
+        }
       }
     }
   }

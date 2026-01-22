@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect } from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import { SparklesIcon, TrophyIcon, StarIcon, XMarkIcon, PuzzlePieceIcon } from "@heroicons/react/24/outline";
@@ -44,13 +44,35 @@ const formatGroupKeyName = (groupKey: string): string => {
 
 const MyAchievements = ({ groupName }: { groupName: string }) => {
   const [selectedAchievement, setSelectedAchievement] = useState<AchievementTypeCounter | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
   
   const {
     data: achievements,
     isLoading,
     isError,
     error,
+    refetch,
   } = api.player.getAchievements.useQuery({ gameGroup: groupName });
+
+  const calculateMutation = api.player.calculateAchievements.useMutation({
+    onSuccess: () => {
+      setIsCalculating(false);
+      void refetch();
+    },
+    onError: (error) => {
+      console.error('Achievement calculation failed:', error);
+      setIsCalculating(false);
+    },
+  });
+
+  // Trigger async calculation in background on mount
+  useEffect(() => {
+    if (achievements && !isCalculating) {
+      setIsCalculating(true);
+      calculateMutation.mutate({ gameGroup: groupName });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (isLoading) return <LoadingPage />;
   if (isError) return <div className="px-4 py-2 text-sm text-red-600 dark:text-red-400">Something went wrong: {error?.message}</div>;
