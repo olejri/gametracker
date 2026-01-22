@@ -127,8 +127,8 @@ const MyCollection = () => {
                       setOpen={setModalOpen}
                       title={game.name}
                       message={game.description}
-                      categories={game.categories}
-                      mechanics={game.mechanics}
+                      categories={(game as unknown as { GameCategory?: Array<{ category: { name: string } }> }).GameCategory?.map(gc => gc.category.name).join(", ") || "None"}
+                      mechanics={(game as unknown as { GameMechanic?: Array<{ mechanic: { name: string } }> }).GameMechanic?.map(gm => gm.mechanic.name).join(", ") || "None"}
                     />
                   </div>
                 </div>

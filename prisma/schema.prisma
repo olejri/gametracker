@@ -23,6 +23,8 @@ model Game {
   isExpansion             Boolean                   @default(false)
   GameSessionGameJunction GameSessionGameJunction[]
   PlayerGameJunction      PlayerGameJunction[]
+  GameMechanic            GameMechanic[]
+  GameCategory            GameCategory[]
 }
 
 model Player {
@@ -217,4 +219,46 @@ model PlayerAchievement {
   @@unique([playerId, achievementId, groupId])
   @@index([playerId, groupId])
   @@index([achievementId])
+}
+
+model Mechanic {
+  id           String         @id @default(uuid())
+  name         String         @unique
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  GameMechanic GameMechanic[]
+}
+
+model Category {
+  id           String         @id @default(uuid())
+  name         String         @unique
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  GameCategory GameCategory[]
+}
+
+model GameMechanic {
+  id         String   @id @default(uuid())
+  gameId     String
+  mechanicId String
+  createdAt  DateTime @default(now())
+  game       Game     @relation(fields: [gameId], references: [id])
+  mechanic   Mechanic @relation(fields: [mechanicId], references: [id])
+
+  @@unique([gameId, mechanicId])
+  @@index([gameId])
+  @@index([mechanicId])
+}
+
+model GameCategory {
+  id         String   @id @default(uuid())
+  gameId     String
+  categoryId String
+  createdAt  DateTime @default(now())
+  game       Game     @relation(fields: [gameId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([gameId, categoryId])
+  @@index([gameId])
+  @@index([categoryId])
 }

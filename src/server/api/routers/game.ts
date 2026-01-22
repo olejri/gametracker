@@ -70,11 +70,36 @@ export const gameRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       if (input?.withExpansions === undefined) {
-        return await ctx.prisma.game.findMany();
+        return await ctx.prisma.game.findMany({
+          include: {
+            GameMechanic: {
+              include: {
+                mechanic: true
+              }
+            },
+            GameCategory: {
+              include: {
+                category: true
+              }
+            }
+          }
+        });
       } else {
         return await ctx.prisma.game.findMany({
           where: {
             isExpansion: input.withExpansions
+          },
+          include: {
+            GameMechanic: {
+              include: {
+                mechanic: true
+              }
+            },
+            GameCategory: {
+              include: {
+                category: true
+              }
+            }
           }
         });
       }
@@ -183,6 +208,18 @@ export const gameRouter = createTRPCRouter({
         where: {
           id: {
             in: player.PlayerGameJunction.map(junction => junction.gameId)
+          }
+        },
+        include: {
+          GameMechanic: {
+            include: {
+              mechanic: true
+            }
+          },
+          GameCategory: {
+            include: {
+              category: true
+            }
           }
         }
       });
