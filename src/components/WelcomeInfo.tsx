@@ -17,7 +17,7 @@ const WelcomeInfo: React.FC = () => {
         </li>
         <li className="flex items-start">
           <span className="mr-2">•</span>
-          <span><strong>Analyze statistics:</strong> See who's winning, which games are most popular, and track performance trends over time.</span>
+          <span><strong>Analyze statistics:</strong> See who&apos;s winning, which games are most popular, and track performance trends over time.</span>
         </li>
         <li className="flex items-start">
           <span className="mr-2">•</span>
