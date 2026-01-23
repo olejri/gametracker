@@ -129,22 +129,75 @@ const MainComponent = (props: ContainerProps) => {
 
               <Disclosure.Panel className="sm:hidden">
                 <div className="space-y-1 pb-3 pt-2">
-                  {navigation.map((item) => (
-                    <Disclosure.Button
-                      key={item.name}
-                      as="a"
-                      href={item.href}
-                      className={classNames(
-                        item.current
-                          ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200"
-                          : "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
-                        "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
-                      )}
-                      aria-current={item.current ? "page" : undefined}
-                    >
-                      {item.name}
-                    </Disclosure.Button>
-                  ))}
+                  {navigation.map((item) => {
+                    // For mobile, expand Profile into sub-items
+                    if (item.name === "Profile") {
+                      const isProfileActive = pathname === "/[dashboardId]/player/[playerId]";
+                      return (
+                        <React.Fragment key={item.name}>
+                          <Disclosure.Button
+                            as="a"
+                            href={"/" + gameGroup + "/player/" + user.id}
+                            className={classNames(
+                              isProfileActive
+                                ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200"
+                                : "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+                              "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                            )}
+                          >
+                            Me
+                          </Disclosure.Button>
+                          <Disclosure.Button
+                            as="a"
+                            href={"/" + gameGroup + "/player/" + user.id + "?tab=collection"}
+                            className={classNames(
+                              "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+                              "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                            )}
+                          >
+                            Collection
+                          </Disclosure.Button>
+                          <Disclosure.Button
+                            as="a"
+                            href={"/" + gameGroup + "/player/" + user.id + "?tab=faq"}
+                            className={classNames(
+                              "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+                              "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                            )}
+                          >
+                            FAQ
+                          </Disclosure.Button>
+                          <Disclosure.Button
+                            as="a"
+                            href={"/" + gameGroup + "/player/" + user.id + "?tab=stats"}
+                            className={classNames(
+                              "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+                              "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                            )}
+                          >
+                            Stats
+                          </Disclosure.Button>
+                        </React.Fragment>
+                      );
+                    }
+                    // For other items (Dashboard, Admin, etc.), render normally
+                    return (
+                      <Disclosure.Button
+                        key={item.name}
+                        as="a"
+                        href={item.href}
+                        className={classNames(
+                          item.current
+                            ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200"
+                            : "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+                          "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                        )}
+                        aria-current={item.current ? "page" : undefined}
+                      >
+                        {item.name}
+                      </Disclosure.Button>
+                    );
+                  })}
                   <div className="border-t border-gray-200 pt-3 dark:border-gray-700">
                     <button
                       onClick={toggleDarkMode}

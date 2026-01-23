@@ -1,19 +1,20 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useState, useEffect } from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import {
   ChartPieIcon,
-  SparklesIcon,
+  QuestionMarkCircleIcon,
   Square3Stack3DIcon,
   UserIcon,
   XMarkIcon
 } from "@heroicons/react/24/outline";
+import { useRouter } from "next/router";
 
 import { Dialog, Transition } from "@headlessui/react";
 import MyProfile from "npm/components/MyProfile";
 import MyCollection from "npm/components/MyCollection";
 import MyStats from "npm/components/MyStats";
-import MyAchievements from "npm/components/MyAchievements";
+import FAQ from "npm/components/FAQ";
 import { classNames } from "npm/lib/utils";
 import { ICON_COLORS } from "npm/lib/constants";
 
@@ -21,10 +22,19 @@ const PlayerBoard = (props: {
   groupName: string
   playerId: string
 }) => {
+  const router = useRouter();
   const { isLoading, isError, error } = api.player.getPlayer.useQuery({ clerkId: props.playerId });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState("me");
   const groupName = props.groupName;
+
+  // Read tab from URL query parameter
+  useEffect(() => {
+    const tab = router.query.tab as string;
+    if (tab && ["me", "collection", "faq", "stats"].includes(tab)) {
+      setCurrentTab(tab);
+    }
+  }, [router.query.tab]);
 
   const navigation = [
     { name: "Me",
@@ -41,10 +51,10 @@ const PlayerBoard = (props: {
       iconForeground: ICON_COLORS.red.foreground,
       iconBackground: ICON_COLORS.red.background
     },
-    { name: "Achievements",
-      onClick: () => {setCurrentTab("achievements")},
-      icon: SparklesIcon,
-      current: currentTab === "achievements",
+    { name: "FAQ",
+      onClick: () => {setCurrentTab("faq")},
+      icon: QuestionMarkCircleIcon,
+      current: currentTab === "faq",
       iconForeground: ICON_COLORS.purple.foreground,
       iconBackground: ICON_COLORS.purple.background
     },
@@ -204,7 +214,7 @@ const PlayerBoard = (props: {
                     {currentTab === "me" && (<MyProfile />)}
                     {currentTab === "collection" &&(<MyCollection />)}
                     {currentTab === "stats" && (<MyStats groupName={groupName}/>)}
-                    {currentTab === "achievements" && (<MyAchievements groupName={groupName} />)}
+                    {currentTab === "faq" && (<FAQ />)}
                   </div>
                 </div>
               </div>

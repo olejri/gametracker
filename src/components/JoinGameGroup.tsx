@@ -6,6 +6,7 @@ import { UserPlusIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import { useTheme } from "npm/context/ThemeContext";
+import WelcomeInfo from "npm/components/WelcomeInfo";
 
 const JoinGameGroupView = () => {
   const { user } = useUser();
@@ -135,7 +136,17 @@ const JoinGameGroupView = () => {
 
       {/* Main Content */}
       <div className="py-10">
-        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Welcome Header */}
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
+              Welcome to Game Tracker
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
+              Your complete board game companion for tracking sessions, analyzing stats, and celebrating your gaming achievements.
+            </p>
+          </div>
+
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Game Groups</h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -216,6 +227,11 @@ const JoinGameGroupView = () => {
                 </li>
               </ul>
             </div>
+          </div>
+
+          {/* Welcome Information Section */}
+          <div className="mt-12">
+            <WelcomeInfo />
           </div>
         </div>
       </div>
