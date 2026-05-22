@@ -1,7 +1,7 @@
 import React from "react";
 import { api } from "npm/utils/api";
 import { LoadingPage, LoadingSpinner } from "npm/components/loading";
-import { UserPlusIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
+import { UserPlusIcon, ShieldCheckIcon, LinkIcon } from "@heroicons/react/24/solid";
 import { Button } from "npm/components/ui";
 
 const AdminView = (props: {
@@ -122,6 +122,27 @@ const AdminView = (props: {
   const [fakeName, setFakeName] = React.useState("");
   const [fakeNickname, setFakeNickname] = React.useState("");
   const [fakeEmail, setFakeEmail] = React.useState("");
+
+  // Magic link state
+  const [copied, setCopied] = React.useState(false);
+  const { data: inviteTokenData, refetch: refetchToken } = api.group.getGroupInviteToken.useQuery({ groupId: gameGroup });
+  const generateToken = api.group.generateInviteToken.useMutation({
+    onSuccess: async () => {
+      await refetchToken();
+    }
+  });
+
+  const getInviteUrl = (token: string) => {
+    if (typeof window === "undefined") return "";
+    return `${window.location.origin}/join?token=${token}`;
+  };
+
+  const handleCopy = (token: string) => {
+    void navigator.clipboard.writeText(getInviteUrl(token)).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   // Combine all users into a single list with status information
   const allUsers = React.useMemo(() => {
@@ -597,6 +618,68 @@ const AdminView = (props: {
               )}
               {createFakePlayer.isError &&
                 <span className="text-red-500 p-2">{createFakePlayer.error?.message}</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Magic Link Section */}
+      <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
+        <div className="px-4 py-5 sm:p-6">
+          <div className="flex items-center gap-2">
+            <LinkIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Magic Invite Link
+            </label>
+          </div>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Generate a shareable link. Anyone who opens it will be automatically added to this group when they sign in or create an account. The link expires after 7 days. Generating a new link immediately invalidates the previous one.
+          </p>
+
+          <div className="mt-3 overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+            <div className="px-4 py-5 sm:p-6 space-y-3">
+              {inviteTokenData?.token && inviteTokenData.expiresAt && new Date(inviteTokenData.expiresAt) > new Date() ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={getInviteUrl(inviteTokenData.token)}
+                      className="block w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                    />
+                    <button
+                      onClick={() => inviteTokenData.token && handleCopy(inviteTokenData.token)}
+                      className="flex-shrink-0 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none"
+                    >
+                      {copied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Expires: {new Date(inviteTokenData.expiresAt).toLocaleDateString()} at {new Date(inviteTokenData.expiresAt).toLocaleTimeString()}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {inviteTokenData?.expiresAt && new Date(inviteTokenData.expiresAt) <= new Date()
+                    ? "Your previous invite link has expired."
+                    : "No active invite link. Generate one below."}
+                </p>
+              )}
+            </div>
+            <div className="bg-gray-50 px-4 py-4 sm:px-6 dark:bg-gray-700">
+              {generateToken.isLoading ? (
+                <LoadingSpinner size={30} />
+              ) : (
+                <Button
+                  variant="primary"
+                  onClick={() => generateToken.mutate({ groupId: gameGroup })}
+                  disabled={generateToken.isLoading}
+                >
+                  {inviteTokenData?.token ? "Regenerate Link" : "Generate Link"}
+                </Button>
+              )}
+              {generateToken.isError && (
+                <span className="text-red-500 p-2">{generateToken.error?.message}</span>
+              )}
             </div>
           </div>
         </div>

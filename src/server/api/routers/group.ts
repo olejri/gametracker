@@ -1,8 +1,10 @@
-import { adminProcedure, createTRPCRouter, privateProcedure, publicProcedure } from "npm/server/api/trpc";
+import { adminProcedure, createTRPCRouter, groupAdminProcedure, privateProcedure, publicProcedure } from "npm/server/api/trpc";
 import { z } from "zod";
 import { clerkClient } from "@clerk/nextjs/server";
 import { filterUserForClient, getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
 import { type GameOwedByPlayers } from "npm/components/Types";
+import { TRPCError } from "@trpc/server";
+import { randomUUID } from "crypto";
 
 export const groupRouter = createTRPCRouter({
   addOrGetGroup: publicProcedure
@@ -316,5 +318,77 @@ export const groupRouter = createTRPCRouter({
         data: result,
         message: "Game group created successfully"
       };
+    }),
+
+  getGroupInviteToken: groupAdminProcedure
+    .input(z.object({ groupId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const group = await ctx.prisma.gameGroup.findUnique({
+        where: { id: input.groupId },
+        select: { inviteToken: true, inviteTokenExpiresAt: true }
+      });
+      if (!group) throw new TRPCError({ code: "NOT_FOUND", message: "Group not found" });
+      return {
+        token: group.inviteToken,
+        expiresAt: group.inviteTokenExpiresAt
+      };
+    }),
+
+  generateInviteToken: groupAdminProcedure
+    .input(z.object({ groupId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const token = randomUUID();
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+      await ctx.prisma.gameGroup.update({
+        where: { id: input.groupId },
+        data: { inviteToken: token, inviteTokenExpiresAt: expiresAt }
+      });
+
+      return { token, expiresAt };
+    }),
+
+  joinByToken: privateProcedure
+    .input(z.object({ token: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const group = await ctx.prisma.gameGroup.findUnique({
+        where: { inviteToken: input.token }
+      });
+
+      if (!group) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "This invite link is invalid." });
+      }
+
+      if (!group.inviteTokenExpiresAt || group.inviteTokenExpiresAt < new Date()) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This invite link has expired. Ask an admin to generate a new one." });
+      }
+
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId);
+
+      // Deactivate all other groups for this player
+      await ctx.prisma.playerGameGroupJunction.updateMany({
+        where: { playerId: player.id },
+        data: { gameGroupIsActive: false }
+      });
+
+      // Upsert the junction — creates if new, updates if already a member
+      await ctx.prisma.playerGameGroupJunction.upsert({
+        where: {
+          groupId_playerId: { groupId: group.id, playerId: player.id }
+        },
+        create: {
+          groupId: group.id,
+          playerId: player.id,
+          role: "MEMBER",
+          inviteStatus: "ACCEPTED",
+          gameGroupIsActive: true
+        },
+        update: {
+          inviteStatus: "ACCEPTED",
+          gameGroupIsActive: true
+        }
+      });
+
+      return { groupId: group.id };
     })
 });

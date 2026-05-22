@@ -49,6 +49,8 @@ model GameGroup {
   updatedAt               DateTime                  @updatedAt
   name                    String                    @default("Game Night")
   hidden                  Boolean                   @default(false)
+  inviteToken             String?                   @unique
+  inviteTokenExpiresAt    DateTime?
   PlayerGameGroupJunction PlayerGameGroupJunction[]
   EmailInvite             EmailInvite[]
 }

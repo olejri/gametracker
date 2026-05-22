@@ -7,10 +7,12 @@ import { UserButton, useUser } from "@clerk/nextjs";
 import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import { useTheme } from "npm/context/ThemeContext";
 import WelcomeInfo from "npm/components/WelcomeInfo";
+import { useRouter } from "next/router";
 
 const JoinGameGroupView = () => {
   const { user } = useUser();
   const { isDarkMode, toggleDarkMode } = useTheme();
+  const router = useRouter();
   const { data, isLoading } = api.group.getActiveGameGroup.useQuery();
   const { data: allGameGroups, isLoading: allGameGroupsIsLoading } = api.group.getAllGameGroups.useQuery();
   const { data: pending, isLoading: pendingIsLoading, isError, error } = api.group.getAllPendingGameGroups.useQuery();
@@ -30,6 +32,35 @@ const JoinGameGroupView = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [groupName, setGroupName] = useState("");
+  const [tokenError, setTokenError] = useState<string | null>(null);
+
+  // ── Magic link auto-join ──────────────────────────────────────────────────
+  const joinByToken = api.group.joinByToken.useMutation({
+    onSuccess: async ({ groupId }) => {
+      localStorage.removeItem("gametracker_invite_token");
+      await ctx.group.getActiveGameGroup.invalidate();
+      await router.push(`/${groupId}/dashboard`);
+    },
+    onError: (err) => {
+      localStorage.removeItem("gametracker_invite_token");
+      setTokenError(err.message);
+    }
+  });
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    // Token can come directly from the URL (/join?token=xxx routes here when
+    // the user has no active group) or from localStorage (post sign-up flow).
+    const urlToken = typeof router.query.token === "string" ? router.query.token : null;
+    const storedToken = typeof window !== "undefined" ? localStorage.getItem("gametracker_invite_token") : null;
+    const resolvedToken = urlToken ?? storedToken;
+
+    if (resolvedToken && !joinByToken.isLoading && !joinByToken.isSuccess) {
+      joinByToken.mutate({ token: resolvedToken });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.isReady]);
 
   const updateNickname = api.player.updateNickname.useMutation({
     onSuccess: async () => {
@@ -69,6 +100,11 @@ const JoinGameGroupView = () => {
   }, [data, setGameGroup]);
 
   if (isLoading || allGameGroupsIsLoading || pendingIsLoading || playerLoading) {
+    return <LoadingPage />;
+  }
+
+  // Show full-page loading while auto-joining via magic link
+  if (joinByToken.isLoading) {
     return <LoadingPage />;
   }
 
@@ -146,6 +182,21 @@ const JoinGameGroupView = () => {
               Your complete board game companion for tracking sessions, analyzing stats, and celebrating your gaming achievements.
             </p>
           </div>
+
+          {/* Invite token error banner */}
+          {tokenError && (
+            <div className="mb-6 rounded-md bg-red-50 p-4 dark:bg-red-900/20">
+              <div className="flex items-start gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <div>
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-300">Invite link problem</h3>
+                  <p className="mt-1 text-sm text-red-700 dark:text-red-400">{tokenError}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Game Groups</h2>

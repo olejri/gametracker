@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { SignInButton } from "@clerk/nextjs";
+import { useRouter } from "next/router";
 
 interface RecentGame {
   id: string;
@@ -8,8 +9,25 @@ interface RecentGame {
 }
 
 export default function LandingPage() {
+  const router = useRouter();
   const [recentGames, setRecentGames] = useState<RecentGame[]>([]);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [hasInvite, setHasInvite] = useState(false);
+
+  // Capture invite token from URL and persist it so JoinGameGroupView can
+  // process it after the user signs up / signs in.
+  useEffect(() => {
+    if (!router.isReady) return;
+    const token = typeof router.query.token === "string" ? router.query.token : null;
+    if (token) {
+      localStorage.setItem("gametracker_invite_token", token);
+      setHasInvite(true);
+    } else {
+      // Show banner if there is already a stored token waiting
+      const stored = localStorage.getItem("gametracker_invite_token");
+      if (stored) setHasInvite(true);
+    }
+  }, [router.isReady, router.query.token]);
 
   useEffect(() => {
     // Fetch recent games from API
@@ -44,6 +62,12 @@ export default function LandingPage() {
 
   return (
     <div className="flex h-screen flex-col bg-gray-800 text-white lg:flex-row">
+      {/* Invite banner */}
+      {hasInvite && (
+        <div className="absolute inset-x-0 top-0 z-10 bg-indigo-600 px-4 py-3 text-center text-sm font-medium text-white shadow">
+          🎲 You&apos;ve been invited to a game group — sign in or create an account to join automatically.
+        </div>
+      )}
       {/* Left Side: Intro Section */}
       <div className="flex flex-1 flex-col items-center justify-center px-8 py-12 lg:px-16">
         <div className="max-w-xl">
