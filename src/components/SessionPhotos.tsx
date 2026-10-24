@@ -1,6 +1,6 @@
 import { Fragment, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { CameraIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { CameraIcon, PhotoIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { upload } from "@vercel/blob/client";
 import { api, type RouterOutputs } from "npm/utils/api";
 import { Button } from "npm/components/ui";
@@ -10,6 +10,8 @@ import { useToast } from "npm/context/ToastContext";
 type SessionPhoto = RouterOutputs["session"]["getGameASession"]["photos"][number];
 
 const MAX_PHOTOS = 3;
+// HEIC/HEIF listed explicitly so iPhone photos are selectable; they are re-encoded to JPEG before upload
+const PHOTO_ACCEPT = "image/*,image/heic,image/heif";
 const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.8;
 
@@ -22,7 +24,7 @@ const compressImage = async (file: File): Promise<Blob> => {
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image();
       image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error("Could not read that image"));
+      image.onerror = () => reject(new Error(`Your browser could not open "${file.name}". Try a JPEG or PNG photo instead.`));
       image.src = objectUrl;
     });
 
@@ -57,8 +59,10 @@ const SessionPhotos = (props: {
   const { gameSessionId, photos, photosEnabled, canAddPhotos } = props;
   const ctx = api.useContext();
   const { showToast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -85,28 +89,44 @@ const SessionPhotos = (props: {
     setConfirmDelete(false);
   }
 
-  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const uploadPhoto = async (file: File) => {
+    const compressed = await compressImage(file);
+    const blob = await upload(`session-photos/${gameSessionId}/photo.jpg`, compressed, {
+      access: "private",
+      handleUploadUrl: "/api/session-photo-upload",
+      clientPayload: JSON.stringify({ gameSessionId }),
+      contentType: "image/jpeg"
+    });
+    await addImage.mutateAsync({ gameSessionId, pathname: blob.pathname });
+  };
+
+  const handleFilesSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? []);
     // Reset so picking the same file again still fires onChange
     event.target.value = "";
-    if (!file) return;
+    if (selected.length === 0) return;
+
+    const remainingSlots = MAX_PHOTOS - photos.length;
+    const files = selected.slice(0, remainingSlots);
+    if (selected.length > files.length) {
+      const skipped = selected.length - files.length;
+      showToast(`Only ${MAX_PHOTOS} photos per session, so ${skipped} ${skipped === 1 ? "photo was" : "photos were"} skipped`, "info");
+    }
+    if (files.length === 0) return;
 
     setIsUploading(true);
-    try {
-      const compressed = await compressImage(file);
-      const blob = await upload(`session-photos/${gameSessionId}/photo.jpg`, compressed, {
-        access: "private",
-        handleUploadUrl: "/api/session-photo-upload",
-        clientPayload: JSON.stringify({ gameSessionId }),
-        contentType: "image/jpeg"
-      });
-      await addImage.mutateAsync({ gameSessionId, pathname: blob.pathname });
-      await ctx.session.getGameASession.invalidate({ data: { id: gameSessionId } });
-    } catch (e) {
-      showToast((e as Error).message || "Could not upload the photo", "error");
-    } finally {
-      setIsUploading(false);
+    // Upload one at a time so a file that fails does not stop the others
+    for (let index = 0; index < files.length; index++) {
+      setUploadProgress({ current: index + 1, total: files.length });
+      try {
+        await uploadPhoto(files[index] as File);
+      } catch (e) {
+        showToast((e as Error).message || "Could not upload the photo", "error");
+      }
     }
+    await ctx.session.getGameASession.invalidate({ data: { id: gameSessionId } });
+    setIsUploading(false);
+    setUploadProgress(null);
   };
 
   return (
@@ -144,32 +164,51 @@ const SessionPhotos = (props: {
 
         {canUpload && (
           <>
+            {/* Camera input: capture makes phones open the camera directly */}
             <input
-              ref={fileInputRef}
+              ref={cameraInputRef}
               type="file"
-              accept="image/*"
+              accept={PHOTO_ACCEPT}
               capture="environment"
               className="hidden"
-              onChange={(e) => void handleFileSelected(e)}
+              onChange={(e) => void handleFilesSelected(e)}
             />
-            <Button
-              variant="primary"
-              className="w-full justify-center gap-2 sm:w-auto"
-              disabled={isUploading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {isUploading ? (
-                <>
-                  <LoadingSpinner size={20} />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <CameraIcon className="h-5 w-5" aria-hidden="true" />
-                  Add photo
-                </>
-              )}
-            </Button>
+            {/* Gallery input: no capture, so phones open the gallery or file picker */}
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept={PHOTO_ACCEPT}
+              multiple
+              className="hidden"
+              onChange={(e) => void handleFilesSelected(e)}
+            />
+            {isUploading ? (
+              <div className="flex items-center justify-center gap-2 py-2 text-sm text-gray-700 dark:text-gray-300">
+                <LoadingSpinner size={20} />
+                {uploadProgress && uploadProgress.total > 1
+                  ? `Uploading ${uploadProgress.current} of ${uploadProgress.total}...`
+                  : "Uploading..."}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:flex">
+                <Button
+                  variant="primary"
+                  className="w-full justify-center gap-1.5 !px-2 sm:w-auto sm:!px-4"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <CameraIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  Take photo
+                </Button>
+                <Button
+                  variant="primary"
+                  className="w-full justify-center gap-1.5 !px-2 sm:w-auto sm:!px-4"
+                  onClick={() => galleryInputRef.current?.click()}
+                >
+                  <PhotoIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  Choose from gallery
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>
