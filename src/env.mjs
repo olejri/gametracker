@@ -9,6 +9,8 @@ const server = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
   CLERK_SECRET_KEY: z.string(),
   OPENAI_API_KEY: z.string(),
+  // Optional: session photos are switched off when the Blob store token is missing
+  BLOB_READ_WRITE_TOKEN: z.string().optional(),
 });
 
 /**
@@ -30,6 +32,7 @@ const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 

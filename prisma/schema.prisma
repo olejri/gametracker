@@ -91,6 +91,18 @@ model GameSession {
   GameSessionGameJunction     GameSessionGameJunction[]
   GameSessionRandomizationLog GameSessionRandomizationLog[]
   GameSessionTeam             GameSessionTeam[]
+  GameSessionImage            GameSessionImage[]
+}
+
+model GameSessionImage {
+  id            String      @id @default(uuid())
+  gameSessionId String
+  storageKey    String      @db.Text
+  uploadedBy    String
+  createdAt     DateTime    @default(now())
+  gameSession   GameSession @relation(fields: [gameSessionId], references: [id])
+
+  @@index([gameSessionId])
 }
 
 model GameSessionTeam {

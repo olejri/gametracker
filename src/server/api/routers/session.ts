@@ -6,6 +6,15 @@ import { FindGameSessionStatus } from "npm/components/HelperFunctions";
 import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { checkIfGameGroupExists, filterUserForClient, getPlayerById, getProfileImageUrl } from "npm/server/helpers/filterUserForClient";
+import {
+  getGroupMembership,
+  MAX_SESSION_PHOTO_BYTES,
+  MAX_SESSION_PHOTOS,
+  photosEnabled,
+  SESSION_PHOTO_CONTENT_TYPES,
+  sessionPhotoPrefix
+} from "npm/server/helpers/sessionPhotos";
+import { del, head } from "@vercel/blob";
 
 export const sessionRouter = createTRPCRouter({
   getAllCompletedSessionsAsc: publicProcedure
@@ -479,8 +488,117 @@ export const sessionRouter = createTRPCRouter({
         isTeamGame: session.isTeamGame,
         teams: teams
       };
+
+      // Photos are only listed for members of the session's group
+      const membership = await getGroupMembership(ctx.prisma, ctx.userId, session.groupId);
+      const images = membership
+        ? await ctx.prisma.gameSessionImage.findMany({
+          where: { gameSessionId: session.id },
+          orderBy: { createdAt: "asc" }
+        })
+        : [];
+      const photos = images.map((image) => ({
+        id: image.id,
+        uploadedBy: image.uploadedBy,
+        createdAt: image.createdAt,
+        canDelete: image.uploadedBy === ctx.userId || membership?.role === "ADMIN"
+      }));
+
       // Return a new object that includes players and their scores and positions
-      return gameSession;
+      return {
+        ...gameSession,
+        photos: photos,
+        photosEnabled: photosEnabled(),
+        canAddPhotos: !!membership
+      };
+    }),
+
+  addImage: privateProcedure
+    .input(
+      z.object({
+        gameSessionId: z.string().min(1),
+        pathname: z.string().min(1)
+      })
+    ).mutation(async ({ ctx, input }) => {
+      if (!photosEnabled()) {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Photo uploads are not enabled" });
+      }
+
+      const session = await ctx.prisma.gameSession.findUnique({
+        where: { id: input.gameSessionId }
+      });
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game session not found" });
+      }
+
+      const membership = await getGroupMembership(ctx.prisma, ctx.userId, session.groupId);
+      if (!membership) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not a member of this group" });
+      }
+
+      const imageCount = await ctx.prisma.gameSessionImage.count({
+        where: { gameSessionId: session.id }
+      });
+      if (imageCount >= MAX_SESSION_PHOTOS) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `A game session can have at most ${MAX_SESSION_PHOTOS} photos`
+        });
+      }
+
+      if (!input.pathname.startsWith(sessionPhotoPrefix(session.id)) || input.pathname.includes("..")) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid photo path" });
+      }
+
+      // head() resolves the pathname against our own store, so this also proves the blob is ours
+      const blob = await head(input.pathname).catch(() => null);
+      if (!blob || !SESSION_PHOTO_CONTENT_TYPES.includes(blob.contentType) || blob.size > MAX_SESSION_PHOTO_BYTES) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Uploaded photo could not be verified" });
+      }
+
+      const existing = await ctx.prisma.gameSessionImage.findFirst({
+        where: { gameSessionId: session.id, storageKey: blob.pathname }
+      });
+      if (existing) {
+        return existing;
+      }
+
+      return await ctx.prisma.gameSessionImage.create({
+        data: {
+          gameSessionId: session.id,
+          storageKey: blob.pathname,
+          uploadedBy: ctx.userId
+        }
+      });
+    }),
+
+  deleteImage: privateProcedure
+    .input(
+      z.object({
+        imageId: z.string().min(1)
+      })
+    ).mutation(async ({ ctx, input }) => {
+      const image = await ctx.prisma.gameSessionImage.findUnique({
+        where: { id: input.imageId },
+        include: { gameSession: { select: { groupId: true } } }
+      });
+      if (!image) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Photo not found" });
+      }
+
+      const membership = await getGroupMembership(ctx.prisma, ctx.userId, image.gameSession.groupId);
+      if (!membership || (image.uploadedBy !== ctx.userId && membership.role !== "ADMIN")) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only the uploader or a group admin can delete this photo" });
+      }
+
+      if (photosEnabled()) {
+        await del(image.storageKey);
+      }
+      await ctx.prisma.gameSessionImage.delete({
+        where: { id: image.id }
+      });
+
+      return { success: true };
     }),
 
   startANewGameSession: privateProcedure
@@ -659,6 +777,17 @@ export const sessionRouter = createTRPCRouter({
         }
       });
       await ctx.prisma.gameSessionRandomizationLog.deleteMany({
+        where: {
+          gameSessionId: input.sessionId
+        }
+      });
+      const images = await ctx.prisma.gameSessionImage.findMany({
+        where: { gameSessionId: input.sessionId }
+      });
+      if (images.length > 0 && photosEnabled()) {
+        await del(images.map((image) => image.storageKey));
+      }
+      await ctx.prisma.gameSessionImage.deleteMany({
         where: {
           gameSessionId: input.sessionId
         }

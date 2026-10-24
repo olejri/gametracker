@@ -5,6 +5,7 @@ import Image from "next/image";
 import { LoadingPage, LoadingSpinner } from "npm/components/loading";
 import { useEffect, useState, useRef, createRef } from "react";
 import PlayerView, { type PlayerViewRef } from "npm/components/PlayerView";
+import SessionPhotos from "npm/components/SessionPhotos";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
 import { Button } from "npm/components/ui";
@@ -611,6 +612,12 @@ const GameSession = (props: GameSessionProps) => {
           </div>
         </div>
       </div>
+      <SessionPhotos
+        gameSessionId={game.sessionId}
+        photos={game.photos}
+        photosEnabled={game.photosEnabled}
+        canAddPhotos={game.canAddPhotos}
+      />
       {game.status === GameSessionStatus.Ongoing ? (
         <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800 mt-4">
           <div className="px-4 py-5 sm:p-6">

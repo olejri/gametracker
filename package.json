@@ -25,6 +25,7 @@
     "@trpc/next": "^10.9.0",
     "@trpc/react-query": "^10.9.0",
     "@trpc/server": "^10.9.0",
+    "@vercel/blob": "^2.8.1",
     "chart.js": "^4.2.1",
     "csv": "^6.2.10",
     "dayjs": "^1.11.7",
