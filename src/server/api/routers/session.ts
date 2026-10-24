@@ -1071,7 +1071,7 @@ export const sessionRouter = createTRPCRouter({
         });
       }
 
-      if (session.status !== "Completed") {
+      if (session.status.toLowerCase() !== "completed") {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Only completed game sessions can be unlocked"

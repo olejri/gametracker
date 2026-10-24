@@ -7,12 +7,13 @@ import { GameSessionStatus } from "npm/components/Types";
 import dayjs from "dayjs";
 
 export function FindGameSessionStatus(status: string): GameSessionStatus {
-  switch (status) {
-    case "Ongoing":
+  // Older data may store the status in a different case, e.g. "COMPLETED"
+  switch (status.toLowerCase()) {
+    case "ongoing":
       return GameSessionStatus.Ongoing;
-    case "Completed":
+    case "completed":
       return GameSessionStatus.Completed;
-    case "Cancelled":
+    case "cancelled":
       return GameSessionStatus.Cancelled;
     default:
       throw new Error(`Invalid GameSessionStatus: ${status}`);
