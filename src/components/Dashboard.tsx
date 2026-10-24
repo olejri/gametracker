@@ -13,6 +13,7 @@ import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import RecentlyActivities from "npm/components/JustPlayed";
 import { classNames } from "npm/lib/utils";
 import { ICON_COLORS } from "npm/lib/constants";
+import WhatsNew from "npm/components/WhatsNew";
 
 const actions = (groupName: string) => {
   return [
@@ -86,6 +87,7 @@ const actions = (groupName: string) => {
 export default function Dashboard(groupName: string) {
   return (
     <>
+      <WhatsNew />
       <div
         className="grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-gray-200 shadow dark:bg-gray-700">
         {actions(groupName).map((action) => (

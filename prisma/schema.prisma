@@ -41,6 +41,7 @@ model Player {
   PlayerGameJunction        PlayerGameJunction[]
   PlayerGameGroupJunction   PlayerGameGroupJunction[]
   PlayerAchievement         PlayerAchievement[]
+  AnnouncementDismissal     AnnouncementDismissal[]
 }
 
 model GameGroup {
@@ -275,4 +276,25 @@ model GameCategory {
   @@unique([gameId, categoryId])
   @@index([gameId])
   @@index([categoryId])
+}
+
+model Announcement {
+  id                    String                  @id
+  title                 String
+  body                  String                  @db.Text
+  active                Boolean                 @default(true)
+  createdAt             DateTime                @default(now())
+  AnnouncementDismissal AnnouncementDismissal[]
+}
+
+model AnnouncementDismissal {
+  id             String       @id @default(uuid())
+  announcementId String
+  playerId       String
+  dismissedAt    DateTime     @default(now())
+  Announcement   Announcement @relation(fields: [announcementId], references: [id])
+  Player         Player       @relation(fields: [playerId], references: [id])
+
+  @@unique([announcementId, playerId])
+  @@index([playerId])
 }

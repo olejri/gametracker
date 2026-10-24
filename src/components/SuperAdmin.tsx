@@ -3,10 +3,11 @@ import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
 import { ShieldCheckIcon, TrashIcon, UserMinusIcon, ArrowPathIcon, PlusIcon, UserPlusIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/router";
+import { formatDate } from "npm/lib/utils";
 
 const SuperAdminView = () => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = React.useState<"players" | "groups" | "admins">("players");
+  const [activeTab, setActiveTab] = React.useState<"players" | "groups" | "admins" | "announcements">("players");
   const [showCreateGroup, setShowCreateGroup] = React.useState(false);
   const [newGroupId, setNewGroupId] = React.useState("");
   const [newGroupName, setNewGroupName] = React.useState("");
@@ -15,6 +16,7 @@ const SuperAdminView = () => {
   const { data: allPlayers, isLoading: playersLoading, refetch: refetchPlayers } = api.superadmin.getAllPlayers.useQuery();
   const { data: allGroups, isLoading: groupsLoading, refetch: refetchGroups } = api.superadmin.getAllGroups.useQuery();
   const { data: allAdmins, isLoading: adminsLoading, refetch: refetchAdmins } = api.superadmin.getAllAdmins.useQuery();
+  const { data: announcements, isLoading: announcementsLoading } = api.announcement.getAllWithDismissals.useQuery();
 
   const toggleSuperAdmin = api.superadmin.toggleSuperAdmin.useMutation({
     onSuccess: () => {
@@ -74,7 +76,7 @@ const SuperAdminView = () => {
     );
   };
 
-  if (playersLoading || groupsLoading || adminsLoading) {
+  if (playersLoading || groupsLoading || adminsLoading || announcementsLoading) {
     return <LoadingPage />;
   }
 
@@ -87,7 +89,7 @@ const SuperAdminView = () => {
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-6 dark:border-gray-700">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto">
           <button
             onClick={() => setActiveTab("players")}
             className={`${
@@ -117,6 +119,16 @@ const SuperAdminView = () => {
             } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
           >
             All Admins ({allAdmins?.length || 0})
+          </button>
+          <button
+            onClick={() => setActiveTab("announcements")}
+            className={`${
+              activeTab === "announcements"
+                ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+          >
+            Announcements ({announcements?.length || 0})
           </button>
         </nav>
       </div>
@@ -429,6 +441,37 @@ const SuperAdminView = () => {
               ))}
             </ul>
           </div>
+        </div>
+      )}
+
+      {/* Announcements Tab */}
+      {activeTab === "announcements" && (
+        <div className="space-y-6">
+          {announcements?.map((announcement) => (
+            <div key={announcement.id} className="overflow-hidden bg-white shadow sm:rounded-md dark:bg-gray-800">
+              <div className="border-b border-gray-200 px-4 py-4 sm:px-6 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">{announcement.title}</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {announcement.id} · {formatDate(announcement.createdAt)} · {announcement.active ? "Active" : "Inactive"} · Dismissed by {announcement.AnnouncementDismissal.length} of {allPlayers?.length || 0} players
+                </p>
+              </div>
+              <ul role="list" className="divide-y divide-gray-200 dark:divide-gray-700">
+                {announcement.AnnouncementDismissal.map((dismissal) => (
+                  <li key={dismissal.id} className="flex items-center justify-between px-4 py-3 sm:px-6">
+                    <p className="truncate text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                      {dismissal.Player.nickname || dismissal.Player.name}
+                    </p>
+                    <p className="ml-4 flex-shrink-0 text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(dismissal.dismissedAt)}
+                    </p>
+                  </li>
+                ))}
+                {announcement.AnnouncementDismissal.length === 0 && (
+                  <li className="px-4 py-3 text-sm text-gray-500 sm:px-6 dark:text-gray-400">Nobody has dismissed this yet</li>
+                )}
+              </ul>
+            </div>
+          ))}
         </div>
       )}
     </div>
