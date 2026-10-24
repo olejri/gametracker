@@ -33,7 +33,7 @@ const MyStats = ({ groupName }: { groupName: string }) => {
 
   return (
     <div className="sm:px-6 lg:px-14">
-      <div className="mt-8 flow-root">
+      <div className="flow-root sm:mt-8">
         <div className="-my-2 -mx-4 sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle">
             <table className="min-w-full border-separate border-spacing-0">

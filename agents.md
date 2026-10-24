@@ -19,7 +19,7 @@ The project uses a consistent color palette defined in `src/lib/constants.ts`. *
 
 ### Icon Colors (ICON_COLORS)
 
-Used for icon wrappers with foreground/background combinations:
+Used for icon wrappers with foreground/background combinations. Each value also includes a dark mode variant (e.g. `dark:text-sky-300`, `dark:bg-sky-900/40`):
 
 | Color   | Foreground        | Background       |
 |---------|-------------------|------------------|
@@ -44,7 +44,7 @@ import { ICON_COLORS } from "npm/lib/constants";
 
 ### Badge Colors (BADGE_COLORS)
 
-Used for status badges and labels:
+Used for status badges and labels. Each value also includes a dark mode variant (e.g. `dark:bg-green-900/30 dark:text-green-300`):
 
 | Color  | Classes                          |
 |--------|----------------------------------|

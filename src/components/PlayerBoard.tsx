@@ -209,7 +209,7 @@ const PlayerBoard = (props: {
           <main className="">
             <div className="sm:px-6">
               <div className="mx-auto max-w-7xl sm:px-6">
-                <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
+                <div className="sm:overflow-hidden sm:rounded-lg sm:bg-white sm:dark:bg-gray-800">
                   <div className="py-1 sm:p-6">
                     {currentTab === "me" && (<MyProfile />)}
                     {currentTab === "collection" &&(<MyCollection />)}

@@ -118,7 +118,7 @@ const SwitchGameGroupView = () => {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
+      <div className="sm:overflow-hidden sm:rounded-lg sm:bg-white sm:dark:bg-gray-800">
         <div className="sm:p-6">
           <ul
             role="list"

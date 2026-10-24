@@ -54,8 +54,8 @@ const GameCollections = (props: DashboardProps) => {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-      <div className="px-4 py-5 sm:p-6">
+    <div className="sm:overflow-hidden sm:rounded-lg sm:bg-white sm:shadow sm:dark:bg-gray-800">
+      <div className="sm:p-6">
         <div className="space-y-5">
           {plans.map((filter) => (
             <div key={filter.id} className="relative flex items-start">
@@ -84,7 +84,7 @@ const GameCollections = (props: DashboardProps) => {
             <div className="w-full border-t border-gray-300 dark:border-gray-600" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900 dark:bg-gray-800 dark:text-white">Games</span>
+            <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900 dark:bg-gray-900 dark:text-white sm:dark:bg-gray-800">Games</span>
           </div>
         </div>
 
