@@ -72,8 +72,8 @@ const StartNewGame = (props: DashboardProps) => {
   return (
     <>
       <form id="game">
-        <div className="w-full sm:w-6/12 sm:overflow-hidden sm:rounded-lg sm:bg-white sm:shadow sm:dark:bg-gray-800">
-          <div className="overflow-hidden rounded-lg shadow-none">
+        <div className="w-full sm:w-6/12 sm:rounded-lg sm:bg-white sm:shadow sm:dark:bg-gray-800">
+          <div className="rounded-lg shadow-none">
             <div className="py-4 sm:p-6">
               <SelectWithSearch items={games} selectedItem={chosenGame} setSelectedItem={setChosenGameAndExpansions}
                                 title={"Pick a game"} placeholder={"Search for a game..."} />
