@@ -11,6 +11,9 @@ const server = z.object({
   OPENAI_API_KEY: z.string(),
   // Optional: session photos are switched off when the Blob store token is missing
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
+  // Optional: the game timer falls back to polling when Pusher is not configured
+  PUSHER_APP_ID: z.string().optional(),
+  PUSHER_SECRET: z.string().optional(),
 });
 
 /**
@@ -19,6 +22,8 @@ const server = z.object({
  */
 const client = z.object({
   // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
+  NEXT_PUBLIC_PUSHER_KEY: z.string().optional(),
+  NEXT_PUBLIC_PUSHER_CLUSTER: z.string().optional(),
 });
 
 /**
@@ -33,6 +38,10 @@ const processEnv = {
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+  PUSHER_APP_ID: process.env.PUSHER_APP_ID,
+  PUSHER_SECRET: process.env.PUSHER_SECRET,
+  NEXT_PUBLIC_PUSHER_KEY: process.env.NEXT_PUBLIC_PUSHER_KEY,
+  NEXT_PUBLIC_PUSHER_CLUSTER: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 

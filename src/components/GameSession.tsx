@@ -12,6 +12,8 @@ import { Button } from "npm/components/ui";
 import { StatusBadge } from "npm/components/ui";
 import { formatDate, transformDate } from "npm/lib/utils";
 import { useToast } from "npm/context/ToastContext";
+import Link from "next/link";
+import { ClockIcon } from "@heroicons/react/24/outline";
 
 // Predefined team colors for adding new teams
 const TEAM_COLORS = [
@@ -363,6 +365,15 @@ const GameSession = (props: GameSessionProps) => {
               <StatusBadge color="green">
                 {game.status}
               </StatusBadge>
+              {game.canUseTimer && (game.timerStatus !== null || game.status === GameSessionStatus.Ongoing) && (
+                <Link
+                  href={`/${props.groupName}/timer/${game.sessionId}`}
+                  className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-700"
+                >
+                  <ClockIcon className="h-4 w-4" aria-hidden="true" />
+                  {game.timerStatus === null ? "Start timer" : "Open timer"}
+                </Link>
+              )}
               {/* Unlock button for admins when game is Completed */}
               {game.status === "Completed" && userRole?.role === "ADMIN" && (
                 unlockGameSession.isLoading ? (

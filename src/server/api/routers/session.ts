@@ -503,13 +503,18 @@ export const sessionRouter = createTRPCRouter({
         createdAt: image.createdAt,
         canDelete: image.uploadedBy === ctx.userId || membership?.role === "ADMIN"
       }));
+      const timer = membership
+        ? await ctx.prisma.gameTimer.findUnique({ where: { gameSessionId: session.id }, select: { status: true } })
+        : null;
 
       // Return a new object that includes players and their scores and positions
       return {
         ...gameSession,
         photos: photos,
         photosEnabled: photosEnabled(),
-        canAddPhotos: !!membership
+        canAddPhotos: !!membership,
+        canUseTimer: !!membership,
+        timerStatus: timer?.status ?? null
       };
     }),
 

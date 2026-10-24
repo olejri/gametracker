@@ -93,6 +93,7 @@ model GameSession {
   GameSessionRandomizationLog GameSessionRandomizationLog[]
   GameSessionTeam             GameSessionTeam[]
   GameSessionImage            GameSessionImage[]
+  GameTimer                   GameTimer?
 }
 
 model GameSessionImage {
@@ -296,5 +297,52 @@ model AnnouncementDismissal {
   Player         Player       @relation(fields: [playerId], references: [id])
 
   @@unique([announcementId, playerId])
+  @@index([playerId])
+}
+
+// Shared chess-clock timer for a session. The server only stores timestamps;
+// clients compute the running clock from turnStartedAt and serverNow.
+model GameTimer {
+  id             String            @id @default(uuid())
+  gameSessionId  String            @unique
+  status         String            @default("setup")
+  activePlayerId String?
+  turnStartedAt  DateTime?
+  pausedFrom     String?
+  adminMs        Int               @default(0)
+  totalMs        Int?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  version        Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  gameSession    GameSession       @relation(fields: [gameSessionId], references: [id])
+  players        GameTimerPlayer[]
+  turns          GameTimerTurn[]
+}
+
+model GameTimerPlayer {
+  id          String    @id @default(uuid())
+  timerId     String
+  playerId    String
+  seatOrder   Int
+  startMs     Int
+  remainingMs Int
+  timer       GameTimer @relation(fields: [timerId], references: [id])
+
+  @@unique([timerId, playerId])
+  @@index([playerId])
+}
+
+// One row per finished clock segment; playerId null means admin time
+model GameTimerTurn {
+  id        String    @id @default(uuid())
+  timerId   String
+  playerId  String?
+  startedAt DateTime
+  endedAt   DateTime
+  timer     GameTimer @relation(fields: [timerId], references: [id])
+
+  @@index([timerId])
   @@index([playerId])
 }
