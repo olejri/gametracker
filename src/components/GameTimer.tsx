@@ -262,6 +262,11 @@ const GameTimer = (props: { groupId: string; sessionId: string }) => {
     );
   }
 
+  // Who "Next player" hands over to, in seat order
+  const seated = timer ? [...timer.players].sort((a, b) => a.seatOrder - b.seatOrder) : [];
+  const activeIndex = seated.findIndex((player) => player.playerId === timer?.activePlayerId);
+  const nextPlayerName = seated.length > 1 ? seated[(activeIndex + 1) % seated.length]?.name : undefined;
+
   const statusBadge = status === "running"
     ? <StatusBadge color="green">Running</StatusBadge>
     : status === "admin"
@@ -407,11 +412,14 @@ const GameTimer = (props: { groupId: string; sessionId: string }) => {
                 <>
                   <Button
                     variant="primary"
-                    className="w-full justify-center py-4 text-lg disabled:opacity-50"
+                    className="w-full flex-col justify-center py-3 text-lg disabled:opacity-50"
                     disabled={disabled || timer.status === "paused"}
                     onClick={() => void act({ type: "next" })}
                   >
                     Next player
+                    {nextPlayerName && (
+                      <span className="text-sm font-normal text-indigo-100">Playing next: {nextPlayerName}</span>
+                    )}
                   </Button>
                   <div className="grid grid-cols-3 gap-2">
                     <button
