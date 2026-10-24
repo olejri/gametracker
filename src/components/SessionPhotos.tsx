@@ -1,6 +1,14 @@
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { CameraIcon, PhotoIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  CameraIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PhotoIcon,
+  TrashIcon,
+  XMarkIcon
+} from "@heroicons/react/24/outline";
+import { classNames } from "npm/lib/utils";
 import { upload } from "@vercel/blob/client";
 import { api, type RouterOutputs } from "npm/utils/api";
 import { Button } from "npm/components/ui";
@@ -48,6 +56,175 @@ const compressImage = async (file: File): Promise<Blob> => {
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
+};
+
+const SWIPE_DISTANCE = 50; // px a drag must travel to move to the next photo
+const SWIPE_VELOCITY = 0.4; // px per ms that counts as a quick flick
+const FLICK_MIN_DISTANCE = 20; // px a flick must still travel, so taps never navigate
+const AXIS_LOCK_DISTANCE = 8; // px before deciding whether a drag is horizontal or vertical
+
+type SwipeGesture = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  startTime: number;
+  axis: "x" | "y" | null;
+};
+
+// Full-screen photo strip: swipe, arrow buttons or arrow keys move between photos without wrapping around
+const PhotoSwiper = (props: {
+  photos: SessionPhoto[];
+  index: number;
+  onIndexChange: (index: number) => void;
+  onTapOutside: () => void;
+}) => {
+  const { photos, index, onIndexChange, onTapOutside } = props;
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const gesture = useRef<SwipeGesture | null>(null);
+  const hasPrevious = index > 0;
+  const hasNext = index < photos.length - 1;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft" && index > 0) onIndexChange(index - 1);
+      if (event.key === "ArrowRight" && index < photos.length - 1) onIndexChange(index + 1);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [index, photos.length, onIndexChange]);
+
+  const resetDrag = () => {
+    gesture.current = null;
+    setIsDragging(false);
+    setDragX(0);
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    gesture.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startTime: event.timeStamp,
+      axis: null
+    };
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const current = gesture.current;
+    if (!current || current.pointerId !== event.pointerId) return;
+    const dx = event.clientX - current.startX;
+    const dy = event.clientY - current.startY;
+
+    if (current.axis === null) {
+      if (Math.abs(dx) < AXIS_LOCK_DISTANCE && Math.abs(dy) < AXIS_LOCK_DISTANCE) return;
+      // Mostly vertical drags are ignored
+      current.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      if (current.axis === "x") {
+        event.currentTarget.setPointerCapture(event.pointerId);
+        setIsDragging(true);
+      }
+    }
+    if (current.axis !== "x") return;
+
+    // Resist dragging past the first or last photo
+    const pastEdge = (dx > 0 && !hasPrevious) || (dx < 0 && !hasNext);
+    setDragX(pastEdge ? dx / 3 : dx);
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const current = gesture.current;
+    if (!current || current.pointerId !== event.pointerId) return;
+    const dx = event.clientX - current.startX;
+
+    if (current.axis === "x") {
+      const velocity = dx / Math.max(1, event.timeStamp - current.startTime);
+      const isFlick = Math.abs(dx) >= FLICK_MIN_DISTANCE && Math.abs(velocity) >= SWIPE_VELOCITY;
+      if ((dx <= -SWIPE_DISTANCE || (isFlick && dx < 0)) && hasNext) {
+        onIndexChange(index + 1);
+      } else if ((dx >= SWIPE_DISTANCE || (isFlick && dx > 0)) && hasPrevious) {
+        onIndexChange(index - 1);
+      }
+    } else if (current.axis === null && !(event.target instanceof HTMLImageElement)) {
+      // A tap beside the photo closes the viewer; a tap on the photo does nothing
+      onTapOutside();
+    }
+    resetDrag();
+  };
+
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div
+        className="relative min-h-0 flex-1 touch-none select-none overflow-hidden"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={resetDrag}
+      >
+        <div
+          className={classNames("flex h-full w-full", !isDragging && "transition-transform duration-300 ease-out")}
+          style={{ transform: `translateX(calc(${-index * 100}% + ${dragX}px))` }}
+        >
+          {/* Every photo is rendered, so the neighbours are already loaded when swiping */}
+          {photos.map((photo, photoIndex) => (
+            <div
+              key={photo.id}
+              className="flex h-full w-full shrink-0 items-center justify-center px-2"
+              aria-hidden={photoIndex !== index}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- served by an authenticated API route */}
+              <img
+                src={photoSrc(photo.id)}
+                alt={`Session photo ${photoIndex + 1}`}
+                draggable={false}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {hasPrevious && (
+        <button
+          type="button"
+          onClick={() => onIndexChange(index - 1)}
+          className="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:block"
+        >
+          <span className="sr-only">Previous photo</span>
+          <ChevronLeftIcon className="h-6 w-6" aria-hidden="true" />
+        </button>
+      )}
+      {hasNext && (
+        <button
+          type="button"
+          onClick={() => onIndexChange(index + 1)}
+          className="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:block"
+        >
+          <span className="sr-only">Next photo</span>
+          <ChevronRightIcon className="h-6 w-6" aria-hidden="true" />
+        </button>
+      )}
+
+      {photos.length > 1 && (
+        <div className="flex justify-center gap-2 pt-3">
+          {photos.map((photo, photoIndex) => (
+            <button
+              key={photo.id}
+              type="button"
+              onClick={() => onIndexChange(photoIndex)}
+              className={classNames(
+                "h-2 w-2 rounded-full transition-colors",
+                photoIndex === index ? "bg-white" : "bg-white/40 hover:bg-white/70"
+              )}
+            >
+              <span className="sr-only">Show photo {photoIndex + 1}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 const SessionPhotos = (props: {
@@ -244,27 +421,17 @@ const SessionPhotos = (props: {
                 </button>
               </div>
 
-              <div
-                className="flex min-h-0 flex-1 items-center justify-center px-2"
-                onClick={closeViewer}
-              >
-                {viewedPhoto && (
-                  /* eslint-disable-next-line @next/next/no-img-element -- served by an authenticated API route */
-                  <img
-                    src={photoSrc(viewedPhoto.id)}
-                    alt="Session photo"
-                    className="max-h-full max-w-full object-contain"
-                    onClick={(e) => {
-                      // Tap the photo to step through the others
-                      e.stopPropagation();
-                      if (photos.length > 1 && viewerIndex !== null) {
-                        setConfirmDelete(false);
-                        setViewerIndex((viewerIndex + 1) % photos.length);
-                      }
-                    }}
-                  />
-                )}
-              </div>
+              {viewerIndex !== null && (
+                <PhotoSwiper
+                  photos={photos}
+                  index={viewerIndex}
+                  onIndexChange={(index) => {
+                    setConfirmDelete(false);
+                    setViewerIndex(index);
+                  }}
+                  onTapOutside={closeViewer}
+                />
+              )}
 
               <div className="px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
                 {viewedPhoto?.canDelete && (
