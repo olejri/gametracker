@@ -74,13 +74,13 @@ const StartNewGame = (props: DashboardProps) => {
       <form id="game">
         <div className="overflow-hidden rounded-lg bg-white sm:shadow w-full sm:w-6/12 dark:bg-gray-800">
           <div className="overflow-hidden rounded-lg shadow-none">
-            <div className="px-4 py-5 sm:p-6">
+            <div className="py-4 sm:p-6">
               <SelectWithSearch items={games} selectedItem={chosenGame} setSelectedItem={setChosenGameAndExpansions}
-                                title={"Pick a game"} placeholder={""} />
+                                title={"Pick a game"} placeholder={"Search for a game..."} />
             </div>
           </div>
           <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
-            <div className="px-4 py-5 sm:p-6">
+            <div className={chosenExpansions.length > 0 ? "py-4 sm:p-6" : ""}>
               {chosenExpansions.length > 0 ? <fieldset>
                 <legend className="text-base font-semibold leading-6 text-gray-900 dark:text-white">Pick expansions</legend>
                 <div className="mt-4 divide-y divide-gray-200 border-t border-b border-gray-200 dark:divide-gray-700 dark:border-gray-700">
@@ -107,7 +107,7 @@ const StartNewGame = (props: DashboardProps) => {
             </div>
           </div>
           <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
-            <div className="px-4 py-5 sm:p-6">
+            <div className="py-4 sm:p-6">
               <fieldset>
                 <legend className="text-base font-semibold leading-6 text-gray-900 dark:text-white">Pick players</legend>
                 <div className="mt-4 divide-y divide-gray-200 border-t border-b border-gray-200 dark:divide-gray-700 dark:border-gray-700">
@@ -133,7 +133,7 @@ const StartNewGame = (props: DashboardProps) => {
             </div>
           </div>
           <div className="overflow-hidden shadow-none dark:bg-gray-800">
-            <div className="px-4 py-5 sm:p-6">
+            <div className="py-4 sm:p-6">
               <Button
                 disabled={disabled}
                 variant="primary"

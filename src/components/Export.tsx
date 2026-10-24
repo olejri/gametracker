@@ -30,16 +30,20 @@ const ExportView = (props: DashboardProps) => {
     <>
       <Button
         variant="primary"
+        className="w-full justify-center sm:w-auto"
         onClick={() => {
           triggerDownload(data.data, "game-night.csv");
         }}
       >
         Download
       </Button>
-      <div className="w-full h-auto">
-    <textarea className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" value={data.data} readOnly={true} style={{
-      height: "800px"
-    }} />
+      <div className="mt-4 w-full">
+        <textarea
+          className="h-64 w-full whitespace-pre rounded-md border-gray-300 bg-white font-mono text-xs text-gray-900 sm:h-[800px] sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          value={data.data}
+          readOnly={true}
+          wrap="off"
+        />
       </div>
     </>
   );

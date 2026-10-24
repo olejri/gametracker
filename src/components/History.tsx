@@ -109,7 +109,7 @@ const History = ({ groupName }: DashboardProps) => {
                 <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">Players</Th>
                 <Th className="hidden px-3 lg:table-cell">Position</Th>
                 <Th className="hidden px-3 lg:table-cell">Score</Th>
-                <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">Date</Th>
+                <Th className="pl-3 pr-4 text-right sm:pr-6 lg:pr-8">Date</Th>
                 <Th className="hidden px-3 lg:table-cell">Location</Th>
               </tr>
             </thead>
@@ -147,7 +147,7 @@ const History = ({ groupName }: DashboardProps) => {
                       )}
                     >
                       <Link href={href} className="block h-full w-full">
-                        <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
+                        <div className="flex-shrink-0 sm:ml-5">
                           <Avatar
                             avatars={playersSorted.map((p) => ({
                               id: p.playerId,
@@ -163,7 +163,7 @@ const History = ({ groupName }: DashboardProps) => {
 
                     <td className={classNames(rowHasBorder && tdBorder, hiddenLgCell)}>
                       <Link href={href} className="block h-full w-full">
-                        <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
+                        <div className="flex-shrink-0 sm:ml-5">
                           <div className="flex flex-wrap gap-2">
                             {playersSorted.map((player) => (
                               <Badge key={player.playerId} className="h-6 min-w-[1.5rem]">
@@ -177,7 +177,7 @@ const History = ({ groupName }: DashboardProps) => {
 
                     <td className={classNames(rowHasBorder && tdBorder, hiddenLgCell)}>
                       <Link href={href} className="block h-full w-full">
-                        <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
+                        <div className="flex-shrink-0 sm:ml-5">
                           <div className="flex flex-wrap gap-2">
                             {playersSorted.map((player) => (
                               <Badge key={player.playerId} className="h-6 min-w-[1.5rem]">
@@ -192,7 +192,7 @@ const History = ({ groupName }: DashboardProps) => {
                     <td
                       className={classNames(
                         rowHasBorder && tdBorder,
-                        "w-6 px-3 py-4 text-sm text-gray-500 dark:text-gray-400",
+                        "w-6 whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm text-gray-500 sm:pr-6 lg:pr-8 dark:text-gray-400",
                       )}
                     >
                       <Link href={href} className="block h-full w-full">
@@ -216,8 +216,8 @@ const History = ({ groupName }: DashboardProps) => {
   }, [groupName, isError, isLoading, filteredSessions, sessions.length]);
 
   return (
-    <div className="px-4 sm:px-6 lg:px-14">
-      <div className="mt-8 flow-root">
+    <div className="sm:px-6 lg:px-14">
+      <div className="flow-root sm:mt-8">
         {/* Filter Controls */}
         {sessions.length > 0 && (
           <div className="relative z-20 mb-6">

@@ -32,7 +32,7 @@ const MyStats = ({ groupName }: { groupName: string }) => {
   if (isError) return <p className="px-4 py-2 text-sm text-red-600 dark:text-red-400">{error?.message}</p>;
 
   return (
-    <div className="px-4 sm:px-6 lg:px-14">
+    <div className="sm:px-6 lg:px-14">
       <div className="mt-8 flow-root">
         <div className="-my-2 -mx-4 sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle">

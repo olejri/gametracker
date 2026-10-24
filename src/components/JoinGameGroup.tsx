@@ -205,7 +205,7 @@ const JoinGameGroupView = () => {
             </p>
           </div>
 
-          <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
+          <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
               <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {/* Existing Groups */}

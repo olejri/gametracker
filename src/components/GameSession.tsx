@@ -354,10 +354,10 @@ const GameSession = (props: GameSessionProps) => {
   };
   return (
     <div className="container mx-auto sm:px-6 lg:px-8">
-      <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
-        <div className="grid grid-cols-2">
-          <div className="px-4 py-5 sm:p-6">
-            <Image src={game.image_url} alt="My Image" width={300} height={300} className="rounded-lg mt-4" />
+      <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2">
+          <div className="flex items-center gap-4 px-4 pt-5 sm:block sm:p-6">
+            <Image src={game.image_url} alt="My Image" width={300} height={300} className="h-20 w-20 rounded-lg object-cover sm:mt-4 sm:h-auto sm:w-auto" />
             <div className="flex items-center gap-2 mt-2">
               <StatusBadge color="green">
                 {game.status}
@@ -388,7 +388,7 @@ const GameSession = (props: GameSessionProps) => {
               )}
             </div>
           </div>
-          <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+          <div className="overflow-hidden bg-white sm:rounded-lg sm:shadow dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
               <div className="isolate -space-y-px rounded-md shadow-sm">
                 <div
@@ -521,7 +521,7 @@ const GameSession = (props: GameSessionProps) => {
       </div>
       {/* Team Management Section - Only shown when Team Game Mode is enabled */}
       {game.status === GameSessionStatus.Ongoing && game.isTeamGame && (
-        <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
+        <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800 mt-4">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
@@ -581,7 +581,7 @@ const GameSession = (props: GameSessionProps) => {
           </div>
         </div>
       )}
-      <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
+      <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800 mt-4">
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {sortPlayers(game.players).map((player, index) => {
@@ -612,7 +612,7 @@ const GameSession = (props: GameSessionProps) => {
         </div>
       </div>
       {game.status === GameSessionStatus.Ongoing ? (
-        <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
+        <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800 mt-4">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
               Randomization Tools
@@ -708,11 +708,12 @@ const GameSession = (props: GameSessionProps) => {
           </div>
         </div>
       ) : null}
-      {game.status === GameSessionStatus.Ongoing ? <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800 mt-4">
+      {game.status === GameSessionStatus.Ongoing ? <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800 mt-4">
         <div className="px-4 py-5 sm:p-6">
-          <div className="gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
             <Button
               variant="primary"
+              className="w-full justify-center sm:w-auto"
               onClick={() => {
                 void (async () => {
                   setHaveError(false);
@@ -738,6 +739,7 @@ const GameSession = (props: GameSessionProps) => {
             </Button>
             <Button
               variant="danger"
+              className="w-full justify-center sm:w-auto"
               disabled={isInReadOnlyMode}
               onClick={() => {
                 setHaveError(false);

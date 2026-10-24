@@ -207,10 +207,10 @@ const PlayerBoard = (props: {
         </div>
         <div className="flex-1">
           <main className="">
-            <div className="px-4 sm:px-6">
+            <div className="sm:px-6">
               <div className="mx-auto max-w-7xl sm:px-6">
-                <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
-                  <div className="px-4 py-5 sm:p-6">
+                <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
+                  <div className="py-1 sm:p-6">
                     {currentTab === "me" && (<MyProfile />)}
                     {currentTab === "collection" &&(<MyCollection />)}
                     {currentTab === "stats" && (<MyStats groupName={groupName}/>)}

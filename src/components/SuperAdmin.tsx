@@ -213,7 +213,7 @@ const SuperAdminView = () => {
                 Create New Dashboard
               </button>
             ) : (
-              <div className="bg-white shadow sm:rounded-lg p-6 dark:bg-gray-800">
+              <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
                 <h3 className="text-lg font-medium text-gray-900 mb-4 dark:text-white">Create New Dashboard</h3>
                 <div className="space-y-4">
                   <div>

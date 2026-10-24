@@ -1,5 +1,5 @@
 import {Combobox} from '@headlessui/react'
-import {useState} from "react";
+import {useRef, useState} from "react";
 import {ChevronUpDownIcon} from "@heroicons/react/20/solid";
 import {type SearchItemProps} from "npm/components/Types";
 import { classNames } from "npm/lib/utils";
@@ -12,6 +12,7 @@ const SelectWithSearch = (props: SearchItemProps) => {
     const placeholder = props.placeholder;
 
     const [query, setQuery] = useState('')
+    const buttonRef = useRef<HTMLButtonElement>(null)
     const filteredItems = items.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()))
 
     return (
@@ -23,6 +24,12 @@ const SelectWithSearch = (props: SearchItemProps) => {
                 <Combobox.Input
                     className="w-full rounded-md border-0 bg-white dark:bg-gray-700 py-1.5 pl-3 pr-10 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     onChange={(event) => setQuery(event.target.value)}
+                    // Open the list on tap so mobile users see the options without typing first
+                    onClick={(event) => {
+                        if (event.currentTarget.getAttribute("aria-expanded") !== "true") {
+                            buttonRef.current?.click();
+                        }
+                    }}
                     placeholder={placeholder}
                     displayValue={(item) => {
                         if (item instanceof Object && "name" in item) {
@@ -32,13 +39,14 @@ const SelectWithSearch = (props: SearchItemProps) => {
                     }}
                 />
                 <Combobox.Button
+                    ref={buttonRef}
                     className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
                     <ChevronUpDownIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" aria-hidden="true"/>
                 </Combobox.Button>
 
                 {filteredItems.length > 0 && (
                     <Combobox.Options
-                        className="z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-gray-700 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 dark:ring-gray-600 focus:outline-none sm:text-sm">
+                        className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-gray-700 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 dark:ring-gray-600 focus:outline-none sm:text-sm">
                         {filteredItems.map((item) => (
                             <Combobox.Option
                                 key={item.id}

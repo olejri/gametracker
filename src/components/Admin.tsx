@@ -436,7 +436,7 @@ const AdminView = (props: {
       </ul>
       
       {/* Group Visibility Toggle */}
-      <div className="mt-6 overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+      <div className="mt-6 overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
         <div className="px-4 py-5 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -479,7 +479,7 @@ const AdminView = (props: {
         </div>
       </div>
 
-      <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
+      <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
         <div
           className="px-4 py-5 sm:p-6"
         >
@@ -536,7 +536,7 @@ const AdminView = (props: {
       </div>
 
       {/* Create Fake Player Section */}
-      <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
+      <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
         <div className="px-4 py-5 sm:p-6">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Create Fake Player
@@ -624,7 +624,7 @@ const AdminView = (props: {
       </div>
 
       {/* Magic Link Section */}
-      <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
+      <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
         <div className="px-4 py-5 sm:p-6">
           <div className="flex items-center gap-2">
             <LinkIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />

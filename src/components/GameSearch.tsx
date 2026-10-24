@@ -22,7 +22,7 @@ const ctx = api.useContext()
     }
 
   if (atlasGamesResult === undefined) return (
-    <div className="sm:w-3/12">
+    <div className="sm:w-1/2 lg:w-1/3">
       <SearchBar setAtlasGamesResult={setAtlasGamesResult} />
     </div>
   );
@@ -37,7 +37,7 @@ const ctx = api.useContext()
 
   return (
     <>
-      <div className="sm:w-3/12">
+      <div className="sm:w-1/2 lg:w-1/3">
         <SearchBar setAtlasGamesResult={setAtlasGamesResult} />
       </div>
         <div className="flex flex-1 flex-col p-8">

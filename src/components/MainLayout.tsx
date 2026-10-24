@@ -145,14 +145,14 @@ const MainComponent = (props: ContainerProps) => {
                               "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
                             )}
                           >
-                            Me
+                            Profile
                           </Disclosure.Button>
                           <Disclosure.Button
                             as="a"
                             href={"/" + gameGroup + "/player/" + user.id + "?tab=collection"}
                             className={classNames(
                               "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
-                              "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                              "block border-l-4 py-2 pl-8 pr-4 text-sm font-medium"
                             )}
                           >
                             Collection
@@ -162,7 +162,7 @@ const MainComponent = (props: ContainerProps) => {
                             href={"/" + gameGroup + "/player/" + user.id + "?tab=faq"}
                             className={classNames(
                               "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
-                              "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                              "block border-l-4 py-2 pl-8 pr-4 text-sm font-medium"
                             )}
                           >
                             FAQ
@@ -172,7 +172,7 @@ const MainComponent = (props: ContainerProps) => {
                             href={"/" + gameGroup + "/player/" + user.id + "?tab=stats"}
                             className={classNames(
                               "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
-                              "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                              "block border-l-4 py-2 pl-8 pr-4 text-sm font-medium"
                             )}
                           >
                             Stats
@@ -229,14 +229,9 @@ const MainComponent = (props: ContainerProps) => {
           )}
         </Disclosure>
 
-        <div className="py-10 dark:bg-gray-900">
-          <header>
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white"></h1>
-            </div>
-          </header>
+        <div className="py-4 sm:py-10 dark:bg-gray-900">
           <main>
-            <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">{props.children}</div>
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{props.children}</div>
           </main>
         </div>
       </div>

@@ -104,16 +104,16 @@ const MyAchievements = ({ groupName }: { groupName: string }) => {
     <div>
       {/* Header with stats */}
       <div className="mb-6 rounded-lg bg-white p-4 shadow dark:bg-gray-800">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Achievement Progress</h2>
+            <h2 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">Achievement Progress</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {totalUnlocked} of {achievements.length} unlocked
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-              {totalPoints} <span className="text-xl text-gray-400 dark:text-gray-500">/ {maxPoints}</span>
+          <div className="shrink-0 text-right">
+            <div className="whitespace-nowrap text-2xl font-bold text-indigo-600 sm:text-3xl dark:text-indigo-400">
+              {totalPoints} <span className="text-base text-gray-400 sm:text-xl dark:text-gray-500">/ {maxPoints}</span>
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">Points</div>
           </div>
@@ -121,19 +121,19 @@ const MyAchievements = ({ groupName }: { groupName: string }) => {
       </div>
 
       {/* Achievement groups */}
-      <div className="space-y-8">
+      <div className="space-y-4 sm:space-y-8">
         {sortedGroupKeys.map((groupKey) => {
           const groupAchievements = achievementsByGroup[groupKey] || [];
           
           return (
-            <div key={groupKey} className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
+            <div key={groupKey} className="rounded-lg bg-white p-4 shadow sm:p-6 dark:bg-gray-800">
               {/* Group header */}
-              <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white border-b-2 border-gray-200 dark:border-gray-700 pb-3">
+              <h3 className="mb-4 text-lg sm:mb-6 sm:text-xl font-bold text-gray-900 dark:text-white border-b-2 border-gray-200 dark:border-gray-700 pb-3">
                 {formatGroupKeyName(groupKey)}
               </h3>
               
               {/* Grid of achievement cards - horizontal left to right */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {groupAchievements.map((achievement) => {
                   const Icon = getIcon(achievement.iconType);
                   const tierGradient = getTierColor(achievement.tier);
@@ -151,9 +151,9 @@ const MyAchievements = ({ groupName }: { groupName: string }) => {
                           : "rounded-lg bg-white text-center shadow dark:bg-gray-700"
                       )}
                     >
-                      <div className="flex flex-col p-4">
+                      <div className="flex flex-col p-3 sm:p-4">
                         <Icon className={classNames(
-                          "mx-auto h-10 w-10 flex-shrink-0",
+                          "mx-auto h-8 w-8 flex-shrink-0 sm:h-10 sm:w-10",
                           isFulfilled ? "text-white" : "text-gray-400 dark:text-gray-500"
                         )} />
                         
@@ -181,7 +181,7 @@ const MyAchievements = ({ groupName }: { groupName: string }) => {
                         )}
                         
                         {/* Badges */}
-                        <div className="mt-3 flex items-center justify-center gap-2">
+                        <div className="mt-3 flex flex-wrap items-center justify-center gap-1 sm:gap-2">
                           <Badge className={classNames(
                             "text-xs",
                             isFulfilled
@@ -267,7 +267,7 @@ const MyAchievements = ({ groupName }: { groupName: string }) => {
                           {selectedAchievement.name}
                         </Dialog.Title>
 
-                        <div className="mt-3 flex items-center justify-center gap-2">
+                        <div className="mt-3 flex flex-wrap items-center justify-center gap-1 sm:gap-2">
                           <Badge className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">{selectedAchievement.points} pts</Badge>
                           <Badge className="bg-gray-100 text-gray-800 capitalize dark:bg-gray-700 dark:text-gray-200">{selectedAchievement.tier}</Badge>
                         </div>

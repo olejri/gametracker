@@ -27,7 +27,8 @@ const SearchBar = (props: {
   return (
     <div className="">
       <h1 className="text-xl font-bold mb-4 dark:text-white">Search after a game</h1>
-      <input className="border border-gray-300 rounded py-2 px-4 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500" type="text" placeholder="Name of the game"
+      <div className="flex gap-2">
+      <input className="min-w-0 flex-1 rounded-md border border-gray-300 px-4 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500" type="text" placeholder="Name of the game"
              onChange={(e) => setSearchName(e.target.value)} />
       <Button
         variant="primary"
@@ -40,8 +41,9 @@ const SearchBar = (props: {
       >
         Search
       </Button>
-        <dl className="mt-1 flex flex-grow flex-col justify-between">
-            <dd className="text-sm text-gray-500">Using gpt-4-1106-preview to find information about a game before April 2023</dd>
+      </div>
+        <dl className="mt-2 flex flex-grow flex-col justify-between">
+            <dd className="text-sm text-gray-500 dark:text-gray-400">Using gpt-4-1106-preview to find information about a game before April 2023</dd>
         </dl>
     </div>
   );

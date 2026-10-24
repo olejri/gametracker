@@ -150,7 +150,7 @@ const PlayerView = forwardRef<PlayerViewRef, {
         }
       }}
       data-player-id={player.playerId}
-      className={`relative flex items-center space-x-3 rounded-lg bg-white px-6 py-5 shadow-sm hover:border-gray-400 dark:bg-gray-800 dark:hover:border-gray-500 transition-all duration-150 ease-in-out ${isRolling ? 'player-rolling-animation' : ''} ${!teamBorderColor ? 'border border-gray-300 dark:border-gray-600' : ''} ${isDragging ? 'opacity-50 scale-95 cursor-move shadow-lg' : ''} ${isDragOver ? 'ring-2 ring-indigo-500 dark:ring-indigo-400 scale-105' : ''} ${!isInReadOnlyMode && !isInputFocused ? 'cursor-move active:scale-95' : ''}`}
+      className={`relative flex items-center space-x-3 rounded-lg bg-white px-4 py-4 shadow-sm sm:px-6 sm:py-5 hover:border-gray-400 dark:bg-gray-800 dark:hover:border-gray-500 transition-all duration-150 ease-in-out ${isRolling ? 'player-rolling-animation' : ''} ${!teamBorderColor ? 'border border-gray-300 dark:border-gray-600' : ''} ${isDragging ? 'opacity-50 scale-95 cursor-move shadow-lg' : ''} ${isDragOver ? 'ring-2 ring-indigo-500 dark:ring-indigo-400 scale-105' : ''} ${!isInReadOnlyMode && !isInputFocused ? 'cursor-move active:scale-95' : ''}`}
       style={teamBorderColor ? { border: `3px solid ${teamBorderColor}` } : undefined}
     >
       <div className="flex-shrink-0">
@@ -158,14 +158,14 @@ const PlayerView = forwardRef<PlayerViewRef, {
           width={30}
           height={30}
           key={player.playerId}
-          className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-900"
+          className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900"
           src={player.profileImageUrl}
           alt={player.nickname ?? player.playerId}
         />
       </div>
       <div className="min-w-0 flex-1">
-        <div className={`grid grid-flow-row-dense gap-4 ${shouldShowTeamSelector ? 'grid-cols-4' : 'grid-cols-3'}`}>
-          <p className="text-sm font-medium text-gray-900 dark:text-white">{player.nickname}</p>
+        <div className={`grid grid-flow-row-dense items-end gap-3 sm:gap-4 ${shouldShowTeamSelector ? 'grid-cols-4' : 'grid-cols-3'}`}>
+          <p className="self-center truncate text-sm font-medium text-gray-900 dark:text-white">{player.nickname}</p>
           <div className="grid grid-cols-1">
             <label className="dark:text-gray-300 text-xs">Score</label>
             {!isUpdatingScore ? <input type="text" id={"score" + player.playerId}

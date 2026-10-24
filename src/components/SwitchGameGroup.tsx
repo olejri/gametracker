@@ -96,9 +96,9 @@ const SwitchGameGroupView = () => {
 
       {playerData?.data?.isSuperAdmin && (
         <div className="mb-6">
-          <div className="overflow-hidden bg-gradient-to-r from-red-50 to-red-100 shadow sm:rounded-lg border-2 border-red-200 dark:from-red-900/20 dark:to-red-800/20 dark:border-red-800">
+          <div className="overflow-hidden bg-gradient-to-r from-red-50 to-red-100 rounded-lg shadow border-2 border-red-200 dark:from-red-900/20 dark:to-red-800/20 dark:border-red-800">
             <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="text-lg font-medium leading-6 text-red-900 dark:text-red-200">SuperAdmin Access</h3>
                   <p className="mt-1 text-sm text-red-700 dark:text-red-300">
@@ -107,7 +107,7 @@ const SwitchGameGroupView = () => {
                 </div>
                 <button
                   onClick={() => void router.push("/dashboards-view")}
-                  className="inline-flex items-center gap-x-2 rounded-md bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                  className="inline-flex shrink-0 items-center justify-center gap-x-2 rounded-md bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                 >
                   <ShieldCheckIcon className="h-5 w-5" aria-hidden="true" />
                   Open SuperAdmin Dashboard
@@ -118,19 +118,19 @@ const SwitchGameGroupView = () => {
         </div>
       )}
 
-      <div className="overflow-hidden bg-white shadow-none sm:rounded-lg dark:bg-gray-800">
-        <div className="px-4 py-5 sm:p-6">
+      <div className="overflow-hidden rounded-lg bg-white shadow-none dark:bg-gray-800">
+        <div className="sm:p-6">
           <ul
             role="list"
-            className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4"
           >
             {data.map((group) => (
               <li
                 key={group.groupId}
                 className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow dark:divide-gray-700 dark:bg-gray-800"
               >
-                <div className="flex flex-1 flex-col p-8">
-                  <h3 className="mt-6 text-sm font-medium text-gray-900 dark:text-white">
+                <div className="flex flex-1 flex-col justify-center p-4 sm:p-8">
+                  <h3 className="text-sm font-medium text-gray-900 sm:mt-6 dark:text-white">
                     {group.groupName}
                   </h3>
                 </div>
@@ -183,8 +183,8 @@ const SwitchGameGroupView = () => {
 
             {/* Create Group Card */}
             <li className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow dark:divide-gray-700 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600">
-              <div className="flex flex-1 flex-col p-8">
-                <h3 className="mt-6 text-sm font-medium text-gray-900 dark:text-white">Create Game Group</h3>
+              <div className="flex flex-1 flex-col justify-center p-4 sm:p-8">
+                <h3 className="text-sm font-medium text-gray-900 sm:mt-6 dark:text-white">Create Game Group</h3>
                 <dl className="mt-1 flex flex-grow flex-col justify-between">
                   <dd className="text-sm text-gray-500 dark:text-gray-400">
                     {playerData?.data?.gameGroupsLeft !== undefined

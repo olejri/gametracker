@@ -87,38 +87,32 @@ export default function Dashboard(groupName: string) {
   return (
     <>
       <div
-        className="divide-y divide-gray-200 overflow-hidden rounded-lg bg-gray-200 shadow sm:grid sm:grid-cols-2 sm:gap-px sm:divide-y-0 dark:divide-gray-700 dark:bg-gray-700">
-        {actions(groupName).map((action, actionIdx) => (
+        className="grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-gray-200 shadow dark:bg-gray-700">
+        {actions(groupName).map((action) => (
           <div
             key={action.title}
-            className={classNames(
-              actionIdx === 0 ? "rounded-tl-lg rounded-tr-lg sm:rounded-tr-none" : "",
-              actionIdx === 1 ? "sm:rounded-tr-lg" : "",
-              actionIdx === actions.length - 2 ? "sm:rounded-bl-lg" : "",
-              actionIdx === actions.length - 1 ? "rounded-bl-lg rounded-br-lg sm:rounded-bl-none" : "",
-              "group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 dark:bg-gray-800"
-            )}
+            className="group relative bg-white p-4 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 sm:p-6 dark:bg-gray-800"
           >
             <div>
             <span
               className={classNames(
                 action.iconBackground,
                 action.iconForeground,
-                "inline-flex rounded-lg p-3 ring-4 ring-white dark:ring-gray-800"
+                "inline-flex rounded-lg p-2 ring-4 ring-white sm:p-3 dark:ring-gray-800"
               )}
             >
-              <action.icon className="h-6 w-6" aria-hidden="true" />
+              <action.icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
             </span>
             </div>
-            <div className="mt-8">
-              <h3 className="text-base font-semibold leading-6 text-gray-900 dark:text-white">
+            <div className="mt-3 sm:mt-8">
+              <h3 className="text-sm font-semibold leading-5 text-gray-900 sm:text-base sm:leading-6 dark:text-white">
                 <Link href={action.href} className="focus:outline-none">
                   {/* Extend touch target to entire panel */}
                   <span className="absolute inset-0" aria-hidden="true" />
                   {action.title}
                 </Link>
               </h3>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 hidden text-sm text-gray-500 sm:mt-2 sm:block dark:text-gray-400">
                 {action.message}
               </p>
             </div>
@@ -130,8 +124,8 @@ export default function Dashboard(groupName: string) {
           </div>
         ))}
       </div>
-      <div className="mt-2">
-        <div className="relative">
+      <div className="mt-6">
+        <div className="relative mb-3">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
             <div className="w-full border-t border-gray-300 dark:border-gray-600" />
           </div>
@@ -140,7 +134,7 @@ export default function Dashboard(groupName: string) {
           </div>
         </div>
         <div className="container mx-auto sm:px-6 lg:px-8">
-          <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+          <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
               <RecentlyActivities groupName={groupName} />
             </div>

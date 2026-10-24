@@ -22,7 +22,7 @@ const HighScoresPage = () => {
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-14">
+    <div className="sm:px-6 lg:px-14">
       <h1 className="text-2xl font-bold text-center mb-6 dark:text-white">Game High Scores</h1>
       
       <div className="bg-white rounded-xl shadow overflow-hidden dark:bg-gray-800">

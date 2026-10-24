@@ -54,7 +54,7 @@ const GameCollections = (props: DashboardProps) => {
   }
 
   return (
-    <div className="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+    <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
       <div className="px-4 py-5 sm:p-6">
         <div className="space-y-5">
           {plans.map((filter) => (
@@ -79,7 +79,7 @@ const GameCollections = (props: DashboardProps) => {
           ))}
         </div>
 
-        <div className="relative">
+        <div className="relative mt-5">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
             <div className="w-full border-t border-gray-300 dark:border-gray-600" />
           </div>
@@ -88,16 +88,16 @@ const GameCollections = (props: DashboardProps) => {
           </div>
         </div>
 
-        <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <ul role="list" className="mt-5 grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
           {gamesToShow.map((game) => (
             <li
               key={game.id}
               className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow dark:divide-gray-700 dark:bg-gray-800"
             >
-              <div className="flex flex-1 flex-col p-8">
-                <Image className="mx-auto sm:h-auto sm:w-52 flex-shrink-0" src={game.image_url} alt="" width={200}
+              <div className="flex flex-1 flex-col p-4 sm:p-8">
+                <Image className="mx-auto h-24 w-24 flex-shrink-0 object-cover sm:h-auto sm:w-52" src={game.image_url} alt="" width={200}
                        height={200} priority={true} />
-                <h3 className="mt-6 text-sm font-medium text-gray-900 dark:text-white">{game.name}</h3>
+                <h3 className="mt-3 text-sm font-medium text-gray-900 sm:mt-6 dark:text-white">{game.name}</h3>
                 <dl className="mt-1 flex flex-grow flex-col justify-between">
                   <dd className="text-sm text-gray-500 dark:text-gray-400">Players: {game.players}</dd>
                   <dd className="text-sm text-gray-500 dark:text-gray-400">Time: {game.playtime}</dd>
@@ -122,23 +122,23 @@ const GameCollections = (props: DashboardProps) => {
                   <div className="flex w-0 flex-1">
                     {game.isExpansion ?
                       <div
-                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white"
+                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-3 text-xs font-semibold sm:py-4 sm:text-sm text-gray-900 dark:text-white"
                       >
-                        <span className="ml-2 text-green-500 dark:text-green-400">An expansion</span></div> :
+                        <span className="text-green-500 sm:ml-2 dark:text-green-400">An expansion</span></div> :
                       <div
-                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white"
+                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-3 text-xs font-semibold sm:py-4 sm:text-sm text-gray-900 dark:text-white"
                       >
-                        <span className="ml-2 text-green-500 dark:text-green-400">Base game</span></div>
+                        <span className="text-green-500 sm:ml-2 dark:text-green-400">Base game</span></div>
                     }
                   </div>
                   <div className="-ml-px flex w-0 flex-1">
                     <button
-                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white`}
+                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-1 rounded-br-lg border border-transparent py-3 text-xs font-semibold sm:gap-x-3 sm:py-4 sm:text-sm text-gray-900 dark:text-white`}
                       onClick={() => {
                         setModalOpen({ open: true, name: game.name });
                       }}
                     >
-                      <AcademicCapIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" aria-hidden="true" />
+                      <AcademicCapIcon className="hidden h-5 w-5 text-gray-600 sm:block dark:text-gray-400" aria-hidden="true" />
                       Description
                     </button>
                     <InfoModal
