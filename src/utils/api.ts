@@ -4,7 +4,7 @@
  *
  * We also create a few inference helpers for input and output types.
  */
-import { httpBatchLink, loggerLink } from "@trpc/client";
+import { httpBatchLink, loggerLink, TRPCClientError } from "@trpc/client";
 import { createTRPCNext } from "@trpc/next";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
@@ -17,6 +17,13 @@ const getBaseUrl = () => {
   return `http://localhost:${process.env.PORT ?? 3000}`; // dev SSR should use localhost
 };
 
+const PERMANENT_ERROR_CODES = ["NOT_FOUND", "UNAUTHORIZED", "FORBIDDEN"];
+
+// True for tRPC errors that will fail the same way on every retry
+export const isPermanentError = (error: unknown) =>
+  error instanceof TRPCClientError &&
+  PERMANENT_ERROR_CODES.includes((error.data as { code?: string } | undefined)?.code ?? "");
+
 /** A set of type-safe react-query hooks for your tRPC API. */
 export const api = createTRPCNext<AppRouter>({
   config() {
@@ -27,6 +34,18 @@ export const api = createTRPCNext<AppRouter>({
        * @see https://trpc.io/docs/data-transformers
        */
       transformer: superjson,
+
+      /**
+       * Retrying cannot fix a missing record or missing access (e.g. a session
+       * someone deleted), so only retry other failures, up to three times.
+       */
+      queryClientConfig: {
+        defaultOptions: {
+          queries: {
+            retry: (failureCount, error) => !isPermanentError(error) && failureCount < 3,
+          },
+        },
+      },
 
       /**
        * Links used to determine request flow from client to server.

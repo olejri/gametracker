@@ -31,3 +31,14 @@ export async function notifyTimerUpdate(timerId: string, version: number) {
     console.error("Failed to send timer update to Pusher", error);
   }
 }
+
+// Tells open timer pages that the session (and its timer) was deleted
+export async function notifyTimerDeleted(timerId: string) {
+  const pusher = getPusher();
+  if (!pusher) return;
+  try {
+    await pusher.trigger(timerChannel(timerId), "deleted", {});
+  } catch (error) {
+    console.error("Failed to send timer deletion to Pusher", error);
+  }
+}

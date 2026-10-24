@@ -15,6 +15,7 @@ import {
   sessionPhotoPrefix
 } from "npm/server/helpers/sessionPhotos";
 import { del, head } from "@vercel/blob";
+import { notifyTimerDeleted } from "npm/server/pusher";
 
 export const sessionRouter = createTRPCRouter({
   getAllCompletedSessionsAsc: publicProcedure
@@ -810,6 +811,9 @@ export const sessionRouter = createTRPCRouter({
           id: input.sessionId
         }
       });
+      if (timer) {
+        await notifyTimerDeleted(timer.id);
+      }
     }),
 
   finishGameSession: privateProcedure

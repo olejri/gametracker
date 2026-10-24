@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { TRPCClientError } from "@trpc/client";
 import { ArrowLeftIcon, PauseIcon, PlayIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
+import { useRouter } from "next/router";
 import { api } from "npm/utils/api";
 import { env } from "npm/env.mjs";
 import { Button, Card, CardContent, StatusBadge } from "npm/components/ui";
@@ -86,7 +87,11 @@ const GameTimer = (props: { groupId: string; sessionId: string }) => {
   const { sessionId } = props;
   const utils = api.useContext();
   const { showToast } = useToast();
+  const router = useRouter();
   const offsetRef = useRef(0);
+  // Set once the session is deleted; stops all polling and refetching
+  const goneRef = useRef(false);
+  const [gone, setGone] = useState(false);
   const [optimistic, setOptimistic] = useState<TimerView | null>(null);
   const [online, setOnline] = useState(true);
   const [pusherConnected, setPusherConnected] = useState(false);
@@ -97,11 +102,12 @@ const GameTimer = (props: { groupId: string; sessionId: string }) => {
   const query = api.timer.getBySessionId.useQuery(
     { sessionId },
     {
-      enabled: !!sessionId,
+      enabled: !!sessionId && !gone,
       retry: false,
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,
       refetchInterval: (data) => {
+        if (goneRef.current) return false;
         const status = data?.timer?.status;
         if (status === "finished") return false;
         if (pusherConnected) return 15000;
@@ -116,8 +122,23 @@ const GameTimer = (props: { groupId: string; sessionId: string }) => {
   );
   const { refetch } = query;
   const refresh = useCallback(() => {
+    if (goneRef.current) return;
     void refetch();
   }, [refetch]);
+
+  // The session was deleted (here or on another phone): leave once, with a notice
+  const leave = useCallback(() => {
+    if (goneRef.current) return;
+    goneRef.current = true;
+    setGone(true);
+    showToast("This game session was deleted", "info");
+    void router.replace("/[dashboardId]/dashboard", `/${props.groupId}/dashboard`);
+  }, [router, props.groupId, showToast]);
+
+  const queryNotFound = query.error?.data?.code === "NOT_FOUND";
+  useEffect(() => {
+    if (queryNotFound) leave();
+  }, [queryNotFound, leave]);
 
   const serverTimer = query.data?.timer ?? null;
   const timer = optimistic ?? serverTimer;
@@ -158,6 +179,7 @@ const GameTimer = (props: { groupId: string; sessionId: string }) => {
       const pusher = new Pusher(pusherKey, { cluster: pusherCluster });
       const channel = pusher.subscribe(timerChannel(timerId));
       channel.bind("update", refresh);
+      channel.bind("deleted", leave);
       pusher.connection.bind("state_change", (states: { previous: string; current: string }) => {
         setPusherConnected(states.current === "connected");
         setPusherDown(states.current === "unavailable" || states.current === "failed");
@@ -175,7 +197,7 @@ const GameTimer = (props: { groupId: string; sessionId: string }) => {
       setPusherConnected(false);
       setPusherDown(false);
     };
-  }, [timerId, refresh]);
+  }, [timerId, refresh, leave]);
 
   useWakeLock(ticking);
   const now = useNow(ticking) + offsetRef.current;
@@ -187,6 +209,10 @@ const GameTimer = (props: { groupId: string; sessionId: string }) => {
       setMutationFailed(false);
     },
     onError: (error: unknown) => {
+      if (error instanceof TRPCClientError && (error.data as { code?: string } | undefined)?.code === "NOT_FOUND") {
+        leave();
+        return;
+      }
       if (isNetworkError(error)) {
         setMutationFailed(true);
       } else {

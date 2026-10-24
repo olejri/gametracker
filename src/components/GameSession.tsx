@@ -34,10 +34,20 @@ const GameSession = (props: GameSessionProps) => {
   } = api.session.getGameASession.useQuery({ data: { id: props.gameId } });
   const { data: userRole } = api.group.getActiveGameGroup.useQuery();
   const ctx = api.useContext();
-  const { showAchievementToast } = useToast();
+  const { showAchievementToast, showToast } = useToast();
   const [haveError, setHaveError] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const path = useRouter();
+
+  // Someone deleted this session; go back to the dashboard
+  const sessionNotFound = error?.data?.code === "NOT_FOUND";
+  const redirectedRef = useRef(false);
+  useEffect(() => {
+    if (!sessionNotFound || redirectedRef.current) return;
+    redirectedRef.current = true;
+    showToast("This game session was deleted", "info");
+    void path.replace("/[dashboardId]/dashboard", `/${props.groupName}/dashboard`);
+  }, [sessionNotFound, path, props.groupName, showToast]);
   const [seatAssignments, setSeatAssignments] = useState<Record<string, number> | null>(null);
   const [startingPlayer, setStartingPlayer] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
