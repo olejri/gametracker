@@ -797,6 +797,14 @@ export const sessionRouter = createTRPCRouter({
           gameSessionId: input.sessionId
         }
       });
+      const timer = await ctx.prisma.gameTimer.findUnique({
+        where: { gameSessionId: input.sessionId }
+      });
+      if (timer) {
+        await ctx.prisma.gameTimerTurn.deleteMany({ where: { timerId: timer.id } });
+        await ctx.prisma.gameTimerPlayer.deleteMany({ where: { timerId: timer.id } });
+        await ctx.prisma.gameTimer.delete({ where: { id: timer.id } });
+      }
       await ctx.prisma.gameSession.delete({
         where: {
           id: input.sessionId
