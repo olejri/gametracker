@@ -59,7 +59,7 @@ const MainComponent = (props: ContainerProps) => {
   }
   return (
     <>
-      <div className="min-h-full">
+      <div className="min-h-screen">
         <Disclosure as="nav" className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
           {({ open }) => (
             <>
