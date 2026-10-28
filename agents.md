@@ -13,6 +13,25 @@ GameTracker is a Next.js web application for tracking board game collections and
 - **Backend**: tRPC with Prisma ORM
 - **Authentication**: Clerk
 
+## Signing In Locally (for AI agents)
+
+Agents have their own test user for the local app, so they never need the owner's account:
+
+- **Email**: `claude+clerk_test@example.com`
+- **Verification code**: `424242`
+
+This works only against the Clerk **development** instance used locally (`pk_test_`/`sk_test_` keys in `.env.local`). Clerk dev instances accept the fixed code `424242` for any `+clerk_test` email, so no password exists or is stored. Production (Clerk live keys on Vercel) is unaffected: this user does not exist there and the code is not accepted.
+
+To sign in: start the dev server (`.claude/launch.json` → `gametracker-dev`), click **Start tracking**, enter the email, press Continue, then type `424242`. You land on the Game Night dashboard as a group admin.
+
+If the user is missing (e.g. after `npm run seed-local` wipes players), recreate it with:
+
+```bash
+npm run setup-claude-user
+```
+
+`scripts/setup-claude-test-user.ts` creates the Clerk test user if needed and makes its Player an admin of the `game-night` group. It refuses to run with a non-`sk_test_` Clerk key or a non-local database.
+
 ## Tailwind Color Palette
 
 The project uses a consistent color palette defined in `src/lib/constants.ts`. **Always use these predefined color constants** instead of hardcoding Tailwind classes.
