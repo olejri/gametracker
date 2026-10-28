@@ -2,6 +2,7 @@ import { createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
 import { getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
 import { type Game, type GameStatsResult } from "npm/components/Types";
 import { z } from "zod";
+import dayjs from "dayjs";
 import { type PrismaClient, type Game as PrismaGame, type Player, type PlayerGameSessionJunction, type GameSessionGameJunction } from "@prisma/client";
 
 // Type for session with player junction
@@ -489,5 +490,101 @@ export const statsRouter = createTRPCRouter({
 
       result.sort((a, b) => a.playerName.localeCompare(b.playerName));
       return result;
+    }),
+
+  // ────────────────────────────────────────────────────────────────
+  // Fun stats for the group dashboard (streaks, records, etc.)
+  // ────────────────────────────────────────────────────────────────
+  getFunStats: privateProcedure
+    .input(z.object({ groupId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { groupId } = input;
+
+      const sessions = await ctx.prisma.gameSession.findMany({
+        where: { groupId, status: "COMPLETED" },
+        include: { PlayerGameSessionJunction: { include: { player: true } } },
+        orderBy: { createdAt: "asc" },
+      });
+
+      const allGames = await ctx.prisma.game.findMany();
+      const gameMap = new Map(allGames.map((g) => [g.id, g]));
+
+      const hotSince = dayjs().subtract(30, "day").toDate();
+
+      const streaks = new Map<string, { current: number; best: number }>();
+      const recentWins = new Map<string, number>();
+      const secondPlaces = new Map<string, number>();
+      const gameCounts = new Map<string, number>();
+      const dayCounts = new Map<string, number>();
+      let highScore: { score: number; playerName: string; gameName: string } | null = null;
+
+      for (const session of sessions) {
+        gameCounts.set(session.gameId, (gameCounts.get(session.gameId) ?? 0) + 1);
+        const day = dayjs(session.createdAt).format("YYYY-MM-DD");
+        dayCounts.set(day, (dayCounts.get(day) ?? 0) + 1);
+
+        // Team games have no individual placements, so they only count for game and date stats
+        if (session.isTeamGame) continue;
+
+        for (const pgs of session.PlayerGameSessionJunction) {
+          const name = pgs.player.nickname ?? pgs.player.name;
+
+          const streak = streaks.get(name) ?? { current: 0, best: 0 };
+          streak.current = pgs.position === 1 ? streak.current + 1 : 0;
+          streak.best = Math.max(streak.best, streak.current);
+          streaks.set(name, streak);
+
+          if (pgs.position === 1 && session.createdAt >= hotSince) {
+            recentWins.set(name, (recentWins.get(name) ?? 0) + 1);
+          }
+          if (pgs.position === 2) {
+            secondPlaces.set(name, (secondPlaces.get(name) ?? 0) + 1);
+          }
+
+          const score = pgs.score ? parseInt(pgs.score, 10) : NaN;
+          if (!isNaN(score) && (!highScore || score > highScore.score)) {
+            highScore = { score, playerName: name, gameName: gameMap.get(session.gameId)?.name ?? "Unknown" };
+          }
+        }
+      }
+
+      // Highest count wins; ties keep the first entry found
+      const topEntry = (counts: Map<string, number>): [string, number] | null => {
+        let top: [string, number] | null = null;
+        for (const entry of counts) {
+          if (!top || entry[1] > top[1]) top = entry;
+        }
+        return top;
+      };
+
+      // Prefer a streak that is still running when two players share the record
+      let longestStreak: { playerName: string; length: number; isActive: boolean } | null = null;
+      for (const [name, streak] of streaks) {
+        if (streak.best === 0) continue;
+        const isActive = streak.current === streak.best;
+        if (
+          !longestStreak ||
+          streak.best > longestStreak.length ||
+          (streak.best === longestStreak.length && isActive && !longestStreak.isActive)
+        ) {
+          longestStreak = { playerName: name, length: streak.best, isActive };
+        }
+      }
+
+      const hottest = topEntry(recentWins);
+      const runnerUp = topEntry(secondPlaces);
+      const mostPlayed = topEntry(gameCounts);
+      const bestNight = topEntry(dayCounts);
+
+      return {
+        longestStreak,
+        hottestPlayer: hottest ? { playerName: hottest[0], wins: hottest[1] } : null,
+        mostPlayedGame: mostPlayed
+          ? { gameName: gameMap.get(mostPlayed[0])?.name ?? "Unknown", sessions: mostPlayed[1] }
+          : null,
+        highScore,
+        mostSecondPlaces: runnerUp ? { playerName: runnerUp[0], count: runnerUp[1] } : null,
+        bestGameNight: bestNight ? { date: bestNight[0], sessions: bestNight[1] } : null,
+      };
     }),
 });

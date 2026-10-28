@@ -11,6 +11,7 @@ import React from "react";
 import Link from "next/link";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import RecentlyActivities from "npm/components/JustPlayed";
+import FunStats from "npm/components/FunStats";
 import { classNames } from "npm/lib/utils";
 import { ICON_COLORS } from "npm/lib/constants";
 import WhatsNew from "npm/components/WhatsNew";
@@ -142,6 +143,17 @@ export default function Dashboard(groupName: string) {
             </div>
           </div>
         </div>
+      </div>
+      <div className="mt-6">
+        <div className="relative mb-3">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900 dark:bg-gray-900 dark:text-white">Fun stats</span>
+          </div>
+        </div>
+        <FunStats groupName={groupName} />
       </div>
     </>
   );
