@@ -245,13 +245,13 @@ const AdminView = (props: {
   }
 
   return (
-    <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl">
       <div className="relative">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-gray-300 dark:border-gray-600" />
         </div>
       </div>
-      <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <ul role="list" className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         {allUsers.map((user) => (
           <li
             key={user.id}
@@ -269,7 +269,7 @@ const AdminView = (props: {
                 )}
               </div>
               <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{user.nickname || user.name}</h3>
-              <dl className="mt-1 flex flex-grow flex-col justify-between">
+              <dl className="mt-1 flex flex-grow flex-col justify-between sm:justify-start">
                 {user.nickname && <dd className="text-sm text-gray-500 dark:text-gray-400">Name: {user.name}</dd>}
                 {user.email && <dd className="text-sm text-gray-500 dark:text-gray-400">Email: {user.email}</dd>}
                 {user.clerkId && <dd className="text-sm text-gray-500 dark:text-gray-400">ClerkId: {user.clerkId.substring(0, 10)}</dd>}
@@ -322,6 +322,7 @@ const AdminView = (props: {
                       <div className="-ml-px flex w-0 flex-1">
                         <button
                           className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-700`}
+                          title="Promote to Admin"
                           onClick={() => {
                             promoteToAdmin.mutate({
                               playerId: user.id,
@@ -331,7 +332,8 @@ const AdminView = (props: {
                           disabled={promoteToAdmin.isLoading}
                         >
                           <ShieldCheckIcon className="h-5 w-5 text-green-600" aria-hidden="true" />
-                          Promote to Admin
+                          <span className="sm:hidden">Promote to Admin</span>
+                          <span className="hidden sm:inline">Promote</span>
                         </button>
                       </div>
                     )}

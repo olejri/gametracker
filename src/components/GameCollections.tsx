@@ -88,17 +88,17 @@ const GameCollections = (props: DashboardProps) => {
           </div>
         </div>
 
-        <ul role="list" className="mt-5 grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+        <ul role="list" className="mt-5 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {gamesToShow.map((game) => (
             <li
               key={game.id}
               className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow dark:divide-gray-700 dark:bg-gray-800"
             >
               <div className="flex flex-1 flex-col p-4 sm:p-8">
-                <Image className="mx-auto h-24 w-24 flex-shrink-0 object-cover sm:h-auto sm:w-52" src={game.image_url} alt="" width={200}
+                <Image className="mx-auto h-24 w-24 flex-shrink-0 object-cover sm:h-40 sm:w-40 sm:object-contain" src={game.image_url} alt="" width={200}
                        height={200} priority={true} />
                 <h3 className="mt-3 text-sm font-medium text-gray-900 sm:mt-6 dark:text-white">{game.name}</h3>
-                <dl className="mt-1 flex flex-grow flex-col justify-between">
+                <dl className="mt-1 flex flex-grow flex-col justify-between sm:justify-start">
                   <dd className="text-sm text-gray-500 dark:text-gray-400">Players: {game.players}</dd>
                   <dd className="text-sm text-gray-500 dark:text-gray-400">Time: {game.playtime}</dd>
                 </dl>
@@ -122,18 +122,18 @@ const GameCollections = (props: DashboardProps) => {
                   <div className="flex w-0 flex-1">
                     {game.isExpansion ?
                       <div
-                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-3 text-xs font-semibold sm:py-4 sm:text-sm text-gray-900 dark:text-white"
+                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-3 text-xs font-semibold sm:gap-x-2 sm:whitespace-nowrap sm:py-4 sm:text-sm text-gray-900 dark:text-white"
                       >
-                        <span className="text-green-500 sm:ml-2 dark:text-green-400">An expansion</span></div> :
+                        <span className="text-green-500 dark:text-green-400">An expansion</span></div> :
                       <div
-                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-3 text-xs font-semibold sm:py-4 sm:text-sm text-gray-900 dark:text-white"
+                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-3 text-xs font-semibold sm:gap-x-2 sm:whitespace-nowrap sm:py-4 sm:text-sm text-gray-900 dark:text-white"
                       >
-                        <span className="text-green-500 sm:ml-2 dark:text-green-400">Base game</span></div>
+                        <span className="text-green-500 dark:text-green-400">Base game</span></div>
                     }
                   </div>
                   <div className="-ml-px flex w-0 flex-1">
                     <button
-                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-1 rounded-br-lg border border-transparent py-3 text-xs font-semibold sm:gap-x-3 sm:py-4 sm:text-sm text-gray-900 dark:text-white`}
+                      className={`relative inline-flex w-0 flex-1 items-center justify-center gap-x-1 rounded-br-lg border border-transparent py-3 text-xs font-semibold sm:gap-x-2 sm:whitespace-nowrap sm:py-4 sm:text-sm text-gray-900 dark:text-white`}
                       onClick={() => {
                         setModalOpen({ open: true, name: game.name });
                       }}

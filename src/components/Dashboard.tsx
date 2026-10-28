@@ -89,7 +89,7 @@ export default function Dashboard(groupName: string) {
     <>
       <WhatsNew />
       <div
-        className="grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-gray-200 shadow dark:bg-gray-700">
+        className="grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-gray-200 shadow lg:grid-cols-4 dark:bg-gray-700">
         {actions(groupName).map((action) => (
           <div
             key={action.title}
@@ -106,7 +106,7 @@ export default function Dashboard(groupName: string) {
               <action.icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
             </span>
             </div>
-            <div className="mt-3 sm:mt-8">
+            <div className="mt-3 sm:mt-5">
               <h3 className="text-sm font-semibold leading-5 text-gray-900 sm:text-base sm:leading-6 dark:text-white">
                 <Link href={action.href} className="focus:outline-none">
                   {/* Extend touch target to entire panel */}
@@ -135,7 +135,7 @@ export default function Dashboard(groupName: string) {
             <span className="bg-white px-3 text-base font-semibold leading-6 text-gray-900 dark:bg-gray-900 dark:text-white">Recent sessions</span>
           </div>
         </div>
-        <div className="container mx-auto sm:px-6 lg:px-8">
+        <div>
           <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
             <div className="px-4 py-5 sm:p-6">
               <RecentlyActivities groupName={groupName} />

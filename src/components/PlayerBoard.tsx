@@ -163,8 +163,8 @@ const PlayerBoard = (props: {
             </div>
           </Dialog>
         </Transition.Root>
-        <div className="hidden sm:flex sm:w-72 sm:flex-col sm:flex-none sm:mr-4">
-          <div className="flex flex-col gap-y-5 bg-white dark:bg-gray-800 px-6 py-6 rounded-lg shadow-none sm:rounded-lg">
+        <div className="hidden sm:flex sm:w-56 sm:flex-col sm:flex-none sm:mr-6 lg:w-64">
+          <div className="flex flex-col gap-y-5 rounded-lg bg-white p-4 dark:bg-gray-800">
             <nav className="flex flex-col">
               <ul role="list" className="flex flex-col gap-y-7">
                 <li>
@@ -177,7 +177,7 @@ const PlayerBoard = (props: {
                             item.current
                               ? "bg-gray-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400"
                               : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-indigo-400 dark:hover:bg-gray-700",
-                            "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
+                            "group flex w-full items-center gap-x-3 rounded-md p-2 text-left text-sm leading-6 font-semibold"
                           )}
                         >
                           <span
@@ -205,10 +205,10 @@ const PlayerBoard = (props: {
             </nav>
           </div>
         </div>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <main className="">
-            <div className="sm:px-6">
-              <div className="mx-auto max-w-7xl sm:px-6">
+            <div>
+              <div className="mx-auto max-w-7xl">
                 <div className="sm:overflow-hidden sm:rounded-lg sm:bg-white sm:dark:bg-gray-800">
                   <div className="py-1 sm:p-6">
                     {currentTab === "me" && (<MyProfile />)}

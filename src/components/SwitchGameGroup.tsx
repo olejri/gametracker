@@ -77,7 +77,7 @@ const SwitchGameGroupView = () => {
   if (isError) return <p className="text-gray-900 dark:text-white">{error?.message}</p>;
 
   return (
-    <div className="relative mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <div className="relative mx-auto max-w-7xl">
       {/* 🌀 Overlay during group switching or requesting */}
       {(switchToGroup.isLoading || requestToJoin.isLoading) && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm transition-opacity duration-300 dark:bg-gray-900/80">
