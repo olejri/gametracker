@@ -156,7 +156,7 @@ const MainComponent = (props: ContainerProps) => {
           </div>
         </nav>
 
-        {/* Mobile drawer: slides in over the page; Dialog locks page scroll and closes on Escape */}
+        {/* Mobile menu: slides down over the whole screen; Dialog locks page scroll and closes on Escape */}
         <Transition.Root show={menuOpen} as={Fragment}>
           <Dialog as="div" className="relative z-50 sm:hidden" onClose={setMenuOpen}>
             <Transition.Child
@@ -171,17 +171,17 @@ const MainComponent = (props: ContainerProps) => {
               <div className="fixed inset-0 bg-gray-900/50" aria-hidden="true" />
             </Transition.Child>
 
-            <div className="fixed inset-0 flex justify-end">
+            <div className="fixed inset-0">
               <Transition.Child
                 as={Fragment}
                 enter="transform transition ease-out duration-200 motion-reduce:transition-none"
-                enterFrom="translate-x-full"
-                enterTo="translate-x-0"
+                enterFrom="-translate-y-full"
+                enterTo="translate-y-0"
                 leave="transform transition ease-in duration-150 motion-reduce:transition-none"
-                leaveFrom="translate-x-0"
-                leaveTo="translate-x-full"
+                leaveFrom="translate-y-0"
+                leaveTo="-translate-y-full"
               >
-                <Dialog.Panel className="flex h-full w-[85%] max-w-sm flex-col bg-white shadow-xl dark:bg-gray-800">
+                <Dialog.Panel className="flex h-full w-full flex-col bg-white pt-[env(safe-area-inset-top)] dark:bg-gray-800">
                   <div className="flex h-16 flex-shrink-0 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
                     <Dialog.Title className="text-base font-semibold text-gray-900 dark:text-white">
                       Menu
