@@ -14,6 +14,10 @@ const server = z.object({
   // Optional: the game timer falls back to polling when Pusher is not configured
   PUSHER_APP_ID: z.string().optional(),
   PUSHER_SECRET: z.string().optional(),
+  // Optional: BGG rating sync is skipped until a BoardGameGeek API token is set
+  BGG_API_TOKEN: z.string().optional(),
+  // Optional: protects the cron endpoints (Vercel sends it as a Bearer token)
+  CRON_SECRET: z.string().optional(),
 });
 
 /**
@@ -40,6 +44,8 @@ const processEnv = {
   BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
   PUSHER_APP_ID: process.env.PUSHER_APP_ID,
   PUSHER_SECRET: process.env.PUSHER_SECRET,
+  BGG_API_TOKEN: process.env.BGG_API_TOKEN,
+  CRON_SECRET: process.env.CRON_SECRET,
   NEXT_PUBLIC_PUSHER_KEY: process.env.NEXT_PUBLIC_PUSHER_KEY,
   NEXT_PUBLIC_PUSHER_CLUSTER: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,

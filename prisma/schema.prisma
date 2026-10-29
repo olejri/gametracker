@@ -21,6 +21,13 @@ model Game {
   updatedAt               DateTime                  @updatedAt
   baseGameId              String?
   isExpansion             Boolean                   @default(false)
+  // BoardGameGeek data, filled from the BGG ranks dump or the BGG API
+  bggId                   Int?                      @unique
+  bggAverage              Float?
+  bggBayesAverage         Float?
+  bggRank                 Int?
+  bggUsersRated           Int?
+  bggUpdatedAt            DateTime?
   GameSessionGameJunction GameSessionGameJunction[]
   PlayerGameJunction      PlayerGameJunction[]
   GameMechanic            GameMechanic[]

@@ -2,7 +2,8 @@ import { api } from "npm/utils/api";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { LoadingPage } from "npm/components/loading";
-import { AcademicCapIcon } from "@heroicons/react/24/solid";
+import { AcademicCapIcon, StarIcon } from "@heroicons/react/24/solid";
+import { StatusBadge } from "npm/components/ui";
 import InfoModal from "npm/components/InfoModal";
 import type { OpenWithGameId } from "npm/components/Types";
 import { type DashboardProps, type GameWithOwners } from "npm/components/Types";
@@ -101,6 +102,24 @@ const GameCollections = (props: DashboardProps) => {
                 <dl className="mt-1 flex flex-grow flex-col justify-between sm:justify-start">
                   <dd className="text-sm text-gray-500 dark:text-gray-400">Players: {game.players}</dd>
                   <dd className="text-sm text-gray-500 dark:text-gray-400">Time: {game.playtime}</dd>
+                  {game.bggId !== null && game.bggAverage !== null && (
+                    <dd className="mt-2">
+                      <a
+                        href={`https://boardgamegeek.com/boardgame/${game.bggId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="BoardGameGeek rating"
+                      >
+                        <StatusBadge color="yellow" className="gap-x-1 text-xs sm:text-sm">
+                          <StarIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                          {game.bggAverage.toFixed(1)}
+                          {game.bggRank !== null && (
+                            <span className="font-normal opacity-80">· #{game.bggRank}</span>
+                          )}
+                        </StatusBadge>
+                      </a>
+                    </dd>
+                  )}
                 </dl>
                 {!showAllGames && (
                   <>
@@ -156,6 +175,19 @@ const GameCollections = (props: DashboardProps) => {
             </li>
           ))}
         </ul>
+        {gamesToShow.some((game) => game.bggId !== null) && (
+          <p className="mt-5 text-center text-xs text-gray-500 dark:text-gray-400">
+            Ratings{" "}
+            <a
+              href="https://boardgamegeek.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              Powered by BGG
+            </a>
+          </p>
+        )}
       </div>
     </div>
   );

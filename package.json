@@ -13,7 +13,8 @@
     "lint": "next lint",
     "start": "next start",
     "seed-local": "tsx scripts/seed-local-data.ts",
-    "setup-claude-user": "tsx scripts/setup-claude-test-user.ts"
+    "setup-claude-user": "tsx scripts/setup-claude-test-user.ts",
+    "import-bgg": "tsx scripts/import-bgg-ranks.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^4.11.3",

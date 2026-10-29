@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/bgg-refresh",
+      "schedule": "0 4 * * 1"
+    }
+  ]
+}

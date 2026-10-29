@@ -249,5 +249,8 @@ export type GameWithOwners = {
     image_url: string
     isExpansion: boolean
     baseGameId: string | null
+    bggId: number | null
+    bggAverage: number | null
+    bggRank: number | null
     ownedByPlayers: string[]
 }
