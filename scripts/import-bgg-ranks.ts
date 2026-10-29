@@ -14,6 +14,7 @@
  *   npm run import-bgg -- --csv <boardgames_ranks.csv>                 dry run against the DB
  *   npm run import-bgg -- --csv <boardgames_ranks.csv> --games <games.json>  dry run against an export
  *   npm run import-bgg -- --csv <boardgames_ranks.csv> --apply         write to the DB
+ *   npm run import-bgg -- --csv <boardgames_ranks.csv> --games <games.json> --sql <migration.sql>  write a data migration
  */
 import fs from "fs";
 import path from "path";
@@ -150,6 +151,20 @@ async function main() {
   review.forEach((line) => console.log(`  ${line}`));
   console.log(`\n== Skipped by override: ${skipped.length}`);
   skipped.forEach((name) => console.log(`  ${name}`));
+
+  const sqlPath = argValue("--sql");
+  if (sqlPath) {
+    // A data migration, keyed by game id, that only fills games without a bggId
+    const sqlNum = (value: string) => num(value) ?? "NULL";
+    const lines = toWrite.map(({ game, row }) =>
+      `UPDATE \`Game\` SET \`bggId\` = ${row.id}, \`bggAverage\` = ${sqlNum(row.average)}, ` +
+      `\`bggBayesAverage\` = ${sqlNum(row.bayesaverage)}, \`bggRank\` = ${sqlNum(row.rank)}, ` +
+      `\`bggUsersRated\` = ${sqlNum(row.usersrated)}, \`bggUpdatedAt\` = CURRENT_TIMESTAMP(3) ` +
+      `WHERE \`id\` = '${game.id.replace(/'/g, "''")}' AND \`bggId\` IS NULL; -- ${game.name.trim().replace(/\s+/g, " ")}`
+    );
+    fs.writeFileSync(sqlPath, `-- BGG ids and ratings from the BGG ranks dump (${path.basename(csvPath)})\n${lines.join("\n")}\n`);
+    console.log(`\nWrote ${lines.length} UPDATE statements to ${sqlPath}`);
+  }
 
   if (!apply) {
     console.log("\nDry run: nothing written. Add --apply to save.");
