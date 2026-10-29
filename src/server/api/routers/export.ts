@@ -4,6 +4,28 @@ import { createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
 import { type Game, type Player } from "npm/components/Types";
 
 export const exportRouter = createTRPCRouter({
+  // Every game in the database, across all groups, as pretty-printed JSON
+  exportGames: privateProcedure
+    .query(async ({ ctx }) => {
+      const games = await ctx.prisma.game.findMany({
+        select: {
+          id: true,
+          name: true,
+          isExpansion: true,
+          baseGameId: true,
+          players: true,
+          playtime: true,
+          image_url: true,
+          createdAt: true
+        },
+        orderBy: { name: "asc" }
+      });
+      return {
+        data: JSON.stringify(games, null, 2),
+        count: games.length
+      };
+    }),
+
   export: privateProcedure
     .input(
       z.object({
