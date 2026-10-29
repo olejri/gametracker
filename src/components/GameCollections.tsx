@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { LoadingPage } from "npm/components/loading";
 import { AcademicCapIcon } from "@heroicons/react/24/solid";
 import BggRatingBadge from "npm/components/BggRatingBadge";
+import { classNames } from "npm/lib/utils";
 import InfoModal from "npm/components/InfoModal";
 import type { OpenWithGameId } from "npm/components/Types";
 import { type DashboardProps, type GameWithOwners } from "npm/components/Types";
@@ -17,12 +18,23 @@ const GameCollections = (props: DashboardProps) => {
     { id: "group", name: "Owned only by the group" }
   ];
 
+  const sortOptions = [
+    { id: "name", name: "Name" },
+    { id: "bgg", name: "BGG rating" }
+  ] as const;
+
   const [showAllGames, setShowAllGames] = useState(true);
+  const [sortBy, setSortBy] = useState<"name" | "bgg">("name");
   const [gamesToShow, setGamesToShow] = useState<GameWithOwners[]>([]);
 
   useEffect(() => {
     if (games !== undefined) {
-      const sort = games.sort((a, b) => a.name.localeCompare(b.name)).map(
+      // BGG rating: best first, games without a rating last (by name)
+      const compare = (a: typeof games[number], b: typeof games[number]) =>
+        sortBy === "bgg" && a.bggAverage !== b.bggAverage
+          ? (b.bggAverage ?? -1) - (a.bggAverage ?? -1)
+          : a.name.localeCompare(b.name);
+      const sort = [...games].sort(compare).map(
         (game) => {
           return {
             ...game,
@@ -46,7 +58,7 @@ const GameCollections = (props: DashboardProps) => {
         setGamesToShow(map);
       }
     }
-  }, [games, showAllGames, gamesInGroup, setGamesToShow]);
+  }, [games, showAllGames, sortBy, gamesInGroup, setGamesToShow]);
 
   if (isLoading) return <LoadingPage />;
 
@@ -78,6 +90,29 @@ const GameCollections = (props: DashboardProps) => {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-5 flex items-center gap-3">
+          <span className="text-sm font-medium text-gray-900 dark:text-white">Sort by</span>
+          <div className="inline-flex rounded-md shadow-sm" role="group" aria-label="Sort games">
+            {sortOptions.map((option, index) => (
+              <button
+                key={option.id}
+                type="button"
+                aria-pressed={sortBy === option.id}
+                onClick={() => setSortBy(option.id)}
+                className={classNames(
+                  "px-3 py-1.5 text-sm font-medium ring-1 ring-inset focus:z-10 focus:outline-none focus:ring-2 focus:ring-indigo-500",
+                  index === 0 ? "rounded-l-md" : "-ml-px rounded-r-md",
+                  sortBy === option.id
+                    ? "bg-indigo-600 text-white ring-indigo-600"
+                    : "bg-white text-gray-900 ring-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:ring-gray-600 dark:hover:bg-gray-600"
+                )}
+              >
+                {option.name}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="relative mt-5">
