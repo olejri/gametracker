@@ -20,13 +20,6 @@ type SessionWithRelations = {
   GameSessionGameJunction: (GameSessionGameJunction & { game: PrismaGame })[];
 };
 
-// Type for session with player relations only
-type SessionWithPlayerRelations = {
-  id: string;
-  gameId: string;
-  PlayerGameSessionJunction: (PlayerGameSessionJunction & { player: Player })[];
-};
-
 // Helper function to get active player nicknames in a group
 async function getActivePlayerNicknames(prisma: PrismaClient, groupId: string): Promise<Set<string>> {
   const activeJunctions = await prisma.playerGameGroupJunction.findMany({
@@ -115,9 +108,9 @@ export const statsRouter = createTRPCRouter({
     }),
 
   // ────────────────────────────────────────────────────────────────
-  // Player/Game win-rate matrix (for heatmap)
+  // Plays, wins and finishing positions per player, per game and overall
   // ────────────────────────────────────────────────────────────────
-  getPlayerGamePerformanceMatrix: privateProcedure
+  getPlayerGameBreakdown: privateProcedure
     .input(z.object({ groupId: z.string() }))
     .query(async ({ ctx, input }) => {
       const { groupId } = input;
@@ -133,138 +126,76 @@ export const statsRouter = createTRPCRouter({
       const allGames = await ctx.prisma.game.findMany();
       const gameMap = new Map(allGames.map((g) => [g.id, g]));
 
-      const matrix = new Map<string, Map<string, { wins: number; total: number }>>();
-      const gameCountsByBaseId = new Map<string, number>();
+      type Tally = { plays: number; wins: number; positions: number[] };
+      const newTally = (): Tally => ({ plays: 0, wins: 0, positions: [] });
+      const record = (tally: Tally, position: number | null) => {
+        tally.plays += 1;
+        if (position === 1) tally.wins += 1;
+        // positions[i] counts finishes in place i + 1
+        if (position && position > 0) {
+          while (tally.positions.length < position) tally.positions.push(0);
+          tally.positions[position - 1] = (tally.positions[position - 1] ?? 0) + 1;
+        }
+      };
+
+      const overall = new Map<string, Tally>();
+      const perGame = new Map<string, Map<string, Tally>>();
+      const sessionsPerGame = new Map<string, number>();
 
       for (const session of sessions) {
         const baseGame = session.gameId ? [gameMap.get(session.gameId) ?? null] : [];
         const expansionGames: (PrismaGame | null)[] = session.GameSessionGameJunction.map((g) => g.game);
-        const gamesInSession = [...baseGame, ...expansionGames];
 
+        // Expansions count toward their base game
         const baseIdsInSession = new Set<string>();
-        for (const g of gamesInSession) {
+        for (const g of [...baseGame, ...expansionGames]) {
           if (!g) continue;
-          const baseId = g.isExpansion && g.baseGameId ? g.baseGameId : g.id;
-          baseIdsInSession.add(baseId);
+          baseIdsInSession.add(g.isExpansion && g.baseGameId ? g.baseGameId : g.id);
         }
 
         for (const baseId of baseIdsInSession) {
-          gameCountsByBaseId.set(baseId, (gameCountsByBaseId.get(baseId) ?? 0) + 1);
-
-          for (const pgs of session.PlayerGameSessionJunction) {
-            const nickname: string | null = pgs.player.nickname ?? pgs.player.name;
-            if (!nickname) continue;
-
-            let playerMap = matrix.get(nickname);
-            if (!playerMap) {
-              playerMap = new Map<string, { wins: number; total: number }>();
-              matrix.set(nickname, playerMap);
-            }
-
-            let stats = playerMap.get(baseId);
-            if (!stats) {
-              stats = { wins: 0, total: 0 };
-              playerMap.set(baseId, stats);
-            }
-
-            stats.total += 1;
-            const position: number | null = pgs.position;
-            if (position === 1) stats.wins += 1;
-          }
+          sessionsPerGame.set(baseId, (sessionsPerGame.get(baseId) ?? 0) + 1);
         }
-      }
 
-      const players = Array.from(matrix.keys());
-
-      // Get active players in the group
-      const activePlayerNicknames = await getActivePlayerNicknames(ctx.prisma, groupId);
-      const activePlayers = players.filter((p) => activePlayerNicknames.has(p));
-
-      const allBaseIds = new Set<string>();
-      for (const m of matrix.values()) for (const id of m.keys()) allBaseIds.add(id);
-
-      const gamesMeta = Array.from(allBaseIds).map((id) => {
-        const g = gameMap.get(id);
-        return { id, name: g?.name ?? id };
-      });
-      gamesMeta.sort((a, b) => a.name.localeCompare(b.name));
-
-      const data: Array<{ game: string; gameCount: number } & Record<string, number>> =
-        gamesMeta.map(({ id, name }) => {
-          const row: { game: string; gameCount: number } & Record<string, number> = {
-            game: name,
-            gameCount: gameCountsByBaseId.get(id) ?? 0,
-          } as { game: string; gameCount: number } & Record<string, number>;
-
-          for (const player of players) {
-            const stat = matrix.get(player)?.get(id);
-            row[player] = stat ? stat.wins / stat.total : 0;
-          }
-          return row;
-        });
-
-      const games = gamesMeta.map((g) => g.name);
-      return { players, games, data, activePlayers };
-    }),
-
-  // ────────────────────────────────────────────────────────────────
-  // NEW: Player Position Distribution Matrix (for heatmap)
-  // ────────────────────────────────────────────────────────────────
-  getPlayerPositionMatrix: privateProcedure
-    .input(z.object({ groupId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const { groupId } = input;
-
-      const sessions: SessionWithPlayerRelations[] = await ctx.prisma.gameSession.findMany({
-        where: { groupId, status: "COMPLETED", isTeamGame: false },
-        include: {
-          PlayerGameSessionJunction: { include: { player: true } },
-        },
-      });
-
-      let maxPosition = 0;
-      for (const session of sessions) {
-        const count: number = session.PlayerGameSessionJunction.length;
-        if (count > maxPosition) maxPosition = count;
-      }
-
-      const matrix = new Map<string, Map<number, number>>();
-
-      for (const session of sessions) {
         for (const pgs of session.PlayerGameSessionJunction) {
           const nickname: string | null = pgs.player.nickname ?? pgs.player.name;
           if (!nickname) continue;
 
-          let posMap = matrix.get(nickname);
-          if (!posMap) {
-            posMap = new Map<number, number>();
-            matrix.set(nickname, posMap);
-          }
+          const total = overall.get(nickname) ?? newTally();
+          overall.set(nickname, total);
+          record(total, pgs.position);
 
-          const pos: number = pgs.position ?? 0;
-          if (pos > 0) {
-            posMap.set(pos, (posMap.get(pos) ?? 0) + 1);
+          for (const baseId of baseIdsInSession) {
+            let byPlayer = perGame.get(baseId);
+            if (!byPlayer) {
+              byPlayer = new Map<string, Tally>();
+              perGame.set(baseId, byPlayer);
+            }
+            const tally = byPlayer.get(nickname) ?? newTally();
+            byPlayer.set(nickname, tally);
+            record(tally, pgs.position);
           }
         }
       }
 
-      const players = Array.from(matrix.keys()).sort();
-
-      // Get active players in the group
       const activePlayerNicknames = await getActivePlayerNicknames(ctx.prisma, groupId);
-      const activePlayers = players.filter((p) => activePlayerNicknames.has(p));
 
-      const data: Array<{ position: number } & Record<string, number>> = [];
-      for (let pos = 1; pos <= maxPosition; pos++) {
-        const row: { position: number } & Record<string, number> = { position: pos };
-        for (const player of players) {
-          const count = matrix.get(player)?.get(pos) ?? 0;
-          row[player] = count;
-        }
-        data.push(row);
-      }
+      const players = Array.from(overall.entries()).map(([name, tally]) => ({
+        name,
+        isActive: activePlayerNicknames.has(name),
+        ...tally,
+      }));
 
-      return { players, positions: Array.from({ length: maxPosition }, (_, i) => i + 1), data, activePlayers };
+      const games = Array.from(perGame.entries())
+        .map(([id, byPlayer]) => ({
+          id,
+          name: gameMap.get(id)?.name ?? id,
+          sessions: sessionsPerGame.get(id) ?? 0,
+          players: Array.from(byPlayer.entries()).map(([name, tally]) => ({ name, ...tally })),
+        }))
+        .sort((a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name));
+
+      return { players, games };
     }),
 
   // ────────────────────────────────────────────────────────────────
