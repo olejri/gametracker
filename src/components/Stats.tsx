@@ -15,7 +15,7 @@ type Tally = { plays: number; wins: number; positions: number[] };
 
 // Win rates based on fewer plays than this are shown faded
 const FEW_PLAYS = 3;
-const GAMES_SHOWN = 9;
+const GAMES_SHOWN = 12;
 
 const AVATAR_COLORS = [
   "bg-sky-500", "bg-purple-500", "bg-teal-500", "bg-rose-500", "bg-amber-500",
@@ -183,76 +183,78 @@ const PlayerSpotlight: React.FC<{
 
   return (
     <div className="space-y-3">
-      <Card className="p-4">
-        <div className="flex items-center gap-3">
-          <PlayerAvatar name={player.name} color={player.color} size="h-12 w-12 text-lg" />
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-lg font-bold text-gray-900 dark:text-white">
-              {player.name}
-              {isYou && <span className={classNames("ml-1 text-xs font-normal", MUTED)}>(you)</span>}
-            </div>
-            <div className={classNames("text-xs", MUTED)}>#{rank} in the group</div>
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          {[
-            ["Win rate", pct(player.rate)],
-            ["Games", player.plays],
-            ["Avg finish", player.avgFinish?.toFixed(1) ?? "–"],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <div className="text-2xl font-bold tabular-nums text-gray-900 dark:text-white">{value}</div>
-              <div className={classNames("text-xs", MUTED)}>{label}</div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className={classNames("w-14 truncate text-xs", MUTED)}>{player.name}</span>
-            <PositionBar positions={player.positions} height="h-3" />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={classNames("w-14 text-xs", MUTED)}>Group</span>
-            <PositionBar positions={groupPositions} height="h-3" />
-          </div>
-          <PositionLegend />
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="p-3">
-          <div className={classNames("flex items-center gap-1.5 text-xs", MUTED)}>
-            <StarIcon className="h-4 w-4 text-yellow-500" aria-hidden="true" />
-            Best game
-          </div>
-          {bestGame ? (
-            <>
-              <div className="mt-1 truncate font-semibold text-gray-900 dark:text-white">{bestGame.bestGame}</div>
-              <div className={classNames("text-xs", MUTED)}>
-                Avg finish {bestGame.avgPosition.toFixed(1)} · {bestGame.gamesPlayed} games
+      <div className="grid gap-3 xl:grid-cols-5">
+        <Card className="p-4 xl:col-span-3">
+          <div className="flex items-center gap-3">
+            <PlayerAvatar name={player.name} color={player.color} size="h-12 w-12 text-lg" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-lg font-bold text-gray-900 dark:text-white">
+                {player.name}
+                {isYou && <span className={classNames("ml-1 text-xs font-normal", MUTED)}>(you)</span>}
               </div>
-            </>
-          ) : (
-            <div className={classNames("mt-1 text-sm", MUTED)}>Not enough games yet</div>
-          )}
-        </Card>
-        <Card className="p-3">
-          <div className={classNames("flex items-center gap-1.5 text-xs", MUTED)}>
-            <TrophyIcon className="h-4 w-4 text-indigo-500" aria-hidden="true" />
-            High scores held
+              <div className={classNames("text-xs", MUTED)}>#{rank} in the group</div>
+            </div>
           </div>
-          {records.length > 0 ? (
-            records.slice(0, 3).map((r) => (
-              <div key={r.gameName} className="mt-1 flex justify-between gap-2 text-sm">
-                <span className="truncate text-gray-900 dark:text-white">{r.gameName}</span>
-                <b className="tabular-nums text-gray-900 dark:text-white">{r.highScore}</b>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            {[
+              ["Win rate", pct(player.rate)],
+              ["Games", player.plays],
+              ["Avg finish", player.avgFinish?.toFixed(1) ?? "–"],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <div className="text-2xl font-bold tabular-nums text-gray-900 dark:text-white">{value}</div>
+                <div className={classNames("text-xs", MUTED)}>{label}</div>
               </div>
-            ))
-          ) : (
-            <div className={classNames("mt-1 text-sm", MUTED)}>None yet</div>
-          )}
-          {records.length > 3 && <div className={classNames("mt-1 text-xs", MUTED)}>+{records.length - 3} more</div>}
+            ))}
+          </div>
+          <div className="mt-4 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className={classNames("w-14 truncate text-xs", MUTED)}>{player.name}</span>
+              <PositionBar positions={player.positions} height="h-3" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={classNames("w-14 text-xs", MUTED)}>Group</span>
+              <PositionBar positions={groupPositions} height="h-3" />
+            </div>
+            <PositionLegend />
+          </div>
         </Card>
+  
+        <div className="grid grid-cols-2 gap-3 xl:col-span-2 xl:grid-cols-1">
+          <Card className="p-3">
+            <div className={classNames("flex items-center gap-1.5 text-xs", MUTED)}>
+              <StarIcon className="h-4 w-4 text-yellow-500" aria-hidden="true" />
+              Best game
+            </div>
+            {bestGame ? (
+              <>
+                <div className="mt-1 truncate font-semibold text-gray-900 dark:text-white">{bestGame.bestGame}</div>
+                <div className={classNames("text-xs", MUTED)}>
+                  Avg finish {bestGame.avgPosition.toFixed(1)} · {bestGame.gamesPlayed} games
+                </div>
+              </>
+            ) : (
+              <div className={classNames("mt-1 text-sm", MUTED)}>Not enough games yet</div>
+            )}
+          </Card>
+          <Card className="p-3">
+            <div className={classNames("flex items-center gap-1.5 text-xs", MUTED)}>
+              <TrophyIcon className="h-4 w-4 text-indigo-500" aria-hidden="true" />
+              High scores held
+            </div>
+            {records.length > 0 ? (
+              records.slice(0, 3).map((r) => (
+                <div key={r.gameName} className="mt-1 flex justify-between gap-2 text-sm">
+                  <span className="truncate text-gray-900 dark:text-white">{r.gameName}</span>
+                  <b className="tabular-nums text-gray-900 dark:text-white">{r.highScore}</b>
+                </div>
+              ))
+            ) : (
+              <div className={classNames("mt-1 text-sm", MUTED)}>None yet</div>
+            )}
+            {records.length > 3 && <div className={classNames("mt-1 text-xs", MUTED)}>+{records.length - 3} more</div>}
+          </Card>
+        </div>
       </div>
 
       <Card className="p-4">
@@ -265,11 +267,11 @@ const PlayerSpotlight: React.FC<{
             </span>
           }
         />
-        <ul className="divide-y divide-gray-100 dark:divide-gray-700/60">
+        <ul className="sm:grid sm:grid-cols-2 sm:gap-x-8">
           {rows.map(({ game, own, rate, groupRate }) => {
             const few = own.plays < FEW_PLAYS;
             return (
-              <li key={game.id}>
+              <li key={game.id} className="border-b border-gray-100 last:border-0 sm:[&:nth-last-child(2):nth-child(odd)]:border-0 dark:border-gray-700/60">
                 <button
                   type="button"
                   onClick={() => onOpenGame(game.id)}
@@ -563,7 +565,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
     );
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4 sm:px-6">
+    <div className="w-full space-y-4">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Stats</h1>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -601,11 +603,11 @@ const Stats: React.FC<DashboardProps> = (props) => {
           No finished games yet. Play a few to see stats here.
         </Card>
       ) : view === "players" ? (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-          <div className="min-w-0 lg:col-span-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
+          <div className="min-w-0 lg:sticky lg:top-4 lg:col-span-4">
             <Leaderboard players={ranked} selected={spotlightName} onSelect={setSelectedPlayer} />
           </div>
-          <div className="min-w-0 space-y-3 lg:col-span-3">
+          <div className="min-w-0 space-y-3 lg:col-span-8">
             <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 lg:hidden">
               {ranked.map((p) => (
                 <button
@@ -657,7 +659,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
               />
             </label>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {visibleGames.map((g) => (
               <GameCard
                 key={g.id}
