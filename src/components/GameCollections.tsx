@@ -1,8 +1,8 @@
 import { api } from "npm/utils/api";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { LoadingPage } from "npm/components/loading";
-import { AcademicCapIcon } from "@heroicons/react/24/solid";
+import { AcademicCapIcon, ChevronDownIcon, PuzzlePieceIcon } from "@heroicons/react/24/solid";
 import BggRatingBadge from "npm/components/BggRatingBadge";
 import { classNames } from "npm/lib/utils";
 import InfoModal from "npm/components/InfoModal";
@@ -60,6 +60,41 @@ const GameCollections = (props: DashboardProps) => {
     }
   }, [games, showAllGames, sortBy, gamesInGroup, setGamesToShow]);
 
+  const [showExpansions, setShowExpansions] = useState(false);
+  const [openBaseGames, setOpenBaseGames] = useState<Set<string>>(new Set());
+
+  // Expansions are listed right after their base game, and only when that base
+  // game is opened (or all expansions are shown). An expansion whose base game
+  // isn't in the list stays a card of its own.
+  const { cards, expansionsByBase } = useMemo(() => {
+    const shownIds = new Set(gamesToShow.map((game) => game.id));
+    const byBase = new Map<string, GameWithOwners[]>();
+    const topLevel: GameWithOwners[] = [];
+    for (const game of gamesToShow) {
+      if (game.isExpansion && game.baseGameId && shownIds.has(game.baseGameId)) {
+        byBase.set(game.baseGameId, [...(byBase.get(game.baseGameId) ?? []), game]);
+      } else {
+        topLevel.push(game);
+      }
+    }
+    const list = topLevel.flatMap((game) =>
+      showExpansions || openBaseGames.has(game.id) ? [game, ...(byBase.get(game.id) ?? [])] : [game]
+    );
+    return { cards: list, expansionsByBase: byBase };
+  }, [gamesToShow, showExpansions, openBaseGames]);
+
+  const toggleBaseGame = (gameId: string) => {
+    setOpenBaseGames((open) => {
+      const next = new Set(open);
+      if (next.has(gameId)) {
+        next.delete(gameId);
+      } else {
+        next.add(gameId);
+      }
+      return next;
+    });
+  };
+
   if (isLoading) return <LoadingPage />;
 
   if (isError) {
@@ -115,6 +150,24 @@ const GameCollections = (props: DashboardProps) => {
           </div>
         </div>
 
+        <div className="relative mt-5 flex items-start">
+          <div className="flex h-6 items-center">
+            <input
+              id="show-expansions"
+              type="checkbox"
+              checked={showExpansions}
+              onChange={(e) => {
+                setShowExpansions(e.target.checked);
+                setOpenBaseGames(new Set());
+              }}
+              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600 dark:bg-gray-700"
+            />
+          </div>
+          <label htmlFor="show-expansions" className="ml-3 text-sm font-medium leading-6 text-gray-900 dark:text-white">
+            Show expansions
+          </label>
+        </div>
+
         <div className="relative mt-5">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
             <div className="w-full border-t border-gray-300 dark:border-gray-600" />
@@ -125,10 +178,13 @@ const GameCollections = (props: DashboardProps) => {
         </div>
 
         <ul role="list" className="mt-5 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-          {gamesToShow.map((game) => (
+          {cards.map((game) => (
             <li
               key={game.id}
-              className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow dark:divide-gray-700 dark:bg-gray-800"
+              className={classNames(
+                "col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg text-center shadow dark:divide-gray-700",
+                game.isExpansion ? "bg-gray-50 ring-1 ring-indigo-200 dark:bg-gray-700 dark:ring-indigo-900" : "bg-white dark:bg-gray-800"
+              )}
             >
               <div className="flex flex-1 flex-col p-4 sm:p-8">
                 <Image className="mx-auto h-24 w-24 flex-shrink-0 object-cover sm:h-40 sm:w-40 sm:object-contain" src={game.image_url} alt="" width={200}
@@ -162,16 +218,36 @@ const GameCollections = (props: DashboardProps) => {
               <div>
                 <div className="-mt-px flex divide-x divide-gray-200 dark:divide-gray-700">
                   <div className="flex w-0 flex-1">
-                    {game.isExpansion ?
-                      <div
-                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-3 text-xs font-semibold sm:gap-x-2 sm:whitespace-nowrap sm:py-4 sm:text-sm text-gray-900 dark:text-white"
-                      >
-                        <span className="text-green-500 dark:text-green-400">An expansion</span></div> :
-                      <div
-                        className="relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-3 text-xs font-semibold sm:gap-x-2 sm:whitespace-nowrap sm:py-4 sm:text-sm text-gray-900 dark:text-white"
-                      >
-                        <span className="text-green-500 dark:text-green-400">Base game</span></div>
-                    }
+                    {(() => {
+                      const expansionCount = expansionsByBase.get(game.id)?.length ?? 0;
+                      const cellClass = "relative -mr-px w-0 flex-1 inline-flex items-center justify-center gap-x-1 rounded-bl-lg border border-transparent py-3 text-xs font-semibold sm:gap-x-2 sm:whitespace-nowrap sm:py-4 sm:text-sm";
+                      if (game.isExpansion) {
+                        return <div className={classNames(cellClass, "text-gray-500 dark:text-gray-400")}>Expansion</div>;
+                      }
+                      if (expansionCount === 0) {
+                        return <div className={classNames(cellClass, "text-green-500 dark:text-green-400")}>Base game</div>;
+                      }
+                      const isOpen = showExpansions || openBaseGames.has(game.id);
+                      return (
+                        <button
+                          type="button"
+                          aria-expanded={isOpen}
+                          disabled={showExpansions}
+                          onClick={() => toggleBaseGame(game.id)}
+                          className={classNames(cellClass, "text-indigo-600 hover:bg-gray-50 disabled:cursor-default disabled:hover:bg-transparent dark:text-indigo-400 dark:hover:bg-gray-700")}
+                        >
+                          <PuzzlePieceIcon className="h-4 w-4 sm:hidden" aria-hidden="true" />
+                          <span className="sm:hidden">{expansionCount}</span>
+                          <span className="sr-only sm:not-sr-only">
+                            {expansionCount} {expansionCount === 1 ? "expansion" : "expansions"}
+                          </span>
+                          <ChevronDownIcon
+                            className={classNames("h-4 w-4 transition-transform", isOpen && "rotate-180")}
+                            aria-hidden="true"
+                          />
+                        </button>
+                      );
+                    })()}
                   </div>
                   <div className="-ml-px flex w-0 flex-1">
                     <button
@@ -198,7 +274,7 @@ const GameCollections = (props: DashboardProps) => {
             </li>
           ))}
         </ul>
-        {gamesToShow.some((game) => game.bggId !== null) && (
+        {cards.some((game) => game.bggId !== null) && (
           <p className="mt-5 text-center text-xs text-gray-500 dark:text-gray-400">
             Ratings{" "}
             <a
