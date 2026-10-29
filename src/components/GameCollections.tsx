@@ -29,11 +29,18 @@ const GameCollections = (props: DashboardProps) => {
 
   useEffect(() => {
     if (games !== undefined) {
-      // BGG rating: best first, games without a rating last (by name)
-      const compare = (a: typeof games[number], b: typeof games[number]) =>
-        sortBy === "bgg" && a.bggAverage !== b.bggAverage
-          ? (b.bggAverage ?? -1) - (a.bggAverage ?? -1)
-          : a.name.localeCompare(b.name);
+      // BGG rating: best rating as shown (one decimal) first, ties broken by
+      // BGG rank (#1 first, unranked after ranked), then by name. Games
+      // without a rating go last.
+      const shownRating = (game: typeof games[number]) =>
+        game.bggAverage === null ? -1 : Math.round(game.bggAverage * 10);
+      const compare = (a: typeof games[number], b: typeof games[number]) => {
+        if (sortBy === "bgg") {
+          if (shownRating(a) !== shownRating(b)) return shownRating(b) - shownRating(a);
+          if (a.bggRank !== b.bggRank) return (a.bggRank ?? Infinity) - (b.bggRank ?? Infinity);
+        }
+        return a.name.localeCompare(b.name);
+      };
       const sort = [...games].sort(compare).map(
         (game) => {
           return {
