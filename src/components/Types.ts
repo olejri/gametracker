@@ -145,6 +145,9 @@ export type GameSessionWithPlayers = {
     baseGameId: string
     gameName: string
     image_url: string
+    bggId?: number | null
+    bggAverage?: number | null
+    bggRank?: number | null
     description?: string
     players: PlayerNicknameAndScore[]
     expansions: Expansions[]

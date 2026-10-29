@@ -1,3 +1,4 @@
+import BggRatingBadge from "npm/components/BggRatingBadge";
 import { type GameSessionProps, GameSessionStatus, type PlayerNicknameAndScore } from "npm/components/Types";
 import { sortPlayers } from "npm/components/HelperFunctions";
 import { api } from "npm/utils/api";
@@ -371,10 +372,11 @@ const GameSession = (props: GameSessionProps) => {
         <div className="grid grid-cols-1 sm:grid-cols-2">
           <div className="flex items-center gap-4 px-4 pt-5 sm:block sm:p-6">
             <Image src={game.image_url} alt="My Image" width={300} height={300} className="h-20 w-20 rounded-lg object-cover sm:mt-4 sm:h-auto sm:w-auto" />
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex flex-wrap items-center gap-2 mt-2">
               <StatusBadge color="green">
                 {game.status}
               </StatusBadge>
+              <BggRatingBadge bggId={game.bggId} bggAverage={game.bggAverage} bggRank={game.bggRank} />
               {game.canUseTimer && (game.timerStatus !== null || game.status === GameSessionStatus.Ongoing) && (
                 <Link
                   href={`/${props.groupName}/timer/${game.sessionId}`}

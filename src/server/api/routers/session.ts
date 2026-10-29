@@ -433,17 +433,14 @@ export const sessionRouter = createTRPCRouter({
       }));
 
       const gameMap = new Map<string, Game>();
-      await ctx.prisma.game.findUnique({
+      const baseGame = await ctx.prisma.game.findUnique({
         where: {
           id: session.gameId
         }
-      }).then(
-        (game) => {
-          if (game !== null) {
-            gameMap.set(game.id, game);
-          }
-        }
-      );
+      });
+      if (baseGame !== null) {
+        gameMap.set(baseGame.id, baseGame);
+      }
 
       await ctx.prisma.game.findMany({
         where: {
@@ -478,6 +475,9 @@ export const sessionRouter = createTRPCRouter({
       const gameSession: GameSessionWithPlayers = {
         gameName: gameMap.get(session.gameId)?.name ?? "",
         image_url: gameMap.get(session.gameId)?.image_url ?? "",
+        bggId: baseGame?.bggId ?? null,
+        bggAverage: baseGame?.bggAverage ?? null,
+        bggRank: baseGame?.bggRank ?? null,
         createdAt: session.createdAt,
         sessionId: session.id,
         players: players,
