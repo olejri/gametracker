@@ -402,8 +402,9 @@ const Tutorial = ({ groupName }: DashboardProps) => {
           >
             <div className="space-y-4 text-gray-600 dark:text-gray-300">
               <p>
-                Need to backup your data or analyze it elsewhere? The export
-                feature allows you to:
+                Need to backup your data or analyze it elsewhere? Open
+                &quot;Export data&quot; from the menu (the download icon at the top
+                on desktop). The export feature allows you to:
               </p>
               <ul className="ml-4 list-disc space-y-2">
                 <li>

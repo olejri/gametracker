@@ -4,7 +4,7 @@ import {
   PlayIcon,
   PuzzlePieceIcon,
   Square3Stack3DIcon,
-  ArrowDownTrayIcon,
+  SparklesIcon,
   TrophyIcon
 } from "@heroicons/react/24/outline";
 import React from "react";
@@ -67,10 +67,10 @@ const actions = (groupName: string) => {
       iconBackground: ICON_COLORS.indigo.background
     },
     {
-      title: "Export",
-      message: "Download your game data as CSV",
-      href: "/" + groupName + "/export",
-      icon: ArrowDownTrayIcon,
+      title: "What to play?",
+      message: "Roll a game from your shelf or find a new one on BGG",
+      href: "/" + groupName + "/what-to-play",
+      icon: SparklesIcon,
       iconForeground: ICON_COLORS.sky.foreground,
       iconBackground: ICON_COLORS.sky.background
     },

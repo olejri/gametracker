@@ -9,6 +9,7 @@ import { statsRouter } from "npm/server/api/routers/stats";
 import { superAdminRouter } from "npm/server/api/routers/superadmin";
 import { announcementRouter } from "npm/server/api/routers/announcement";
 import { timerRouter } from "npm/server/api/routers/timer";
+import { whatToPlayRouter } from "npm/server/api/routers/whatToPlay";
 
 /**
  * This is the primary router for your server.
@@ -25,7 +26,8 @@ export const appRouter = createTRPCRouter({
   stats: statsRouter,
   superadmin: superAdminRouter,
   announcement: announcementRouter,
-  timer: timerRouter
+  timer: timerRouter,
+  whatToPlay: whatToPlayRouter
 });
 
 // export type definition of API

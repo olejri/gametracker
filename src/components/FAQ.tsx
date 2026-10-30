@@ -86,7 +86,7 @@ const FAQ = () => {
           />
           <FAQItem
             question="How do I export my data?"
-            answer="Go to 'Export' from the dashboard to download all your game session data as a CSV file. You can then import it into spreadsheet applications, create custom reports and visualizations, or keep a backup of your gaming history."
+            answer="Open 'Export data' from the menu (the download icon at the top on desktop) to download all your game session data as a CSV file. You can then import it into spreadsheet applications, create custom reports and visualizations, or keep a backup of your gaming history."
           />
         </div>
       </div>

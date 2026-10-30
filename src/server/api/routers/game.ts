@@ -8,7 +8,46 @@ import {OpenaiResponse} from "npm/components/Types";
 import {makeBoardGameAtlasSearchUrl} from "npm/components/HelperFunctions";
 import OpenAI from "openai";
 import * as process from "process";
-import { fetchBggGame, isBggSyncEnabled, searchBgg } from "npm/server/bgg";
+import type { PrismaClient } from "@prisma/client";
+import { type BggGame, fetchBggGame, isBggSyncEnabled, searchBgg } from "npm/server/bgg";
+
+/** Creates a Game from BGG details, linked to its base game when that is in the collection. */
+export async function createGameFromBgg(prisma: PrismaClient, bgg: BggGame) {
+  const baseGame = bgg.baseGameBggIds.length > 0
+    ? await prisma.game.findFirst({ where: { bggId: { in: bgg.baseGameBggIds } }, select: { id: true } })
+    : null;
+
+  return await prisma.game.create({
+    data: {
+      name: bgg.name,
+      image_url: bgg.image ?? "",
+      description: bgg.description || "No description",
+      players: bgg.players,
+      playtime: bgg.playtime,
+      mechanics: bgg.mechanics.join(", "),
+      categories: bgg.categories.join(", "),
+      isExpansion: bgg.isExpansion,
+      baseGameId: baseGame?.id ?? null,
+      bggId: bgg.bggId,
+      bggAverage: bgg.average,
+      bggBayesAverage: bgg.bayesAverage,
+      bggRank: bgg.rank,
+      bggUsersRated: bgg.usersRated,
+      bggWeight: bgg.weight,
+      bggUpdatedAt: new Date(),
+      GameMechanic: {
+        create: await Promise.all(bgg.mechanics.map(async (name) => ({
+          mechanic: { connect: { id: (await prisma.mechanic.upsert({ where: { name }, create: { name }, update: {} })).id } }
+        })))
+      },
+      GameCategory: {
+        create: await Promise.all(bgg.categories.map(async (name) => ({
+          category: { connect: { id: (await prisma.category.upsert({ where: { name }, create: { name }, update: {} })).id } }
+        })))
+      }
+    }
+  });
+}
 
 export const gameRouter = createTRPCRouter({
   addGame: publicProcedure
@@ -233,39 +272,7 @@ export const gameRouter = createTRPCRouter({
       if (await ctx.prisma.game.findUnique({ where: { name: bgg.name } })) {
         throw new TRPCError({ code: "CONFLICT", message: `A game called "${bgg.name}" already exists` });
       }
-      const baseGame = bgg.baseGameBggIds.length > 0
-        ? await ctx.prisma.game.findFirst({ where: { bggId: { in: bgg.baseGameBggIds } }, select: { id: true } })
-        : null;
-
-      const game = await ctx.prisma.game.create({
-        data: {
-          name: bgg.name,
-          image_url: bgg.image ?? "",
-          description: bgg.description || "No description",
-          players: bgg.players,
-          playtime: bgg.playtime,
-          mechanics: bgg.mechanics.join(", "),
-          categories: bgg.categories.join(", "),
-          isExpansion: bgg.isExpansion,
-          baseGameId: baseGame?.id ?? null,
-          bggId: bgg.bggId,
-          bggAverage: bgg.average,
-          bggBayesAverage: bgg.bayesAverage,
-          bggRank: bgg.rank,
-          bggUsersRated: bgg.usersRated,
-          bggUpdatedAt: new Date(),
-          GameMechanic: {
-            create: await Promise.all(bgg.mechanics.map(async (name) => ({
-              mechanic: { connect: { id: (await ctx.prisma.mechanic.upsert({ where: { name }, create: { name }, update: {} })).id } }
-            })))
-          },
-          GameCategory: {
-            create: await Promise.all(bgg.categories.map(async (name) => ({
-              category: { connect: { id: (await ctx.prisma.category.upsert({ where: { name }, create: { name }, update: {} })).id } }
-            })))
-          }
-        }
-      });
+      const game = await createGameFromBgg(ctx.prisma, bgg);
       return { game };
     }),
 

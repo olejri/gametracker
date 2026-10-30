@@ -27,11 +27,38 @@ model Game {
   bggBayesAverage         Float?
   bggRank                 Int?
   bggUsersRated           Int?
+  bggWeight               Float?
   bggUpdatedAt            DateTime?
   GameSessionGameJunction GameSessionGameJunction[]
   PlayerGameJunction      PlayerGameJunction[]
   GameMechanic            GameMechanic[]
   GameCategory            GameCategory[]
+}
+
+// BGG's top ranked board games, searched by "What to play?" for games a
+// group doesn't own yet. Filled by `npm run bgg-catalog`, kept fresh by the
+// weekly BGG cron job.
+model BggCatalogGame {
+  bggId        Int      @id
+  name         String
+  year         Int?
+  rank         Int?
+  average      Float?
+  bayesAverage Float?
+  usersRated   Int?
+  weight       Float?
+  minPlayers   Int?
+  maxPlayers   Int?
+  // Player counts BGG users vote "best", e.g. "3,4"
+  bestPlayers  String?
+  minPlaytime  Int?
+  maxPlaytime  Int?
+  thumbnail    String?  @db.Text
+  mechanics    String   @db.Text
+  categories   String   @db.Text
+  updatedAt    DateTime @updatedAt
+
+  @@index([rank])
 }
 
 model Player {

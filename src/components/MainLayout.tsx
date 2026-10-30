@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon, MoonIcon, SunIcon, ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon, MoonIcon, SunIcon, ArrowsRightLeftIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { LoadingPage } from "npm/components/loading";
 import { useRouter } from "next/router";
@@ -134,6 +134,14 @@ const MainComponent = (props: ContainerProps) => {
                   )}
                 </button>
                 <a
+                  href={"/" + gameGroup + "/export"}
+                  className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                  aria-label="Export data"
+                  title="Export data"
+                >
+                  <ArrowDownTrayIcon className="h-6 w-6" aria-hidden="true" />
+                </a>
+                <a
                   href={"/" + gameGroup + "/switch"}
                   className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
                   aria-label="Switch dashboard"
@@ -248,6 +256,10 @@ const MainComponent = (props: ContainerProps) => {
                         <a href={"/" + gameGroup + "/switch"} className={drawerActionClasses}>
                           <ArrowsRightLeftIcon className="mr-3 h-6 w-6" aria-hidden="true" />
                           Switch dashboard
+                        </a>
+                        <a href={"/" + gameGroup + "/export"} className={drawerActionClasses}>
+                          <ArrowDownTrayIcon className="mr-3 h-6 w-6" aria-hidden="true" />
+                          Export data
                         </a>
                       </div>
                     </div>

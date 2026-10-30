@@ -1,7 +1,7 @@
 import type { DashboardProps } from "npm/components/Types";
 import { api } from "npm/utils/api";
 import { LoadingPage } from "npm/components/loading";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import type { Game } from "npm/components/Types";
 import SelectWithSearch from "npm/components/SelectWithSearch";
@@ -18,6 +18,16 @@ const StartNewGame = (props: DashboardProps) => {
   const [generateYourGameSession, setGenerateYourGameSession] = useState(false);
   const [error, setError] = useState<string>("");
   const [validationError, setValidationError] = useState<string>("");
+  // "Play this" on What to play? links here with ?gameId= to pick the game up front
+  const prefillGameId = router.query.gameId as string | undefined;
+
+  useEffect(() => {
+    if (!prefillGameId || !games || !expansions || chosenGame) return;
+    const game = games.find((g) => g.id === prefillGameId);
+    if (!game) return;
+    setChosenGame(game as unknown as string);
+    setChosenExpansions(expansions.filter((e) => e.baseGameId === game.id));
+  }, [prefillGameId, games, expansions, chosenGame]);
 
   const mutate = api.session.startANewGameSession.useMutation({
     onSuccess: (session) => {

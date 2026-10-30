@@ -19,6 +19,8 @@ export type BggStats = {
   bayesAverage: number | null;
   rank: number | null;
   usersRated: number | null;
+  // BGG's complexity vote, 1 (light) to 5 (heavy)
+  weight: number | null;
 };
 
 export const isBggSyncEnabled = () => !!process.env.BGG_API_TOKEN;
@@ -47,7 +49,8 @@ export function parseThingStats(xml: string): BggStats[] {
       average: toNumber(attr(body, "average")),
       bayesAverage: toNumber(attr(body, "bayesaverage")),
       rank: toNumber(rank),
-      usersRated: toNumber(attr(body, "usersrated"))
+      usersRated: toNumber(attr(body, "usersrated")),
+      weight: toNumber(attr(body, "averageweight"))
     });
   }
   return items;
@@ -156,6 +159,7 @@ export function parseThing(xml: string): BggGame | null {
     bayesAverage: stats?.bayesAverage ?? null,
     rank: stats?.rank ?? null,
     usersRated: stats?.usersRated ?? null,
+    weight: stats?.weight ?? null,
     name: decodeXmlEntities(primaryName),
     year: toNumber(attr(body, "yearpublished")),
     isExpansion,
@@ -216,10 +220,110 @@ export async function refreshBggRatings(prisma: PrismaClient) {
         bggBayesAverage: s.bayesAverage,
         bggRank: s.rank,
         bggUsersRated: s.usersRated,
+        bggWeight: s.weight,
         bggUpdatedAt: new Date()
       }
     });
     updated++;
+  }
+  return { skipped: false as const, updated };
+}
+
+export type BggCatalogEntry = {
+  bggId: number;
+  name: string;
+  year: number | null;
+  rank: number | null;
+  average: number | null;
+  bayesAverage: number | null;
+  usersRated: number | null;
+  weight: number | null;
+  minPlayers: number | null;
+  maxPlayers: number | null;
+  bestPlayers: string | null;
+  minPlaytime: number | null;
+  maxPlaytime: number | null;
+  thumbnail: string | null;
+  mechanics: string;
+  categories: string;
+};
+
+/** Turns BGG's poll summary, e.g. "Best with 2, 4–5 players", into "2,4,5". */
+export function parseBestPlayers(text: string | undefined): string | null {
+  const counts = new Set<number>();
+  for (const part of (text ?? "").replace(/^.*?with/i, "").split(",")) {
+    const [from, to] = (part.match(/\d+/g) ?? []).map(Number);
+    if (from === undefined) continue;
+    for (let n = from; n <= (to ?? from) && n - from < 20; n++) counts.add(n);
+  }
+  return counts.size > 0 ? [...counts].sort((a, b) => a - b).join(",") : null;
+}
+
+/** Parses every <item> of a /thing?stats=1 response into catalog entries. */
+export function parseCatalogItems(xml: string): BggCatalogEntry[] {
+  const stats = new Map(parseThingStats(xml).map((s) => [s.bggId, s]));
+  const entries: BggCatalogEntry[] = [];
+  const itemRegex = /<item\b[^>]*\bid="(\d+)"[^>]*>([\s\S]*?)<\/item>/g;
+  let match: RegExpExecArray | null;
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const [, id, body = ""] = match;
+    const s = stats.get(Number(id));
+    const links = (linkType: string) =>
+      [...body.matchAll(new RegExp(`<link\\b[^>]*type="${linkType}"[^>]*\\bvalue="([^"]*)"`, "g"))]
+        .map((m) => decodeXmlEntities(m[1] ?? ""));
+    entries.push({
+      bggId: Number(id),
+      name: decodeXmlEntities(/<name\b[^>]*\btype="primary"[^>]*\bvalue="([^"]*)"/.exec(body)?.[1] ?? ""),
+      year: toNumber(attr(body, "yearpublished")),
+      rank: s?.rank ?? null,
+      average: s?.average ?? null,
+      bayesAverage: s?.bayesAverage ?? null,
+      usersRated: s?.usersRated ?? null,
+      weight: s?.weight ?? null,
+      minPlayers: toNumber(attr(body, "minplayers")),
+      maxPlayers: toNumber(attr(body, "maxplayers")),
+      bestPlayers: parseBestPlayers(/<result\b[^>]*name="bestwith"[^>]*\bvalue="([^"]*)"/.exec(body)?.[1]),
+      minPlaytime: toNumber(attr(body, "minplaytime")),
+      maxPlaytime: toNumber(attr(body, "maxplaytime")),
+      thumbnail: /<thumbnail>\s*([^<]+?)\s*<\/thumbnail>/.exec(body)?.[1] ?? null,
+      mechanics: links("boardgamemechanic").join(", "),
+      categories: links("boardgamecategory").join(", ")
+    });
+  }
+  return entries;
+}
+
+/** Fetches catalog details for up to BATCH_SIZE games in one request. */
+export async function fetchBggCatalogBatch(bggIds: number[]): Promise<BggCatalogEntry[]> {
+  return parseCatalogItems(await bggFetch(`/thing?id=${bggIds.slice(0, BATCH_SIZE).join(",")}&stats=1`));
+}
+
+export async function saveCatalogEntries(prisma: PrismaClient, entries: BggCatalogEntry[]) {
+  for (const { bggId, ...data } of entries) {
+    if (!data.name) continue;
+    await prisma.bggCatalogGame.upsert({ where: { bggId }, create: { bggId, ...data }, update: data });
+  }
+}
+
+/**
+ * Re-fetches the catalog games that were updated longest ago, in batches,
+ * until the time budget runs out. The weekly cron job works through the whole
+ * catalog this way over a few weeks.
+ */
+export async function refreshBggCatalog(prisma: PrismaClient, budgetMs: number) {
+  if (!isBggSyncEnabled()) return { skipped: true as const, updated: 0 };
+  const started = Date.now();
+  const stale = await prisma.bggCatalogGame.findMany({
+    orderBy: { updatedAt: "asc" },
+    take: 400,
+    select: { bggId: true }
+  });
+  let updated = 0;
+  for (let i = 0; i < stale.length && Date.now() - started < budgetMs; i += BATCH_SIZE) {
+    if (i > 0) await sleep(REQUEST_DELAY_MS);
+    const entries = await fetchBggCatalogBatch(stale.slice(i, i + BATCH_SIZE).map((g) => g.bggId));
+    await saveCatalogEntries(prisma, entries);
+    updated += entries.length;
   }
   return { skipped: false as const, updated };
 }
