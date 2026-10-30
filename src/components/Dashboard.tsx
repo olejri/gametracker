@@ -138,9 +138,7 @@ export default function Dashboard(groupName: string) {
         </div>
         <div>
           <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-            <div className="px-4 py-5 sm:p-6">
-              <RecentlyActivities groupName={groupName} />
-            </div>
+            <RecentlyActivities groupName={groupName} />
           </div>
         </div>
       </div>
