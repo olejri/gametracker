@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { GameImage } from "npm/components/GameImage";
 import React, { useMemo, useState } from "react";
 import { AcademicCapIcon, ChevronDownIcon, PuzzlePieceIcon } from "@heroicons/react/24/solid";
 import BggRatingBadge from "npm/components/BggRatingBadge";
@@ -150,8 +150,8 @@ const GameGrid = ({
             )}
           >
             <div className="flex flex-1 flex-col p-4 sm:p-8">
-              <Image className="mx-auto h-24 w-24 flex-shrink-0 object-cover sm:h-40 sm:w-40 sm:object-contain" src={game.image_url} alt="" width={200}
-                     height={200} priority={true} />
+              <GameImage src={game.image_url} name={game.name} priority
+                         className="mx-auto h-24 w-24 text-2xl sm:h-40 sm:w-40 sm:text-4xl" size={320} />
               <h3 className="mt-3 text-sm font-medium text-gray-900 sm:mt-6 dark:text-white">{game.name}</h3>
               <dl className="mt-1 flex flex-grow flex-col justify-between sm:justify-start">
                 <dd className="text-sm text-gray-500 dark:text-gray-400">Players: {game.players}</dd>

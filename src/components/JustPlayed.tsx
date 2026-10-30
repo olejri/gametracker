@@ -2,6 +2,7 @@ import React from "react";
 import { api } from "npm/utils/api";
 import { LoadingSpinner } from "npm/components/loading";
 import Image from "next/image";
+import { GameImage } from "npm/components/GameImage";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Link from "next/link";
@@ -191,12 +192,11 @@ const RecentlyActivities = (props: {
             href={`/${groupId}/session/${game.sessionId}`}
             className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 sm:px-5 dark:hover:bg-gray-700/50"
           >
-            <Image
-              className="h-12 w-12 flex-shrink-0 rounded-lg object-cover sm:h-14 sm:w-14"
+            <GameImage
+              className="h-12 w-12 text-sm sm:h-14 sm:w-14"
               src={game.image_url}
-              alt=""
-              width={112}
-              height={112}
+              name={game.gameName}
+              size={112}
               priority={idx < 2}
             />
             <div className="grid min-w-0 flex-1 gap-1.5">

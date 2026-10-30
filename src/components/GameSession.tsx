@@ -3,7 +3,7 @@ import PoweredByBgg from "npm/components/PoweredByBgg";
 import { type GameSessionProps, GameSessionStatus, type PlayerNicknameAndScore } from "npm/components/Types";
 import { sortPlayers } from "npm/components/HelperFunctions";
 import { api } from "npm/utils/api";
-import Image from "next/image";
+import { GameImage } from "npm/components/GameImage";
 import { LoadingPage, LoadingSpinner } from "npm/components/loading";
 import { useEffect, useState, useRef, createRef } from "react";
 import PlayerView, { type PlayerViewRef } from "npm/components/PlayerView";
@@ -372,7 +372,7 @@ const GameSession = (props: GameSessionProps) => {
       <div className="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
         <div className="grid grid-cols-1 sm:grid-cols-2">
           <div className="flex items-center gap-4 px-4 pt-5 sm:block sm:p-6">
-            <Image src={game.image_url} alt="My Image" width={300} height={300} className="h-20 w-20 rounded-lg object-cover sm:mt-4 sm:h-auto sm:w-auto" />
+            <GameImage src={game.image_url} name={game.gameName} size={320} className="h-20 w-20 text-2xl sm:mt-4 sm:h-40 sm:w-40 sm:text-4xl" />
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <StatusBadge color="green">
                 {game.status}

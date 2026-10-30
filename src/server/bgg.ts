@@ -21,6 +21,8 @@ export type BggStats = {
   usersRated: number | null;
   // BGG's complexity vote, 1 (light) to 5 (heavy)
   weight: number | null;
+  // Full-size picture, usually the box cover
+  image: string | null;
 };
 
 export const isBggSyncEnabled = () => !!process.env.BGG_API_TOKEN;
@@ -50,7 +52,8 @@ export function parseThingStats(xml: string): BggStats[] {
       bayesAverage: toNumber(attr(body, "bayesaverage")),
       rank: toNumber(rank),
       usersRated: toNumber(attr(body, "usersrated")),
-      weight: toNumber(attr(body, "averageweight"))
+      weight: toNumber(attr(body, "averageweight")),
+      image: /<image>\s*([^<]+?)\s*<\/image>/.exec(body)?.[1] ?? null
     });
   }
   return items;
@@ -85,7 +88,6 @@ export type BggGame = BggStats & {
   name: string;
   year: number | null;
   isExpansion: boolean;
-  image: string | null;
   description: string;
   players: string;
   playtime: string;

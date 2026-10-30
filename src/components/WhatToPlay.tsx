@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import { GameImage } from "npm/components/GameImage";
 import { useRouter } from "next/router";
 import {
   ArrowPathIcon,
@@ -91,17 +91,8 @@ const FilterRow = ({ icon: Icon, label, children }: { icon: typeof UsersIcon; la
   </div>
 );
 
-// The game's picture, or its initials when it has none or the picture fails to load
 const GameCover = ({ name, imageUrl, className }: { name: string; imageUrl: string | null; className: string }) => {
-  const [failed, setFailed] = useState(false);
-  return imageUrl && !failed ? (
-    <Image src={imageUrl} alt="" width={160} height={160} onError={() => setFailed(true)}
-           className={classNames("shrink-0 rounded-md bg-gray-100 object-cover dark:bg-gray-700", className)} />
-  ) : (
-    <span className={classNames("flex shrink-0 items-center justify-center rounded-md bg-indigo-50 font-bold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300", className)}>
-      {name.split(/[\s:]+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("")}
-    </span>
-  );
+  return <GameImage src={imageUrl} name={name} size={160} className={className} />;
 };
 
 function matchesShelf(game: ShelfGame, players: number, time: number, weight: number) {

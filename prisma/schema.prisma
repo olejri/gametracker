@@ -12,6 +12,8 @@ model Game {
   id                      String                    @id @default(uuid())
   name                    String                    @unique
   image_url               String                    @db.Text
+  // The picture link the game had before it switched to its BGG picture
+  originalImageUrl        String?                   @db.Text
   description             String                    @db.Text
   players                 String
   playtime                String
