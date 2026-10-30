@@ -3,6 +3,7 @@ import React, { useMemo, useState } from "react";
 import { AcademicCapIcon, ChevronDownIcon, PuzzlePieceIcon } from "@heroicons/react/24/solid";
 import BggRatingBadge from "npm/components/BggRatingBadge";
 import InfoModal from "npm/components/InfoModal";
+import PoweredByBgg from "npm/components/PoweredByBgg";
 import { classNames } from "npm/lib/utils";
 import type { GameWithOwners, OpenWithGameId } from "npm/components/Types";
 
@@ -247,19 +248,7 @@ const GameGrid = ({
           </li>
         ))}
       </ul>
-      {cards.some((game) => game.bggId !== null) && (
-        <p className="mt-5 text-center text-xs text-gray-500 dark:text-gray-400">
-          Ratings{" "}
-          <a
-            href="https://boardgamegeek.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-          >
-            Powered by BGG
-          </a>
-        </p>
-      )}
+      {cards.some((game) => game.bggId !== null) && <PoweredByBgg className="mt-6" />}
     </>
   );
 };

@@ -1,4 +1,5 @@
 import BggRatingBadge from "npm/components/BggRatingBadge";
+import PoweredByBgg from "npm/components/PoweredByBgg";
 import { type GameSessionProps, GameSessionStatus, type PlayerNicknameAndScore } from "npm/components/Types";
 import { sortPlayers } from "npm/components/HelperFunctions";
 import { api } from "npm/utils/api";
@@ -782,6 +783,7 @@ const GameSession = (props: GameSessionProps) => {
           {haveError ? <div className="text-center mt-4 text-red-600 dark:text-red-400">Error while finish or deleting the session</div> : <></>}
         </div>
       </div> : <> </>}
+      {game.bggId != null && <PoweredByBgg className="mt-6" />}
     </div>
   );
 };

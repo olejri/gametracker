@@ -6,6 +6,7 @@ import { CheckCircleIcon, ChevronLeftIcon } from "@heroicons/react/24/solid";
 import { api } from "npm/utils/api";
 import { LoadingSpinner } from "npm/components/loading";
 import BggRatingBadge from "npm/components/BggRatingBadge";
+import PoweredByBgg from "npm/components/PoweredByBgg";
 import { Button, Card, CardContent, Input, StatusBadge } from "npm/components/ui";
 import { classNames } from "npm/lib/utils";
 
@@ -119,6 +120,7 @@ const GameSearch = () => {
             </CardContent>
           </Card>
         )}
+        <PoweredByBgg label="Game data" className="mt-6" />
       </div>
     );
   }
@@ -182,15 +184,7 @@ const GameSearch = () => {
           </ul>
         )
       )}
-      {search.data && search.data.length > 0 && (
-        <p className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
-          Search{" "}
-          <a href="https://boardgamegeek.com" target="_blank" rel="noopener noreferrer"
-             className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
-            Powered by BGG
-          </a>
-        </p>
-      )}
+      <PoweredByBgg label="Search results" className="mt-6" />
     </div>
   );
 };
