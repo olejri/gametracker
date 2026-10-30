@@ -8,6 +8,7 @@ import {OpenaiResponse} from "npm/components/Types";
 import {makeBoardGameAtlasSearchUrl} from "npm/components/HelperFunctions";
 import OpenAI from "openai";
 import * as process from "process";
+import { fetchBggGame, isBggSyncEnabled, searchBgg } from "npm/server/bgg";
 
 export const gameRouter = createTRPCRouter({
   addGame: publicProcedure
@@ -184,6 +185,88 @@ export const gameRouter = createTRPCRouter({
         return json.games;
       }
       return [] as AtlasResponse["games"];
+    }),
+
+  searchBgg: privateProcedure
+    .input(z.object({ query: z.string().trim().min(2) }))
+    .query(async ({ ctx, input }) => {
+      if (!isBggSyncEnabled()) {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "BGG search is not set up yet" });
+      }
+      const results = await searchBgg(input.query);
+      const existing = await ctx.prisma.game.findMany({
+        where: { bggId: { in: results.map((r) => r.bggId) } },
+        select: { bggId: true }
+      });
+      const existingIds = new Set(existing.map((g) => g.bggId));
+      const q = input.query.toLowerCase();
+      // Exact and prefix matches first, then the rest by name
+      const score = (name: string) => (name.toLowerCase() === q ? 0 : name.toLowerCase().startsWith(q) ? 1 : 2);
+      return results
+        .map((r) => ({ ...r, alreadyAdded: existingIds.has(r.bggId) }))
+        .sort((a, b) => score(a.name) - score(b.name) || a.name.localeCompare(b.name))
+        .slice(0, 30);
+    }),
+
+  getBggGame: privateProcedure
+    .input(z.object({ bggId: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const game = await fetchBggGame(input.bggId);
+      if (!game) throw new TRPCError({ code: "NOT_FOUND", message: `BGG game ${input.bggId} not found` });
+      const [existing, baseGame] = await Promise.all([
+        ctx.prisma.game.findUnique({ where: { bggId: input.bggId }, select: { id: true } }),
+        game.baseGameBggIds.length > 0
+          ? ctx.prisma.game.findFirst({ where: { bggId: { in: game.baseGameBggIds } }, select: { id: true, name: true } })
+          : null
+      ]);
+      return { ...game, alreadyAdded: existing !== null, baseGame };
+    }),
+
+  addGameFromBgg: privateProcedure
+    .input(z.object({ bggId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      if (await ctx.prisma.game.findUnique({ where: { bggId: input.bggId } })) {
+        throw new TRPCError({ code: "CONFLICT", message: "This game is already in the collection" });
+      }
+      const bgg = await fetchBggGame(input.bggId);
+      if (!bgg) throw new TRPCError({ code: "NOT_FOUND", message: `BGG game ${input.bggId} not found` });
+      if (await ctx.prisma.game.findUnique({ where: { name: bgg.name } })) {
+        throw new TRPCError({ code: "CONFLICT", message: `A game called "${bgg.name}" already exists` });
+      }
+      const baseGame = bgg.baseGameBggIds.length > 0
+        ? await ctx.prisma.game.findFirst({ where: { bggId: { in: bgg.baseGameBggIds } }, select: { id: true } })
+        : null;
+
+      const game = await ctx.prisma.game.create({
+        data: {
+          name: bgg.name,
+          image_url: bgg.image ?? "",
+          description: bgg.description || "No description",
+          players: bgg.players,
+          playtime: bgg.playtime,
+          mechanics: bgg.mechanics.join(", "),
+          categories: bgg.categories.join(", "),
+          isExpansion: bgg.isExpansion,
+          baseGameId: baseGame?.id ?? null,
+          bggId: bgg.bggId,
+          bggAverage: bgg.average,
+          bggBayesAverage: bgg.bayesAverage,
+          bggRank: bgg.rank,
+          bggUsersRated: bgg.usersRated,
+          bggUpdatedAt: new Date(),
+          GameMechanic: {
+            create: await Promise.all(bgg.mechanics.map(async (name) => ({
+              mechanic: { connect: { id: (await ctx.prisma.mechanic.upsert({ where: { name }, create: { name }, update: {} })).id } }
+            })))
+          },
+          GameCategory: {
+            create: await Promise.all(bgg.categories.map(async (name) => ({
+              category: { connect: { id: (await ctx.prisma.category.upsert({ where: { name }, create: { name }, update: {} })).id } }
+            })))
+          }
+        }
+      });
+      return { game };
     }),
 
   getGameOwnedBy: privateProcedure
