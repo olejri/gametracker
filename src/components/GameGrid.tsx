@@ -141,7 +141,7 @@ const GameGrid = ({
       </div>
 
       <ul role="list" className={classNames("mt-5 grid grid-cols-2 gap-3 sm:gap-6", gridClassName)}>
-        {cards.map((game) => (
+        {cards.map((game, idx) => (
           <li
             key={game.id}
             className={classNames(
@@ -150,7 +150,8 @@ const GameGrid = ({
             )}
           >
             <div className="flex flex-1 flex-col p-4 sm:p-8">
-              <GameImage src={game.image_url} name={game.name} priority
+              {/* Only the first row loads eagerly; loading every cover at once made phones stutter */}
+              <GameImage src={game.image_url} name={game.name} priority={idx < 4}
                          className="mx-auto h-24 w-24 text-2xl sm:h-40 sm:w-40 sm:text-4xl" size={320} />
               <h3 className="mt-3 text-sm font-medium text-gray-900 sm:mt-6 dark:text-white">{game.name}</h3>
               <dl className="mt-1 flex flex-grow flex-col justify-between sm:justify-start">

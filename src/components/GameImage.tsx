@@ -9,7 +9,7 @@ const initials = (name: string) =>
 
 /**
  * A game's picture in a rounded square. BGG box art is shown whole, over a
- * blurred copy of itself that fills the rest of the square; any other picture sits on a soft gray tile that its white background
+ * soft, stretched copy of itself that fills the rest of the square; any other picture sits on a soft gray tile that its white background
  * blends into. Games without a picture (or whose picture fails) show their
  * initials. Size it with className, e.g. "h-12 w-12 text-sm".
  */
@@ -44,16 +44,21 @@ export const GameImage = ({ src, name, className, size = 200, priority }: {
       )}
     >
       {bgg && (
-        // A blurred copy of the art fills the square around covers that aren't square
-        <Image
-          src={src}
-          alt=""
-          aria-hidden="true"
-          width={size}
-          height={size}
-          priority={priority}
-          className="absolute inset-0 h-full w-full scale-125 object-cover blur-md dark:brightness-75"
-        />
+        // A tiny copy of the art, stretched, fills the square around covers that aren't square.
+        // Upscaling softens it for free; a CSS blur/brightness filter here made scrolling stutter
+        // on phones (Firefox for Android in particular).
+        <>
+          <Image
+            src={src}
+            alt=""
+            aria-hidden="true"
+            width={16}
+            height={16}
+            priority={priority}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <span className="absolute inset-0 hidden bg-black/25 dark:block" aria-hidden="true" />
+        </>
       )}
       <Image
         src={src}
