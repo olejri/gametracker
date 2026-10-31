@@ -56,13 +56,15 @@ export const groupRouter = createTRPCRouter({
     }
 
     const group = await ctx.prisma.playerGameGroupJunction.findFirst({
-      where: { playerId: player.id, gameGroupIsActive: true }
+      where: { playerId: player.id, gameGroupIsActive: true },
+      include: { GameGroup: { select: { name: true } } }
     });
 
     if (!group) return null;
 
     return {
       groupId: group.groupId,
+      groupName: group.GameGroup.name,
       role: group.role
     };
   }),

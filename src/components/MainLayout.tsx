@@ -95,7 +95,7 @@ const MainComponent = (props: ContainerProps) => {
         <nav className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 justify-between">
-              <div className="flex">
+              <div className="flex min-w-0 flex-1">
                 <div className="flex flex-shrink-0 items-center">
                   <div
                     className="block h-8 w-auto sm:hidden"
@@ -103,6 +103,16 @@ const MainComponent = (props: ContainerProps) => {
                     <UserButton />
                   </div>
                 </div>
+                {data?.groupName && (
+                  <div className="flex min-w-0 flex-1 items-center px-3 sm:hidden">
+                    <span
+                      className="truncate text-base font-semibold text-gray-900 dark:text-white"
+                      title={data.groupName}
+                    >
+                      {data.groupName}
+                    </span>
+                  </div>
+                )}
                 <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
                   {navigation.map((item) => (
                     <a
