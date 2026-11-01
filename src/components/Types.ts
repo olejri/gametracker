@@ -212,15 +212,6 @@ export type ClerkInvite = {
     updated_at: number;
 };
 
-export type GameStatsResult = {
-    gameName: string,
-    numberOfGamesPlayed: number,
-    numberOfFirstPlaceWins: number,
-    numberOfSecondPlaceWins: number,
-    numberOfThirdPlaceWins: number,
-    winPrecentage: number,
-}
-
 export type GameHighScore = {
     gameName: string,
     highScore: number,

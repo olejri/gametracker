@@ -1,16 +1,9 @@
 import { createTRPCRouter, privateProcedure } from "npm/server/api/trpc";
 import { getPlayerByClerkId } from "npm/server/helpers/filterUserForClient";
-import { type Game, type GameStatsResult } from "npm/components/Types";
 import { z } from "zod";
 import dayjs from "dayjs";
+import { buildProfileStats, type ProfileSession } from "npm/server/helpers/profileStats";
 import { type PrismaClient, type Game as PrismaGame, type Player, type PlayerGameSessionJunction, type GameSessionGameJunction } from "@prisma/client";
-
-// Type for session with player junction
-type SessionWithPlayerJunction = {
-  id: string;
-  gameId: string;
-  PlayerGameSessionJunction: PlayerGameSessionJunction[];
-};
 
 // Type for session with full relations
 type SessionWithRelations = {
@@ -43,70 +36,6 @@ async function getActivePlayerNicknames(prisma: PrismaClient, groupId: string): 
 }
 
 export const statsRouter = createTRPCRouter({
-  // ────────────────────────────────────────────────────────────────
-  // EXISTING: get stats per game for a specific player
-  // ────────────────────────────────────────────────────────────────
-  getGameStatsForPlayer: privateProcedure
-    .input(z.object({ groupName: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId);
-
-      const allGameSession: SessionWithPlayerJunction[] = await ctx.prisma.gameSession.findMany({
-        include: { PlayerGameSessionJunction: true },
-        where: { groupId: input.groupName, isTeamGame: false },
-      });
-
-      const gameInfo = await ctx.prisma.game.findMany({});
-      const gameMap = new Map<string, Game>(gameInfo.map((g) => [g.id, g]));
-
-      const allGames = allGameSession.filter((session) =>
-        session.PlayerGameSessionJunction.some(
-          (pgsj: PlayerGameSessionJunction) => pgsj.playerId === player.id
-        )
-      );
-
-      const result: GameStatsResult[] = [];
-
-      for (const g of allGames) {
-        const gameName = gameMap.get(g.gameId)?.name ?? "Unknown";
-        const playerGameSession = g.PlayerGameSessionJunction.find(
-          (pgs: PlayerGameSessionJunction) => pgs.playerId === player.id
-        );
-        if (!playerGameSession) continue;
-
-        let gameStats = result.find((x) => x.gameName === gameName);
-        if (!gameStats) {
-          gameStats = {
-            gameName,
-            numberOfGamesPlayed: 0,
-            numberOfFirstPlaceWins: 0,
-            numberOfSecondPlaceWins: 0,
-            numberOfThirdPlaceWins: 0,
-            winPrecentage: 0,
-          };
-          result.push(gameStats);
-        }
-
-        const position = playerGameSession.position;
-        if (position === 1)
-          gameStats.numberOfFirstPlaceWins++;
-        else if (position === 2)
-          gameStats.numberOfSecondPlaceWins++;
-        else if (position === 3)
-          gameStats.numberOfThirdPlaceWins++;
-
-        gameStats.numberOfGamesPlayed++;
-      }
-
-      for (const game of result) {
-        game.winPrecentage =
-          (game.numberOfFirstPlaceWins / game.numberOfGamesPlayed) * 100;
-      }
-
-      result.sort((a, b) => b.numberOfGamesPlayed - a.numberOfGamesPlayed);
-      return result;
-    }),
-
   // ────────────────────────────────────────────────────────────────
   // Plays, wins and finishing positions per player, per game and overall
   // ────────────────────────────────────────────────────────────────
@@ -516,6 +445,66 @@ export const statsRouter = createTRPCRouter({
         highScore,
         mostSecondPlaces: runnerUp ? { playerName: runnerUp[0], count: runnerUp[1] } : null,
         bestGameNight: bestNight ? { date: bestNight[0], sessions: bestNight[1] } : null,
+      };
+    }),
+
+  // ────────────────────────────────────────────────────────────────
+  // Profile > Stats: everything about the signed-in player in one call
+  // ────────────────────────────────────────────────────────────────
+  getProfileStats: privateProcedure
+    .input(z.object({ groupName: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const player = await getPlayerByClerkId(ctx.prisma, ctx.userId);
+
+      const [group, sessions, games] = await Promise.all([
+        ctx.prisma.gameGroup.findUnique({ where: { id: input.groupName }, select: { name: true } }),
+        ctx.prisma.gameSession.findMany({
+          where: {
+            groupId: input.groupName,
+            status: "COMPLETED",
+            PlayerGameSessionJunction: { some: { playerId: player.id } },
+          },
+          select: {
+            createdAt: true,
+            gameId: true,
+            isTeamGame: true,
+            PlayerGameSessionJunction: { select: { playerId: true, position: true } },
+            GameSessionTeam: { select: { _count: { select: { TeamPlayerJunction: true } } } },
+          },
+        }),
+        ctx.prisma.game.findMany({
+          select: {
+            id: true,
+            name: true,
+            isExpansion: true,
+            baseGameId: true,
+            GameMechanic: { select: { mechanic: { select: { name: true } } } },
+          },
+        }),
+      ]);
+
+      const gameMap = new Map(games.map((g) => [g.id, g]));
+      const profileSessions: ProfileSession[] = sessions.map((s) => {
+        // Expansions count toward their base game
+        const played = gameMap.get(s.gameId);
+        const game = played?.isExpansion && played.baseGameId ? gameMap.get(played.baseGameId) ?? played : played;
+        const me = s.PlayerGameSessionJunction.find((p) => p.playerId === player.id);
+        return {
+          createdAt: s.createdAt,
+          gameId: game?.id ?? s.gameId,
+          gameName: game?.name ?? "Unknown",
+          mechanics: game?.GameMechanic.map((m) => m.mechanic.name) ?? [],
+          position: me?.position ?? null,
+          allPositions: s.PlayerGameSessionJunction.map((p) => p.position),
+          isTeamGame: s.isTeamGame,
+          teamCount: s.GameSessionTeam.filter((t) => t._count.TeamPlayerJunction > 0).length,
+        };
+      });
+
+      return {
+        playerName: player.nickname ?? player.name,
+        groupName: group?.name ?? input.groupName,
+        ...buildProfileStats(profileSessions),
       };
     }),
 });
