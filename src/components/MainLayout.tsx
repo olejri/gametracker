@@ -1,6 +1,16 @@
 import React, { Fragment, useEffect, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon, MoonIcon, SunIcon, ArrowsRightLeftIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import { Dialog, Menu, Transition } from "@headlessui/react";
+import {
+  Bars3Icon,
+  XMarkIcon,
+  MoonIcon,
+  SunIcon,
+  ArrowsRightLeftIcon,
+  ArrowDownTrayIcon,
+  ChevronDownIcon,
+  QuestionMarkCircleIcon
+} from "@heroicons/react/24/outline";
+import Link from "next/link";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { LoadingPage } from "npm/components/loading";
 import { useRouter } from "next/router";
@@ -8,6 +18,7 @@ import { api } from "npm/utils/api";
 import { useGameGroupContext } from "npm/context/GameGroupContext";
 import { classNames } from "npm/lib/utils";
 import { useTheme } from "npm/context/ThemeContext";
+import { PROFILE_TABS, ProfileAvatar, ProfileMiniCard, helpHref, profileHref } from "npm/components/ProfileNav";
 
 type ContainerProps = {
   children: React.ReactNode; //👈 children prop typr
@@ -20,9 +31,6 @@ const drawerLinkClasses = (active: boolean) =>
       : "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
     "flex min-h-[44px] items-center border-l-4 pl-3 pr-4 text-base font-medium"
   );
-
-const drawerSubLinkClasses =
-  "flex min-h-[44px] items-center border-l-4 border-transparent pl-8 pr-4 text-sm font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100";
 
 const drawerActionClasses =
   "flex min-h-[44px] w-full items-center px-4 text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100";
@@ -38,6 +46,7 @@ const MainComponent = (props: ContainerProps) => {
   );
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileMenuSeen, setProfileMenuSeen] = useState(false);
 
   // Close the drawer on client-side navigation
   useEffect(() => {
@@ -65,6 +74,9 @@ const MainComponent = (props: ContainerProps) => {
   }
 
   const pathname = router.pathname;
+  const isProfilePage = pathname === "/[dashboardId]/player/[playerId]";
+  const currentProfileTab = typeof router.query.tab === "string" && router.query.tab !== "me" ? router.query.tab : router.query.tab === "me" ? "profile" : "stats";
+  const profileName = playerData?.data?.nickname || user.username || user.firstName || "Me";
   const navigation = [
     { name: "Dashboard", href: "/" + gameGroup + "/dashboard", current: pathname === "/[dashboardId]/dashboard" },
     {
@@ -114,7 +126,67 @@ const MainComponent = (props: ContainerProps) => {
                   </div>
                 )}
                 <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-                  {navigation.map((item) => (
+                  {navigation.map((item) => item.name === "Profile" ? (
+                    <Menu as="div" key={item.name} className="relative flex">
+                      <Menu.Button
+                        onClick={() => setProfileMenuSeen(true)}
+                        className={classNames(
+                          item.current
+                            ? "border-indigo-500 text-gray-900 dark:text-white"
+                            : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100",
+                          "inline-flex items-center gap-2 border-b-2 px-1 pt-1 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        )}
+                      >
+                        {({ open }) => (
+                          <>
+                            <ProfileAvatar name={profileName} imageUrl={user.imageUrl} size={24} />
+                            Profile
+                            <ChevronDownIcon className={classNames("h-4 w-4 transition-transform", open && "rotate-180")} aria-hidden="true" />
+                          </>
+                        )}
+                      </Menu.Button>
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-100 motion-reduce:transition-none"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75 motion-reduce:transition-none"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <Menu.Items className="absolute left-0 top-full z-30 mt-1 w-72 origin-top-left rounded-xl border border-gray-200 bg-white p-2 shadow-lg focus:outline-none dark:border-gray-700 dark:bg-gray-800">
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link
+                                href={profileHref(gameGroup, user.id, "stats")}
+                                className={classNames("mb-1 block rounded-2xl focus:outline-none", active && "ring-2 ring-indigo-400")}
+                              >
+                                <ProfileMiniCard groupName={gameGroup} fallbackName={profileName} imageUrl={user.imageUrl} enabled={profileMenuSeen} />
+                              </Link>
+                            )}
+                          </Menu.Item>
+                          {PROFILE_TABS.map((tab) => (
+                            <Menu.Item key={tab.id}>
+                              {({ active }) => (
+                                <Link
+                                  href={profileHref(gameGroup, user.id, tab.id)}
+                                  className={classNames(
+                                    active && "bg-gray-100 dark:bg-gray-700",
+                                    "flex min-h-[44px] items-center gap-3 rounded-lg px-2 text-sm font-semibold text-gray-900 dark:text-white"
+                                  )}
+                                >
+                                  <span className={classNames(tab.iconBackground, tab.iconForeground, "inline-flex rounded-lg p-1.5")}>
+                                    <tab.icon className="h-5 w-5" aria-hidden="true" />
+                                  </span>
+                                  {tab.label}
+                                </Link>
+                              )}
+                            </Menu.Item>
+                          ))}
+                        </Menu.Items>
+                      </Transition>
+                    </Menu>
+                  ) : (
                     <a
                       key={item.name}
                       href={item.href}
@@ -132,6 +204,14 @@ const MainComponent = (props: ContainerProps) => {
                 </div>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
+                <a
+                  href={helpHref(gameGroup)}
+                  className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                  aria-label="Help and FAQ"
+                  title="Help & FAQ"
+                >
+                  <QuestionMarkCircleIcon className="h-6 w-6" aria-hidden="true" />
+                </a>
                 <button
                   onClick={toggleDarkMode}
                   className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
@@ -215,28 +295,38 @@ const MainComponent = (props: ContainerProps) => {
                   </div>
 
                   <div className="flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
+                    <div className="space-y-3 border-b border-gray-200 p-4 dark:border-gray-700">
+                      <Link href={profileHref(gameGroup, user.id, "stats")} className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                        <ProfileMiniCard groupName={gameGroup} fallbackName={profileName} imageUrl={user.imageUrl} enabled={menuOpen} />
+                      </Link>
+                      <div className="grid grid-cols-3 gap-2">
+                        {PROFILE_TABS.map((tab) => {
+                          const active = isProfilePage && currentProfileTab === tab.id;
+                          return (
+                            <Link
+                              key={tab.id}
+                              href={profileHref(gameGroup, user.id, tab.id)}
+                              aria-current={active ? "page" : undefined}
+                              className={classNames(
+                                active
+                                  ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/40 dark:text-indigo-200"
+                                  : "border-gray-200 text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700",
+                                "flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-xl border px-1 text-center text-sm font-semibold"
+                              )}
+                            >
+                              <span className={classNames(tab.iconBackground, tab.iconForeground, "inline-flex rounded-lg p-2")}>
+                                <tab.icon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                              {tab.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
                     <div className="space-y-1 pb-3 pt-2">
                       {navigation.map((item) => {
-                        // For mobile, expand Profile into sub-items
-                        if (item.name === "Profile") {
-                          const isProfileActive = pathname === "/[dashboardId]/player/[playerId]";
-                          return (
-                            <React.Fragment key={item.name}>
-                              <a href={"/" + gameGroup + "/player/" + user.id} className={drawerLinkClasses(isProfileActive)}>
-                                Profile
-                              </a>
-                              <a href={"/" + gameGroup + "/player/" + user.id + "?tab=collection"} className={drawerSubLinkClasses}>
-                                Collection
-                              </a>
-                              <a href={"/" + gameGroup + "/player/" + user.id + "?tab=faq"} className={drawerSubLinkClasses}>
-                                FAQ
-                              </a>
-                              <a href={"/" + gameGroup + "/player/" + user.id + "?tab=stats"} className={drawerSubLinkClasses}>
-                                Stats
-                              </a>
-                            </React.Fragment>
-                          );
-                        }
+                        // Profile has its own card above the list
+                        if (item.name === "Profile") return null;
                         // For other items (Dashboard, Admin, etc.), render normally
                         return (
                           <a
@@ -270,6 +360,10 @@ const MainComponent = (props: ContainerProps) => {
                         <a href={"/" + gameGroup + "/export"} className={drawerActionClasses}>
                           <ArrowDownTrayIcon className="mr-3 h-6 w-6" aria-hidden="true" />
                           Export data
+                        </a>
+                        <a href={helpHref(gameGroup)} className={drawerActionClasses}>
+                          <QuestionMarkCircleIcon className="mr-3 h-6 w-6" aria-hidden="true" />
+                          Help &amp; FAQ
                         </a>
                       </div>
                     </div>

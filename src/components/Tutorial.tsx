@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import FAQ from "npm/components/FAQ";
 import { Disclosure } from "@headlessui/react";
 import {
   ChevronDownIcon,
@@ -58,45 +60,21 @@ const TutorialSection: React.FC<TutorialSectionProps> = ({
   );
 };
 
-interface FAQItemProps {
-  question: string;
-  answer: string;
-}
-
-const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
-  return (
-    <Disclosure>
-      {({ open }) => (
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <Disclosure.Button className="flex w-full items-center justify-between py-4 text-left">
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {question}
-            </span>
-            <ChevronDownIcon
-              className={classNames(
-                "h-5 w-5 text-gray-500 transition-transform duration-200 dark:text-gray-400",
-                open ? "rotate-180 transform" : ""
-              )}
-            />
-          </Disclosure.Button>
-          <Disclosure.Panel className="pb-4">
-            <p className="text-sm text-gray-600 dark:text-gray-300">{answer}</p>
-          </Disclosure.Panel>
-        </div>
-      )}
-    </Disclosure>
-  );
-};
-
 const Tutorial = ({ groupName }: DashboardProps) => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"guide" | "faq">("guide");
 
+  // Open the FAQ tab straight away for links like /tutorial?tab=faq
+  useEffect(() => {
+    if (router.query.tab === "faq") setActiveTab("faq");
+  }, [router.query.tab]);
+
   return (
-    <div className="px-4 py-6 sm:px-6 lg:px-8">
+    <div className="py-2 sm:px-6 sm:py-6 lg:px-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Welcome to Game Tracker
+          Help &amp; FAQ
         </h1>
         <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
           Game Tracker helps you record, organize, and analyze your board game
@@ -527,54 +505,7 @@ const Tutorial = ({ groupName }: DashboardProps) => {
           </div>
         </div>
       ) : (
-        /* FAQ Section */
-        <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-          <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-white">
-            Frequently Asked Questions
-          </h3>
-          <div className="space-y-1">
-            <FAQItem
-              question="How do I invite friends to my game group?"
-              answer="Game groups are managed through the admin panel. If you're an admin, you can invite new members by sharing the group invite link or adding them directly from the admin section."
-            />
-            <FAQItem
-              question="Can I edit a game session after it's been recorded?"
-              answer="Yes! Click on any session in your history to view its details. From there, you can edit scores, add or remove players, or update other information."
-            />
-            <FAQItem
-              question="How are win percentages calculated?"
-              answer="Win percentage is calculated as the number of first-place finishes divided by the total number of games played, multiplied by 100. For games with ties, the win is shared among tied players."
-            />
-            <FAQItem
-              question="Can I track cooperative games?"
-              answer="Yes! When recording a cooperative game, you can mark all players with the same position (1 for win, 2 for loss) to indicate the team result."
-            />
-            <FAQItem
-              question="What's the difference between a game and an expansion?"
-              answer="Base games can be played standalone, while expansions require a base game. When adding an expansion to a session, it will be linked to the base game in your statistics."
-            />
-            <FAQItem
-              question="Can I delete a game from my collection?"
-              answer="Games can be removed from your collection through the game details page. Note that this won't delete any recorded sessions - those are preserved in your history."
-            />
-            <FAQItem
-              question="How do I change my display name or avatar?"
-              answer="Your profile information is managed through your account settings. Click on your profile picture in the navigation bar to access account options."
-            />
-            <FAQItem
-              question="Is my data backed up?"
-              answer="Yes, all data is automatically saved to our servers. You can also export your data as a CSV file at any time for local backup."
-            />
-            <FAQItem
-              question="Can I be in multiple game groups?"
-              answer="Absolutely! You can join as many game groups as you like and switch between them using the switch icon in the navigation bar."
-            />
-            <FAQItem
-              question="How do I report a bug or suggest a feature?"
-              answer="We appreciate your feedback! Please reach out to the app administrators or submit feedback through the provided channels."
-            />
-          </div>
-        </div>
+        <FAQ />
       )}
 
       {/* Back to Dashboard */}

@@ -36,7 +36,7 @@ const Avatar = ({ name, imageUrl }: { name: string; imageUrl?: string }) =>
     </span>
   );
 
-const PlayerCard = ({ stats, imageUrl }: { stats: ProfileStats; imageUrl?: string }) => {
+const PlayerCard = ({ stats, imageUrl, hideIdentity }: { stats: ProfileStats; imageUrl?: string; hideIdentity?: boolean }) => {
   const { level } = stats;
   const progress = level.xpForNextLevel > 0 ? (level.xpIntoLevel / level.xpForNextLevel) * 100 : 0;
   const tiles = [
@@ -49,21 +49,23 @@ const PlayerCard = ({ stats, imageUrl }: { stats: ProfileStats; imageUrl?: strin
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-700 to-indigo-900 p-4 text-white shadow sm:p-5">
       <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full border-[22px] border-white/10" aria-hidden="true" />
-      <div className="relative flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <Avatar name={stats.playerName} imageUrl={imageUrl} />
-          <div className="min-w-0">
-            <div className="truncate text-base font-bold">{stats.playerName}</div>
-            <div className="truncate text-xs text-white/80">
-              {stats.groupName}
-              {stats.since && ` · since ${dayjs(stats.since).format("MMM YYYY")}`}
+      {!hideIdentity && (
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar name={stats.playerName} imageUrl={imageUrl} />
+            <div className="min-w-0">
+              <div className="truncate text-base font-bold">{stats.playerName}</div>
+              <div className="truncate text-xs text-white/80">
+                {stats.groupName}
+                {stats.since && ` · since ${dayjs(stats.since).format("MMM YYYY")}`}
+              </div>
             </div>
           </div>
+          <span className="flex-none rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold">Lvl {level.level}</span>
         </div>
-        <span className="flex-none rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold">Lvl {level.level}</span>
-      </div>
+      )}
 
-      <div className="relative mt-3 text-2xl font-extrabold leading-tight">{stats.archetype.title}</div>
+      <div className={classNames("relative text-2xl font-extrabold leading-tight", !hideIdentity && "mt-3")}>{stats.archetype.title}</div>
       <p className="relative mt-1 max-w-md text-sm text-white/85">{stats.archetype.reason}</p>
 
       <dl className="relative mt-4 grid grid-cols-4 gap-2 border-t border-white/20 pt-3">
@@ -281,7 +283,7 @@ const EveryGame = ({ games }: { games: ProfileGame[] }) => {
   );
 };
 
-const MyStats = ({ groupName }: { groupName: string }) => {
+const MyStats = ({ groupName, hideIdentity }: { groupName: string; hideIdentity?: boolean }) => {
   const { user } = useUser();
   const { data: stats, isLoading, isError, error } = api.stats.getProfileStats.useQuery({ groupName });
 
@@ -311,7 +313,7 @@ const MyStats = ({ groupName }: { groupName: string }) => {
         {showMechanics ? (
           <>
             <div className="grid gap-3 lg:col-span-2 lg:gap-4">
-              <PlayerCard stats={stats} imageUrl={user?.imageUrl} />
+              <PlayerCard stats={stats} imageUrl={user?.imageUrl} hideIdentity={hideIdentity} />
               <div className="grid items-start gap-3 md:grid-cols-2 lg:gap-4">
                 {fairShare}
                 {signature}
@@ -321,7 +323,7 @@ const MyStats = ({ groupName }: { groupName: string }) => {
           </>
         ) : (
           <>
-            <PlayerCard stats={stats} imageUrl={user?.imageUrl} />
+            <PlayerCard stats={stats} imageUrl={user?.imageUrl} hideIdentity={hideIdentity} />
             <div className="grid gap-3 lg:gap-4">
               {fairShare}
               {signature}
