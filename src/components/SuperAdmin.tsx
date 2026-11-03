@@ -5,6 +5,8 @@ import {
   ArrowTopRightOnSquareIcon,
   ChevronDownIcon,
   EllipsisVerticalIcon,
+  EyeIcon,
+  EyeSlashIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   ShieldCheckIcon,
@@ -18,6 +20,7 @@ import { api } from "npm/utils/api";
 import { LoadingPage, LoadingSpinner } from "npm/components/loading";
 import { classNames, formatDate } from "npm/lib/utils";
 import { useToast } from "npm/context/ToastContext";
+import { AnnouncementBody, AnnouncementHeader } from "npm/components/WhatsNew";
 
 type Tab = "players" | "groups" | "admins" | "news";
 
@@ -161,11 +164,20 @@ const SuperAdminView = () => {
   const [showAllMembers, setShowAllMembers] = React.useState(false);
   const [memberQuery, setMemberQuery] = React.useState("");
   const [addToGroupFor, setAddToGroupFor] = React.useState<string | null>(null);
+  const [showCreateMessage, setShowCreateMessage] = React.useState(false);
+  const [newTitle, setNewTitle] = React.useState("");
+  const [newBody, setNewBody] = React.useState("");
+  const [newActive, setNewActive] = React.useState(true);
+  const [openSeenList, setOpenSeenList] = React.useState<string | null>(null);
 
   const { data: allPlayers, isLoading: playersLoading, refetch: refetchPlayers } = api.superadmin.getAllPlayers.useQuery();
   const { data: allGroups, isLoading: groupsLoading, refetch: refetchGroups } = api.superadmin.getAllGroups.useQuery();
   const { data: allAdmins, isLoading: adminsLoading, refetch: refetchAdmins } = api.superadmin.getAllAdmins.useQuery();
-  const { data: announcements, isLoading: announcementsLoading } = api.announcement.getAllWithDismissals.useQuery();
+  const {
+    data: announcements,
+    isLoading: announcementsLoading,
+    refetch: refetchAnnouncements,
+  } = api.announcement.getAllWithDismissals.useQuery();
 
   const refetchAll = () => {
     void refetchPlayers();
@@ -200,6 +212,29 @@ const SuperAdminView = () => {
       refetchAll();
       setMemberQuery("");
       setAddToGroupFor(null);
+    },
+    onError,
+  });
+
+  const createMessage = api.announcement.create.useMutation({
+    onSuccess: (created) => {
+      void refetchAnnouncements();
+      setShowCreateMessage(false);
+      setNewTitle("");
+      setNewBody("");
+      setNewActive(true);
+      showToast(created.active ? "Message published" : "Message saved as inactive", "success");
+    },
+    onError,
+  });
+  const setMessageActive = api.announcement.setActive.useMutation({
+    onSuccess: () => void refetchAnnouncements(),
+    onError,
+  });
+  const deleteMessage = api.announcement.delete.useMutation({
+    onSuccess: () => {
+      void refetchAnnouncements();
+      showToast("Message deleted", "success");
     },
     onError,
   });
@@ -289,18 +324,25 @@ const SuperAdminView = () => {
             {players.length} players · {groups.length} groups · {admins.length} admins
           </p>
         </div>
-        {!(showCreateGroup && tab === "groups") && (
-          <button
-            className={primaryButton}
-            onClick={() => {
-              setShowCreateGroup(true);
-              switchTab("groups");
-            }}
-          >
-            <PlusIcon className="h-5 w-5" aria-hidden="true" />
-            New group
-          </button>
-        )}
+        {tab === "news"
+          ? !showCreateMessage && (
+              <button className={primaryButton} onClick={() => setShowCreateMessage(true)}>
+                <PlusIcon className="h-5 w-5" aria-hidden="true" />
+                New message
+              </button>
+            )
+          : !(showCreateGroup && tab === "groups") && (
+              <button
+                className={primaryButton}
+                onClick={() => {
+                  setShowCreateGroup(true);
+                  switchTab("groups");
+                }}
+              >
+                <PlusIcon className="h-5 w-5" aria-hidden="true" />
+                New group
+              </button>
+            )}
       </div>
 
       <div className="grid grid-cols-4 gap-0.5 rounded-xl bg-gray-100 p-1 dark:bg-gray-800 sm:inline-grid sm:w-auto" role="tablist">
@@ -666,38 +708,148 @@ const SuperAdminView = () => {
       {/* News */}
       {tab === "news" && (
         <div className="space-y-4">
+          {showCreateMessage && (
+            <div className={classNames(cardClass, "space-y-3 p-4 sm:p-5")}>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-gray-900 dark:text-white">New message</h2>
+                <button
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                  aria-label="Close"
+                  onClick={() => setShowCreateMessage(false)}
+                >
+                  <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Title
+                    <input
+                      className={classNames(inputClass, "mt-1")}
+                      value={newTitle}
+                      maxLength={191}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      placeholder="What's new in Game Tracker"
+                    />
+                  </label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Message
+                    <span className="ml-1 font-normal text-gray-500 dark:text-gray-400">· one bullet per line</span>
+                    <textarea
+                      className={classNames(inputClass, "mt-1 h-36 resize-y py-2")}
+                      value={newBody}
+                      onChange={(e) => setNewBody(e.target.value)}
+                      placeholder={"You can now add photos to a session\nThe app works better on phones"}
+                    />
+                  </label>
+                  <label className="flex items-center gap-2.5 text-sm text-gray-900 dark:text-white">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900"
+                      checked={newActive}
+                      onChange={(e) => setNewActive(e.target.checked)}
+                    />
+                    Show to players right away
+                  </label>
+                </div>
+                <div>
+                  <p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Preview</p>
+                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                    {newTitle.trim() || newBody.trim() ? (
+                      <div className="space-y-4">
+                        <AnnouncementHeader as="p" title={newTitle.trim() || "Untitled"} />
+                        <AnnouncementBody body={newBody} />
+                      </div>
+                    ) : (
+                      <p className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">Start typing to see what players will see</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                className={primaryButton}
+                disabled={!newTitle.trim() || !newBody.trim() || createMessage.isLoading}
+                onClick={() => createMessage.mutate({ title: newTitle, body: newBody, active: newActive })}
+              >
+                {createMessage.isLoading ? <LoadingSpinner size={16} /> : <PlusIcon className="h-5 w-5" aria-hidden="true" />}
+                {newActive ? "Publish message" : "Save as inactive"}
+              </button>
+            </div>
+          )}
           {news.map((n) => {
             const seen = n.AnnouncementDismissal.length;
             const pct = players.length ? Math.round((seen / players.length) * 100) : 0;
+            const seenOpen = openSeenList === n.id;
             return (
               <div key={n.id} className={cardClass}>
-                <div className="space-y-2 p-4 sm:p-5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-semibold text-gray-900 dark:text-white">{n.title}</h2>
-                    <span className={n.active ? superChip : memberChip}>{n.active ? "Active" : "Inactive"}</span>
+                <div className="space-y-3 p-4 sm:p-5">
+                  <div className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={n.active ? superChip : memberChip}>{n.active ? "Active" : "Inactive"}</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{formatDate(n.createdAt)}</span>
+                      </div>
+                      <p className="mt-0.5 truncate font-mono text-xs text-gray-500 dark:text-gray-400">{n.id}</p>
+                    </div>
+                    <ActionMenu
+                      label={`Actions for ${n.title}`}
+                      actions={[
+                        {
+                          label: n.active ? "Stop showing" : "Show to players",
+                          icon: n.active ? EyeSlashIcon : EyeIcon,
+                          onClick: () => setMessageActive.mutate({ announcementId: n.id, active: !n.active }),
+                        },
+                        {
+                          label: "Delete message",
+                          icon: TrashIcon,
+                          danger: true,
+                          divider: true,
+                          onClick: () =>
+                            confirmThen(`Delete "${n.title}"? This also forgets who has seen it.`, () =>
+                              deleteMessage.mutate({ announcementId: n.id })
+                            ),
+                        },
+                      ]}
+                    />
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    <span className="font-mono text-xs">{n.id}</span> · {formatDate(n.createdAt)}
-                  </p>
-                  <div className="flex items-center gap-3">
+                  <div
+                    className={classNames(
+                      "max-w-md space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800",
+                      !n.active && "opacity-60"
+                    )}
+                  >
+                    <AnnouncementHeader as="p" title={n.title} />
+                    <AnnouncementBody body={n.body} />
+                  </div>
+                  <button
+                    className="flex w-full items-center gap-3 rounded-lg py-1 text-left"
+                    aria-expanded={seenOpen}
+                    onClick={() => setOpenSeenList(seenOpen ? null : n.id)}
+                  >
                     <div className="h-2 flex-1 rounded-full bg-gray-200 dark:bg-gray-700">
                       <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${pct}%` }} />
                     </div>
                     <span className="flex-none text-sm text-gray-500 dark:text-gray-400">
                       Seen by {seen} of {players.length}
                     </span>
-                  </div>
+                    <ChevronDownIcon
+                      className={classNames("h-5 w-5 flex-none text-gray-400 transition-transform", seenOpen && "rotate-180")}
+                      aria-hidden="true"
+                    />
+                  </button>
                 </div>
-                <ul className="divide-y divide-gray-200 border-t border-gray-200 dark:divide-gray-700 dark:border-gray-700">
-                  {n.AnnouncementDismissal.map((d) => (
-                    <li key={d.id} className="flex items-center gap-3 px-4 py-2 sm:px-5">
-                      <Initial id={d.Player.id} label={displayName(d.Player)} small />
-                      <span className="min-w-0 flex-1 truncate text-sm text-gray-900 dark:text-white">{displayName(d.Player)}</span>
-                      <span className="flex-none text-sm text-gray-500 dark:text-gray-400">{formatDate(d.dismissedAt)}</span>
-                    </li>
-                  ))}
-                  {seen === 0 && <li className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 sm:px-5">Nobody has seen this yet</li>}
-                </ul>
+                {seenOpen && (
+                  <ul className="divide-y divide-gray-200 border-t border-gray-200 dark:divide-gray-700 dark:border-gray-700">
+                    {n.AnnouncementDismissal.map((d) => (
+                      <li key={d.id} className="flex items-center gap-3 px-4 py-2 sm:px-5">
+                        <Initial id={d.Player.id} label={displayName(d.Player)} small />
+                        <span className="min-w-0 flex-1 truncate text-sm text-gray-900 dark:text-white">{displayName(d.Player)}</span>
+                        <span className="flex-none text-sm text-gray-500 dark:text-gray-400">{formatDate(d.dismissedAt)}</span>
+                      </li>
+                    ))}
+                    {seen === 0 && <li className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 sm:px-5">Nobody has seen this yet</li>}
+                  </ul>
+                )}
               </div>
             );
           })}
