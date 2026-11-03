@@ -55,11 +55,16 @@ export const statsRouter = createTRPCRouter({
       const allGames = await ctx.prisma.game.findMany();
       const gameMap = new Map(allGames.map((g) => [g.id, g]));
 
-      type Tally = { plays: number; wins: number; positions: number[] };
-      const newTally = (): Tally => ({ plays: 0, wins: 0, positions: [] });
-      const record = (tally: Tally, position: number | null) => {
+      // beaten sums, per rated game, the share of opponents finished ahead of
+      type Tally = { plays: number; wins: number; positions: number[]; beaten: number; rated: number };
+      const newTally = (): Tally => ({ plays: 0, wins: 0, positions: [], beaten: 0, rated: 0 });
+      const record = (tally: Tally, position: number | null, beaten: number | null) => {
         tally.plays += 1;
         if (position === 1) tally.wins += 1;
+        if (beaten !== null) {
+          tally.beaten += beaten;
+          tally.rated += 1;
+        }
         // positions[i] counts finishes in place i + 1
         if (position && position > 0) {
           while (tally.positions.length < position) tally.positions.push(0);
@@ -86,13 +91,23 @@ export const statsRouter = createTRPCRouter({
           sessionsPerGame.set(baseId, (sessionsPerGame.get(baseId) ?? 0) + 1);
         }
 
+        // Share of opponents each finisher beat, ties counting as half a win against each other
+        const finished = session.PlayerGameSessionJunction.flatMap((p) => (p.position && p.position > 0 ? [p.position] : []));
+        const beatenShare = (position: number | null) => {
+          if (!position || position <= 0 || finished.length < 2) return null;
+          const behind = finished.filter((p) => p > position).length;
+          const tied = finished.filter((p) => p === position).length - 1;
+          return (behind + tied / 2) / (finished.length - 1);
+        };
+
         for (const pgs of session.PlayerGameSessionJunction) {
           const nickname: string | null = pgs.player.nickname ?? pgs.player.name;
           if (!nickname) continue;
+          const beaten = beatenShare(pgs.position);
 
           const total = overall.get(nickname) ?? newTally();
           overall.set(nickname, total);
-          record(total, pgs.position);
+          record(total, pgs.position, beaten);
 
           for (const baseId of baseIdsInSession) {
             let byPlayer = perGame.get(baseId);
@@ -102,7 +117,7 @@ export const statsRouter = createTRPCRouter({
             }
             const tally = byPlayer.get(nickname) ?? newTally();
             byPlayer.set(nickname, tally);
-            record(tally, pgs.position);
+            record(tally, pgs.position, beaten);
           }
         }
       }

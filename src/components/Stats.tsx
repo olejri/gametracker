@@ -15,6 +15,8 @@ type Tally = { plays: number; wins: number; positions: number[] };
 
 // Win rates based on fewer plays than this are shown faded
 const FEW_PLAYS = 3;
+// Players need this many games with a finishing position to be ranked
+const MIN_RANKED_GAMES = 5;
 const GAMES_SHOWN = 12;
 
 const AVATAR_COLORS = [
@@ -40,12 +42,6 @@ const bucketPositions = (positions: number[]) => [
   positions[2] ?? 0,
   positions.slice(3).reduce((s, n) => s + n, 0),
 ];
-
-const averageFinish = (positions: number[]) => {
-  const total = positions.reduce((s, n) => s + n, 0);
-  if (total === 0) return null;
-  return positions.reduce((s, n, i) => s + n * (i + 1), 0) / total;
-};
 
 const sumPositions = (tallies: Tally[]) => {
   const result: number[] = [];
@@ -112,54 +108,91 @@ const StatTile = ({ title, value, subtitle }: { title: string; value: string | n
   </Card>
 );
 
-type PlayerSummary = Breakdown["players"][number] & { color: string; rate: number | null; avgFinish: number | null };
+type PlayerSummary = Breakdown["players"][number] & {
+  color: string;
+  rate: number | null;
+  beatenRate: number | null;
+  isRanked: boolean;
+};
+
+const LeaderboardRow: React.FC<{
+  player: PlayerSummary;
+  rank?: number;
+  selected: boolean;
+  onSelect: (name: string) => void;
+}> = ({ player: p, rank, selected, onSelect }) => (
+  <li>
+    <button
+      type="button"
+      onClick={() => onSelect(p.name)}
+      className={classNames(
+        "flex w-full items-center gap-3 rounded-md p-1.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
+        selected
+          ? "bg-indigo-50 ring-1 ring-indigo-200 dark:bg-indigo-900/30 dark:ring-indigo-800"
+          : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+      )}
+    >
+      <span className={classNames("w-4 text-right text-xs font-semibold tabular-nums", MUTED)}>{rank ?? "–"}</span>
+      <PlayerAvatar name={p.name} color={p.color} />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-baseline justify-between gap-2">
+          <span className="truncate text-sm font-medium text-gray-900 dark:text-white">{p.name}</span>
+          <span className={classNames("shrink-0 text-xs tabular-nums", MUTED)}>
+            <b className={classNames("font-semibold", p.isRanked ? "text-gray-900 dark:text-white" : MUTED)}>
+              {pct(p.beatenRate)}
+            </b>{" "}
+            · {pct(p.rate)} wins · {p.plays} games
+          </span>
+        </span>
+        <span className="mt-1 block">
+          <PositionBar positions={p.positions} />
+        </span>
+      </span>
+    </button>
+  </li>
+);
 
 const Leaderboard: React.FC<{
   players: PlayerSummary[];
   selected: string | null;
   onSelect: (name: string) => void;
-}> = ({ players, selected, onSelect }) => (
-  <Card className="p-4">
-    <SectionHeader title="Leaderboard" right="by win rate" />
-    <ol className="space-y-1">
-      {players.map((p, rank) => (
-        <li key={p.name}>
-          <button
-            type="button"
-            onClick={() => onSelect(p.name)}
-            className={classNames(
-              "flex w-full items-center gap-3 rounded-md p-1.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
-              selected === p.name
-                ? "bg-indigo-50 ring-1 ring-indigo-200 dark:bg-indigo-900/30 dark:ring-indigo-800"
-                : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
-            )}
-          >
-            <span className={classNames("w-4 text-right text-xs font-semibold tabular-nums", MUTED)}>{rank + 1}</span>
-            <PlayerAvatar name={p.name} color={p.color} />
-            <span className="min-w-0 flex-1">
-              <span className="flex items-baseline justify-between gap-2">
-                <span className="truncate text-sm font-medium text-gray-900 dark:text-white">{p.name}</span>
-                <span className={classNames("shrink-0 text-xs tabular-nums", MUTED)}>
-                  <b className="font-semibold text-gray-900 dark:text-white">{pct(p.rate)}</b> wins · {p.plays} games
-                </span>
-              </span>
-              <span className="mt-1 block">
-                <PositionBar positions={p.positions} />
-              </span>
-            </span>
-          </button>
-        </li>
-      ))}
-    </ol>
-    <div className="mt-3">
-      <PositionLegend />
-    </div>
-  </Card>
-);
+}> = ({ players, selected, onSelect }) => {
+  const unranked = players.filter((p) => !p.isRanked);
+  return (
+    <Card className="p-4">
+      <SectionHeader title="Leaderboard" right="by opponents beaten" />
+      <ol className="space-y-1">
+        {players
+          .filter((p) => p.isRanked)
+          .map((p, i) => (
+            <LeaderboardRow key={p.name} player={p} rank={i + 1} selected={selected === p.name} onSelect={onSelect} />
+          ))}
+      </ol>
+      {unranked.length > 0 && (
+        <>
+          <div className={classNames("mb-1 mt-3 border-t border-gray-100 pt-2 text-xs dark:border-gray-700", MUTED)}>
+            Not ranked yet · under {MIN_RANKED_GAMES} games
+          </div>
+          <ul className="space-y-1">
+            {unranked.map((p) => (
+              <LeaderboardRow key={p.name} player={p} selected={selected === p.name} onSelect={onSelect} />
+            ))}
+          </ul>
+        </>
+      )}
+      <p className={classNames("mt-3 text-[11px]", MUTED)}>
+        Share of opponents finished ahead of, so 2nd of 6 beats 2nd of 2. Ties count as half.
+      </p>
+      <div className="mt-2">
+        <PositionLegend />
+      </div>
+    </Card>
+  );
+};
 
 const PlayerSpotlight: React.FC<{
   player: PlayerSummary;
-  rank: number;
+  rank: number | null;
   isYou: boolean;
   groupPositions: number[];
   games: BreakdownGame[];
@@ -192,14 +225,16 @@ const PlayerSpotlight: React.FC<{
                 {player.name}
                 {isYou && <span className={classNames("ml-1 text-xs font-normal", MUTED)}>(you)</span>}
               </div>
-              <div className={classNames("text-xs", MUTED)}>#{rank} in the group</div>
+              <div className={classNames("text-xs", MUTED)}>
+                {rank ? `#${rank} in the group` : `Not ranked yet · ${MIN_RANKED_GAMES} games needed`}
+              </div>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
             {[
               ["Win rate", pct(player.rate)],
               ["Games", player.plays],
-              ["Avg finish", player.avgFinish?.toFixed(1) ?? "–"],
+              ["Opponents beaten", pct(player.beatenRate)],
             ].map(([label, value]) => (
               <div key={label}>
                 <div className="text-2xl font-bold tabular-nums text-gray-900 dark:text-white">{value}</div>
@@ -513,9 +548,15 @@ const Stats: React.FC<DashboardProps> = (props) => {
         ...p,
         color: colors.get(p.name) ?? "bg-gray-400",
         rate: winRate(p),
-        avgFinish: averageFinish(p.positions),
+        beatenRate: p.rated > 0 ? p.beaten / p.rated : null,
+        isRanked: p.rated >= MIN_RANKED_GAMES,
       }))
-      .sort((a, b) => (b.rate ?? 0) - (a.rate ?? 0) || b.plays - a.plays);
+      .sort(
+        (a, b) =>
+          Number(b.isRanked) - Number(a.isRanked) ||
+          (b.beatenRate ?? -1) - (a.beatenRate ?? -1) ||
+          b.plays - a.plays
+      );
     const games = breakdown.games.filter((g) => g.players.some((p) => activeNames.has(p.name)));
     const highScoreByGame = new Map(
       (highScores ?? []).filter((h) => h.isActivePlayer).map((h) => [h.gameName, h])
@@ -624,7 +665,7 @@ const Stats: React.FC<DashboardProps> = (props) => {
             {spotlight && (
               <PlayerSpotlight
                 player={spotlight}
-                rank={ranked.indexOf(spotlight) + 1}
+                rank={spotlight.isRanked ? ranked.indexOf(spotlight) + 1 : null}
                 isYou={spotlight.name === myName}
                 groupPositions={groupPositions}
                 games={games}
