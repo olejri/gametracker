@@ -1,390 +1,264 @@
 import { type DashboardProps } from "npm/components/Types";
-import { sortPlayers } from "npm/components/HelperFunctions";
 import { api } from "npm/utils/api";
-import React, { useMemo, useState } from "react";
+import React, { Fragment, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { LoadingPage } from "npm/components/loading";
-import Avatar from "npm/components/Avatar";
-import Badge from "npm/components/Badge";
-import { Th } from "npm/components/Th";
+import { GameImage } from "npm/components/GameImage";
+import { PlayerStack, WinnerChip, sessionResult } from "npm/components/SessionSummary";
 import { classNames } from "npm/lib/utils";
-import { Combobox } from "@headlessui/react";
-import { ChevronUpDownIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { BADGE_COLORS } from "npm/lib/constants";
+import { Listbox, Transition } from "@headlessui/react";
+import { CheckIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
-const tdBorder = "border-b border-gray-300 dark:border-gray-700";
-const hiddenLgCell = "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell dark:text-gray-400";
+type Option = { value: string; label: string };
+
+const pill = "inline-flex h-9 flex-shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500";
+const pillIdle = "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700";
+const pillActive = "border-indigo-500 bg-indigo-50 text-indigo-800 dark:border-indigo-400 dark:bg-indigo-900/40 dark:text-indigo-200";
+
+// A pill that opens a list to pick one option; "" means no filter
+const FilterMenu = ({ label, value, options, onChange }: {
+  label: string;
+  value: string;
+  options: Option[];
+  onChange: (value: string) => void;
+}) => {
+  const selected = options.find((o) => o.value === value);
+  return (
+    <Listbox value={value} onChange={onChange}>
+      <div className="relative">
+        <Listbox.Button className={classNames(pill, selected ? pillActive : pillIdle)}>
+          <span className="max-w-[9rem] truncate">{selected?.label ?? label}</span>
+          <ChevronDownIcon className="h-4 w-4 opacity-70" aria-hidden="true" />
+        </Listbox.Button>
+        <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+          <Listbox.Options className="absolute left-0 z-20 mt-1 max-h-72 w-56 overflow-auto rounded-lg bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-gray-800 dark:ring-gray-600">
+            {[{ value: "", label }, ...options].map((o) => (
+              <Listbox.Option
+                key={o.value || "all"}
+                value={o.value}
+                className={({ active }) => classNames(
+                  "relative flex min-h-[40px] cursor-default select-none items-center py-2 pl-9 pr-3",
+                  active ? "bg-indigo-600 text-white" : "text-gray-900 dark:text-white"
+                )}
+              >
+                {({ selected: isSelected }) => (
+                  <>
+                    {isSelected && <CheckIcon className="absolute left-3 h-4 w-4" aria-hidden="true" />}
+                    <span className={classNames("truncate", isSelected && "font-semibold")}>{o.label}</span>
+                  </>
+                )}
+              </Listbox.Option>
+            ))}
+          </Listbox.Options>
+        </Transition>
+      </div>
+    </Listbox>
+  );
+};
+
+const tag = "rounded px-1.5 py-px text-[11px] font-semibold";
 
 const History = ({ groupName }: DashboardProps) => {
   const { data, isLoading, isError } = api.session.getAllCompletedSessions.useQuery({
     data: { groupId: groupName },
   });
 
+  const [search, setSearch] = useState("");
   const [gameFilter, setGameFilter] = useState("");
   const [playerFilter, setPlayerFilter] = useState("");
-  const [gameQuery, setGameQuery] = useState("");
-  const [playerQuery, setPlayerQuery] = useState("");
   const [teamGamesOnly, setTeamGamesOnly] = useState(false);
 
-  const sessions = data ?? [];
+  const sessions = useMemo(() => data ?? [], [data]);
 
-  // Extract unique game names and players from sessions
-  const uniqueGames = useMemo(() => {
+  const gameOptions = useMemo(() => {
     const games = new Set<string>();
     sessions.forEach((session) => games.add(session.gameName));
-    return Array.from(games).sort();
+    return Array.from(games).sort().map((name) => ({ value: name, label: name }));
   }, [sessions]);
 
-  const uniquePlayers = useMemo(() => {
+  const playerOptions = useMemo(() => {
     const players = new Map<string, string>();
     sessions.forEach((session) => {
       session.players.forEach((player) => {
         if (!players.has(player.playerId)) {
-          players.set(player.playerId, player.nickname || player.playerId);
+          players.set(player.playerId, player.nickname || "Unnamed player");
         }
       });
     });
     return Array.from(players.entries())
-      .map(([id, nickname]) => ({ id, nickname }))
-      .sort((a, b) => a.nickname.localeCompare(b.nickname));
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }, [sessions]);
 
-  // Filter games based on query
-  const filteredGames = useMemo(() => {
-    return uniqueGames.filter((game) =>
-      game.toLowerCase().includes(gameQuery.toLowerCase())
-    );
-  }, [uniqueGames, gameQuery]);
-
-  // Filter players based on query
-  const filteredPlayers = useMemo(() => {
-    return uniquePlayers.filter((player) =>
-      player.nickname.toLowerCase().includes(playerQuery.toLowerCase())
-    );
-  }, [uniquePlayers, playerQuery]);
-
-  // Apply filters to sessions
   const filteredSessions = useMemo(() => {
+    const query = search.trim().toLowerCase();
     return sessions.filter((session) => {
       const gameMatches = !gameFilter || session.gameName === gameFilter;
       const playerMatches =
         !playerFilter || session.players.some((p) => p.playerId === playerFilter);
       const teamGameMatches = !teamGamesOnly || session.isTeamGame;
-      return gameMatches && playerMatches && teamGameMatches;
+      const searchMatches = !query
+        || session.gameName.toLowerCase().includes(query)
+        || session.players.some((p) => p.nickname.toLowerCase().includes(query));
+      return gameMatches && playerMatches && teamGameMatches && searchMatches;
     });
-  }, [sessions, gameFilter, playerFilter, teamGamesOnly]);
+  }, [sessions, search, gameFilter, playerFilter, teamGamesOnly]);
 
-  const content = useMemo(() => {
-    if (isLoading) {
-      return (
-        <div className="flex grow">
-          <LoadingPage />
-        </div>
-      );
-    }
+  // Sessions come newest first, so months come out in order
+  const months = useMemo(() => {
+    const groups: { label: string; items: typeof filteredSessions }[] = [];
+    filteredSessions.forEach((session) => {
+      const label = dayjs(session.createdAt).format("MMMM YYYY");
+      const last = groups[groups.length - 1];
+      if (last?.label === label) last.items.push(session);
+      else groups.push({ label, items: [session] });
+    });
+    return groups;
+  }, [filteredSessions]);
 
-    if (isError) {
-      return <div className="px-4 py-6 text-sm text-red-600 dark:text-red-400">Failed to load history.</div>;
-    }
+  const hasFilters = !!(search || gameFilter || playerFilter || teamGamesOnly);
+  const clearFilters = () => {
+    setSearch("");
+    setGameFilter("");
+    setPlayerFilter("");
+    setTeamGamesOnly(false);
+  };
 
-    if (!sessions.length) {
-      return <div className="px-4 py-6 text-sm text-gray-600 dark:text-gray-400">No completed sessions yet.</div>;
-    }
-
-    if (!filteredSessions.length) {
-      return (
-        <div className="px-4 py-6 text-sm text-gray-600 dark:text-gray-400">
-          No sessions match the current filters.
-        </div>
-      );
-    }
-
+  if (isLoading) {
     return (
-      <div className="relative -my-2 -mx-4 sm:-mx-6 lg:-mx-8">
-        <div className="inline-block min-w-full py-2 align-middle">
-          <table className="min-w-full border-separate border-spacing-0">
-            <thead>
-              <tr>
-                <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">Game</Th>
-                <Th className="pl-4 pr-3 sm:pl-6 lg:pl-8">Players</Th>
-                <Th className="hidden px-3 lg:table-cell">Position</Th>
-                <Th className="hidden px-3 lg:table-cell">Score</Th>
-                <Th className="pl-3 pr-4 text-right sm:pr-6 lg:pr-8">Date</Th>
-                <Th className="hidden px-3 lg:table-cell">Location</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredSessions.map((game, gameIdx) => {
-                const href = `/${groupName}/session/${game.sessionId}`;
-                const rowHasBorder = gameIdx !== filteredSessions.length - 1;
-                const playersSorted = sortPlayers(game.players);
-
-                return (
-                  <tr 
-                    key={game.sessionId}
-                    className={classNames(
-                      game.isTeamGame && "bg-blue-50 dark:bg-blue-900/20"
-                    )}
-                  >
-                    <td
-                      className={classNames(
-                        rowHasBorder && tdBorder,
-                        "w-6 py-4 pl-4 pr-3 text-sm font-medium sm:pl-6 lg:pl-8",
-                        game.isTeamGame 
-                          ? "text-blue-600 dark:text-blue-400 border-l-4 border-l-blue-500" 
-                          : "text-gray-900 dark:text-white",
-                      )}
-                    >
-                      <Link href={href} className="block h-full w-full">
-                        {game.gameName}
-                      </Link>
-                    </td>
-
-                    <td
-                      className={classNames(
-                        rowHasBorder && tdBorder,
-                        "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8 dark:text-white",
-                      )}
-                    >
-                      <Link href={href} className="block h-full w-full">
-                        <div className="flex-shrink-0 sm:ml-5">
-                          <Avatar
-                            avatars={playersSorted.map((p) => ({
-                              id: p.playerId,
-                              src: p.profileImageUrl,
-                              alt: p.nickname ?? p.playerId,
-                              position: p.position,
-                            }))}
-                            rankedSizing
-                          />
-                        </div>
-                      </Link>
-                    </td>
-
-                    <td className={classNames(rowHasBorder && tdBorder, hiddenLgCell)}>
-                      <Link href={href} className="block h-full w-full">
-                        <div className="flex-shrink-0 sm:ml-5">
-                          <div className="flex flex-wrap gap-2">
-                            {playersSorted.map((player) => (
-                              <Badge key={player.playerId} className="h-6 min-w-[1.5rem]">
-                                {player.position}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </Link>
-                    </td>
-
-                    <td className={classNames(rowHasBorder && tdBorder, hiddenLgCell)}>
-                      <Link href={href} className="block h-full w-full">
-                        <div className="flex-shrink-0 sm:ml-5">
-                          <div className="flex flex-wrap gap-2">
-                            {playersSorted.map((player) => (
-                              <Badge key={player.playerId} className="h-6 min-w-[1.5rem]">
-                                {player.score}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </Link>
-                    </td>
-
-                    <td
-                      className={classNames(
-                        rowHasBorder && tdBorder,
-                        "w-6 whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm text-gray-500 sm:pr-6 lg:pr-8 dark:text-gray-400",
-                      )}
-                    >
-                      <Link href={href} className="block h-full w-full">
-                        {dayjs(game.createdAt).format("DD.MM.YYYY")}
-                      </Link>
-                    </td>
-
-                    <td className={classNames(rowHasBorder && tdBorder, hiddenLgCell)}>
-                      <Link href={href} className="block h-full w-full">
-                        {"???"}
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <div className="flex grow">
+        <LoadingPage />
       </div>
     );
-  }, [groupName, isError, isLoading, filteredSessions, sessions.length]);
+  }
+
+  if (isError) {
+    return <div className="px-4 py-6 text-sm text-red-600 dark:text-red-400">Failed to load history.</div>;
+  }
+
+  const oldest = sessions[sessions.length - 1];
 
   return (
-    <div className="sm:px-6 lg:px-14">
-      <div className="flow-root sm:mt-8">
-        {/* Filter Controls */}
-        {sessions.length > 0 && (
-          <div className="relative z-20 mb-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Game Filter */}
-              <Combobox
-              as="div"
-              value={gameFilter}
-              onChange={(value: string) => {
-                setGameFilter(value);
-                setGameQuery("");
-              }}
-            >
-              <Combobox.Label className="block text-sm font-medium text-gray-900 dark:text-white">
-                Filter by Game
-              </Combobox.Label>
-              <div className="relative mt-2">
-                <Combobox.Input
-                  className="w-full rounded-md border-0 bg-white py-2 pl-3 pr-20 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:ring-gray-600"
-                  onChange={(event) => setGameQuery(event.target.value)}
-                  displayValue={(gameName: string) => gameName}
-                  placeholder="Search games..."
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center">
-                  {gameFilter && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setGameFilter("");
-                        setGameQuery("");
-                      }}
-                      className="mr-1 rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <XMarkIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                    </button>
-                  )}
-                  <Combobox.Button className="rounded-r-md px-2 focus:outline-none">
-                    <ChevronUpDownIcon
-                      className="h-5 w-5 text-gray-400"
-                      aria-hidden="true"
-                    />
-                  </Combobox.Button>
-                </div>
+    <div className="mx-auto max-w-5xl py-4 sm:py-8">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">History</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          {sessions.length} {sessions.length === 1 ? "game" : "games"} played
+          {oldest && <span className="hidden sm:inline"> since {dayjs(oldest.createdAt).format("MMMM YYYY")}</span>}
+        </p>
+      </div>
 
-                {filteredGames.length > 0 && (
-                  <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-800 dark:ring-gray-600">
-                    {filteredGames.map((game) => (
-                      <Combobox.Option
-                        key={game}
-                        value={game}
-                        className={({ active }) =>
-                          classNames(
-                            "relative cursor-default select-none py-2 pl-3 pr-9",
-                            active ? "bg-indigo-600 text-white" : "text-gray-900 dark:text-white"
-                          )
-                        }
-                      >
-                        {({ selected }) => (
-                          <span
-                            className={classNames(
-                              "block truncate",
-                              selected && "font-semibold"
-                            )}
-                          >
-                            {game}
-                          </span>
-                        )}
-                      </Combobox.Option>
-                    ))}
-                  </Combobox.Options>
-                )}
-              </div>
-            </Combobox>
-
-            {/* Player Filter */}
-            <Combobox
-              as="div"
-              value={playerFilter}
-              onChange={(value: string) => {
-                setPlayerFilter(value);
-                setPlayerQuery("");
-              }}
-            >
-              <Combobox.Label className="block text-sm font-medium text-gray-900 dark:text-white">
-                Filter by Player
-              </Combobox.Label>
-              <div className="relative mt-2">
-                <Combobox.Input
-                  className="w-full rounded-md border-0 bg-white py-2 pl-3 pr-20 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white dark:ring-gray-600"
-                  onChange={(event) => setPlayerQuery(event.target.value)}
-                  displayValue={(playerId: string) => {
-                    const player = uniquePlayers.find((p) => p.id === playerId);
-                    return player ? player.nickname : "";
-                  }}
-                  placeholder="Search players..."
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center">
-                  {playerFilter && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPlayerFilter("");
-                        setPlayerQuery("");
-                      }}
-                      className="mr-1 rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <XMarkIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                    </button>
-                  )}
-                  <Combobox.Button className="rounded-r-md px-2 focus:outline-none">
-                    <ChevronUpDownIcon
-                      className="h-5 w-5 text-gray-400"
-                      aria-hidden="true"
-                    />
-                  </Combobox.Button>
-                </div>
-
-                {filteredPlayers.length > 0 && (
-                  <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-800 dark:ring-gray-600">
-                    {filteredPlayers.map((player) => (
-                      <Combobox.Option
-                        key={player.id}
-                        value={player.id}
-                        className={({ active }) =>
-                          classNames(
-                            "relative cursor-default select-none py-2 pl-3 pr-9",
-                            active ? "bg-indigo-600 text-white" : "text-gray-900 dark:text-white"
-                          )
-                        }
-                      >
-                        {({ selected }) => (
-                          <span
-                            className={classNames(
-                              "block truncate",
-                              selected && "font-semibold"
-                            )}
-                          >
-                            {player.nickname}
-                          </span>
-                        )}
-                      </Combobox.Option>
-                    ))}
-                  </Combobox.Options>
-                )}
-              </div>
-            </Combobox>
-            </div>
-            {/* Team Games Only Filter */}
-            <div className="mt-4 flex items-center">
+      {sessions.length === 0 ? (
+        <p className="py-6 text-sm text-gray-500 dark:text-gray-400">No sessions yet. Finished games show up here.</p>
+      ) : (
+        <>
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="relative block sm:w-80">
+              <span className="sr-only">Search games or players</span>
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" aria-hidden="true" />
               <input
-                id="team-games-only"
-                type="checkbox"
-                checked={teamGamesOnly}
-                onChange={(e) => setTeamGamesOnly(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600 dark:bg-gray-800"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search games or players"
+                className="h-11 w-full rounded-lg border-0 bg-white pl-10 pr-3 text-base text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:h-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:ring-gray-600 dark:placeholder:text-gray-500"
               />
-              <label
-                htmlFor="team-games-only"
-                className="ml-2 block text-sm font-medium text-gray-900 dark:text-white"
+            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              <FilterMenu label="All players" value={playerFilter} options={playerOptions} onChange={setPlayerFilter} />
+              <FilterMenu label="All games" value={gameFilter} options={gameOptions} onChange={setGameFilter} />
+              <button
+                type="button"
+                aria-pressed={teamGamesOnly}
+                onClick={() => setTeamGamesOnly((on) => !on)}
+                className={classNames(pill, teamGamesOnly ? pillActive : pillIdle)}
               >
-                Show team games only
-              </label>
+                <UserGroupIcon className="h-4 w-4" aria-hidden="true" />
+                Team games
+              </button>
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="inline-flex h-9 items-center gap-1 rounded-full px-2 text-sm font-medium text-gray-500 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <XMarkIcon className="h-4 w-4" aria-hidden="true" />
+                  Clear
+                </button>
+              )}
             </div>
           </div>
-        )}
-        {content}
-      </div>
+
+          {months.length === 0 && (
+            <p className="py-6 text-sm text-gray-500 dark:text-gray-400">No sessions match these filters.</p>
+          )}
+
+          <div className="space-y-6">
+            {months.map((month) => (
+              <section key={month.label}>
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  {month.label}
+                </h2>
+                <ul
+                  role="list"
+                  className="-mx-4 divide-y divide-gray-200 border-y border-gray-200 bg-white sm:mx-0 sm:overflow-hidden sm:rounded-lg sm:border dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  {month.items.map((session) => {
+                    const kind = sessionResult(session).kind;
+                    const isCoop = kind === "everyone" || kind === "lost";
+                    return (
+                      <li key={session.sessionId}>
+                        <Link
+                          href={`/${groupName}/session/${session.sessionId}`}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 lg:grid lg:grid-cols-[3.5rem_minmax(0,1.2fr)_minmax(0,1.4fr)_9rem_4.5rem_1rem] lg:gap-4 lg:px-5 dark:hover:bg-gray-700/50"
+                        >
+                          <GameImage
+                            className="h-12 w-12 text-sm lg:h-14 lg:w-14"
+                            src={session.image_url}
+                            name={session.gameName}
+                            size={112}
+                          />
+                          {/* Phone: name and date over result and players. Desktop: the wrappers dissolve into grid cells */}
+                          <div className="grid min-w-0 flex-1 gap-1.5 lg:contents">
+                            <div className="flex min-w-0 items-center gap-2 lg:flex-col lg:items-start lg:gap-0.5">
+                              <div className="flex min-w-0 items-center gap-1.5">
+                                <p className="truncate text-sm font-semibold text-gray-900 sm:text-base dark:text-white">
+                                  {session.gameName}
+                                </p>
+                                {session.isTeamGame && <span className={classNames(tag, BADGE_COLORS.blue)}>Team</span>}
+                                {isCoop && <span className={classNames(tag, BADGE_COLORS.gray)}>Co-op</span>}
+                              </div>
+                              <p className="hidden w-full truncate text-sm text-gray-500 lg:block dark:text-gray-400">
+                                {session.players.map((p) => p.nickname).filter(Boolean).join(", ")}
+                              </p>
+                              <span className="ml-auto whitespace-nowrap text-xs text-gray-500 lg:hidden dark:text-gray-400">
+                                {dayjs(session.createdAt).format("D MMM")}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 lg:contents">
+                              <div className="min-w-0">
+                                <WinnerChip session={session} />
+                              </div>
+                              <PlayerStack session={session} />
+                            </div>
+                          </div>
+                          <span className="hidden text-right text-sm text-gray-500 lg:block dark:text-gray-400">
+                            {dayjs(session.createdAt).format("D MMM")}
+                          </span>
+                          <ChevronRightIcon className="hidden h-5 w-5 text-gray-400 lg:block" aria-hidden="true" />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 };
